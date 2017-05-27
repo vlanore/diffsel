@@ -29,6 +29,11 @@ class PoissonSuffStat : public SuffStat	{
 		beta += in;
 	}
 
+	void AddSuffStat(int incount, double inbeta)	{
+		count += incount;
+		beta += inbeta;
+	}
+
 	int GetCount() const {
 		return count;
 	}

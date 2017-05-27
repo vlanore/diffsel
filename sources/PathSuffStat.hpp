@@ -3,6 +3,8 @@
 #define PATHSUFFSTAT_H
 
 #include "SuffStat.hpp"
+#include "PoissonSuffStat.hpp"
+#include "CodonSubMatrix.hpp"
 #include "SubMatrix.hpp"
 #include "CodonSubMatrix.hpp"
 #include "Array.hpp"
@@ -66,6 +68,36 @@ class PathSuffStat : public SuffStat	{
 			total += i->second * log(mat(i->first.first, i->first.second));
 		}
 		return total;
+	}
+
+	void AddOmegaSuffStat(PoissonSuffStat& omegasuffstat, const MGOmegaCodonSubMatrix& matrix) const {
+
+		int ncodon = matrix.GetNstate();
+		const CodonStateSpace* statespace = matrix.GetCodonStateSpace();
+
+		double beta = 0;
+		for (std::map<int,double>::iterator i = waitingtime.begin(); i!= waitingtime.end(); i++)	{
+			double totnonsynrate = 0;
+			int a = i->first;
+			for (int b=0; b<ncodon; b++)	{
+				if (b != a)	{
+					if (matrix(a,b) != 0)	{
+						if (!statespace->Synonymous(a,b))	{
+							totnonsynrate += matrix(a,b);
+						}
+					}
+				}
+			}
+			beta += i->second * totnonsynrate;
+		}
+
+		int count = 0;
+		for (std::map<pair<int,int>, int>::iterator i = paircount.begin(); i!= paircount.end(); i++)	{
+			if (! statespace->Synonymous(i->first.first,i->first.second))	{
+				count += i->second;
+			}
+		}
+		omegasuffstat.AddSuffStat(count,beta);
 	}
 
 	private:

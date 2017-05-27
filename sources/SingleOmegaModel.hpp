@@ -6,6 +6,7 @@
 #include "CodonSubMatrix.hpp"
 #include "PhyloProcess.hpp"
 #include "IIDGamma.hpp"
+#include "CodonSuffStat.hpp"
 
 const int Nrr = Nnuc * (Nnuc-1) / 2;
 const int Nstate = 61;
@@ -31,6 +32,7 @@ class SingleOmegaModel : public ProbModel	{
 	GTRSubMatrix* nucmatrix;
 
 	double omega;
+	OmegaSuffStat omegasuffstat;
 	MGOmegaCodonSubMatrix* codonmatrix;
 	
 	PhyloProcess* phyloprocess;
@@ -166,9 +168,7 @@ class SingleOmegaModel : public ProbModel	{
 
 			CollectPathSuffStat();
 
-			MoveOmega(0.3,3);
-			MoveOmega(0.1,3);
-			MoveOmega(0.03,3);
+			MoveOmega();
 
 			MoveRR(0.1,1,3);
 			MoveRR(0.03,3,3);
@@ -204,6 +204,15 @@ class SingleOmegaModel : public ProbModel	{
 		pathsuffstat.Clear();
 		phyloprocess->AddPathSuffStat(pathsuffstat);
 		UpdateSuffStatLogProb();
+	}
+
+	void MoveOmega()	{
+
+		omegasuffstat.Clear();
+		omegasuffstat.AddSuffStat(*codonmatrix,pathsuffstat);
+		MoveOmega(0.3,3);
+		MoveOmega(0.1,3);
+		MoveOmega(0.03,3);
 	}
 
 	double MoveRR(double tuning, int n, int nrep)	{
