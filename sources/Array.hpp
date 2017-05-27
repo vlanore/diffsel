@@ -2,40 +2,44 @@
 #ifndef ARRAY_H
 #define ARRAY_H
 
-#include "Tree.hpp"
 #include <vector>
 
-// Arrays
-
-template<class T> class Array	{
+template<class T> class ConstArray	{
 
 	public:
-	Array(int insize) : size(insize) {}
-	virtual ~Array() {}
+	ConstArray(int insize) : size(insize) {}
+	virtual ~ConstArray() {}
 
 	int GetSize() const {return size;}
 
-	virtual T& operator[](int index) = 0;
 	virtual const T& GetVal(int index) const = 0;
 
 	protected:
 	int size;
 };
 
-template<class T> class HomogeneousArray : public Array<T>	{
+template<class T> class Array : public ConstArray<T>	{
 
 	public:
-	HomogeneousArray(int insize, T* invalue) : Array<T>(insize), value(invalue) {}
-	~HomogeneousArray() {}
+	Array(int insize) : ConstArray<T>(insize) {}
+	~Array() {}
 
-	T& operator[](int index) override {return *value;}
-	const T& GetVal(int index) const override {return *value;}
-
-	private:
-	T* value;
+	virtual T& operator[](int index) = 0;
 };
 
-template<class T> class SimpleArray : public virtual Array<T>	{
+template<class T> class HomogeneousArray : public ConstArray<T>	{
+
+	public:
+	HomogeneousArray(int insize, const T& invalue) : ConstArray<T>(insize), value(invalue) {}
+	~HomogeneousArray() {}
+
+	const T& GetVal(int index) const override {return value;}
+
+	private:
+	const T& value;
+};
+
+template<class T> class SimpleArray : public Array<T>	{
 
 	public:
 	SimpleArray(int insize) : Array<T>(insize), array(insize) {}
@@ -48,95 +52,6 @@ template<class T> class SimpleArray : public virtual Array<T>	{
 	vector<T> array;
 };
 
-// Branch Arrays
-
-template<class T> class BranchArray : public virtual Array<T> {
-
-	public:
-	BranchArray(const Tree* intree) : Array<T>(tree->GetNbranch()), tree(intree) {}
-	virtual ~BranchArray() {}
-
-	const Tree* GetTree() const {return tree;}
-	int GetNbranch() const {return tree->GetNbranch();}
-
-	protected:
-	const Tree* tree;
-};
-
-template<class T> class BranchHomogeneousArray : public virtual BranchArray<T>, public virtual HomogeneousArray<T> {
-
-	public:
-
-	BranchHomogeneousArray(const Tree* intree, T* invalue) : Array<T>(intree->GetNbranch()), BranchArray<T>(intree), HomogeneousArray<T>(intree->GetNbranch(), invalue) {}
-	~BranchHomogeneousArray() {}
-};
-
-template<class T> class SimpleBranchArray : public virtual SimpleArray<T>, public virtual BranchArray<T> {
-
-	public:
-
-	SimpleBranchArray(const Tree* intree) : Array<T>(intree->GetNbranch()), SimpleArray<T>(intree->GetNbranch()), BranchArray<T>(intree) {}
-	~SimpleBranchArray() {}
-};
-
-// Branch Site Arrays 
-
-template<class T> class BranchSiteArray	{
-
-	public:
-	BranchSiteArray(const Tree* intree, int insize) : tree(intree), size(insize) {}
-	virtual ~BranchSiteArray() {}
-
-	const Tree* GetTree() const {return tree;}
-	int GetNbranch() const {return tree->GetNbranch();}
-	int GetSize() const {return size;}
-
-	virtual T& operator()(int branch, int site) = 0;
-	virtual const T& GetVal(int branch, int site) const = 0;
-
-	protected:
-	const Tree* tree;
-	int size;
-};
-
-template<class T> class HomogeneousBranchSiteArray : public virtual BranchSiteArray<T> {
-
-	public:
-	HomogeneousBranchSiteArray(const Tree* intree, int insize, T* invalue) : BranchSiteArray<T>(intree,insize), value(invalue) {}
-	~HomogeneousBranchSiteArray() {}
-
-	T& operator()(int branch, int site) override {return *value;}
-	const T& GetVal(int branch, int site) const override {return *value;}
-
-	private:
-	T* value;
-};
-
-template<class T> class BranchHomogeneousSiteHeterogeneousArray : public virtual BranchSiteArray<T>	{
-
-	public:
-	BranchHomogeneousSiteHeterogeneousArray(const Tree* intree, Array<T>* inarray) : BranchSiteArray<T>(intree,inarray->GetSize()), array(inarray) {}
-	~BranchHomogeneousSiteHeterogeneousArray() {}
-
-	T& operator()(int branch, int site) override {return (*array)[site];}
-	const T& GetVal(int branch, int site) const override {return array->GetVal(site);}
-
-	private:
-	Array<T>* array;
-};
-
-template<class T> class BranchHeterogeneousSiteHomogeneousArray : public virtual BranchSiteArray<T> {
-
-	public:
-	BranchHeterogeneousSiteHomogeneousArray(BranchArray<T>* inbrancharray, int insize) : BranchSiteArray<T>(inbrancharray->GetTree(),insize), brancharray(inbrancharray) {}
-	~BranchHeterogeneousSiteHomogeneousArray() {}
-
-	T& operator()(int branch, int site) override {return (*brancharray)[branch];}
-	const T& GetVal(int branch, int site) const override {return brancharray->GetVal(branch);}
-
-	private:
-	BranchArray<T>* brancharray;
-};
 
 #endif
 

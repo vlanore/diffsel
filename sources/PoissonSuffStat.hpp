@@ -4,6 +4,7 @@
 
 #include "SuffStat.hpp"
 #include "Array.hpp"
+#include "BranchArray.hpp"
 #include <cmath>
 
 class PoissonSuffStat : public SuffStat	{
@@ -60,7 +61,7 @@ class PoissonSuffStatArray : public SimpleArray<PoissonSuffStat>	{
 
 	public:
 
-	PoissonSuffStatArray(int insize) : Array<PoissonSuffStat>(insize), SimpleArray<PoissonSuffStat>(insize) {}
+	PoissonSuffStatArray(int insize) : SimpleArray<PoissonSuffStat>(insize) {}
 	~PoissonSuffStatArray() {}
 
 	void Clear()	{
@@ -95,12 +96,37 @@ class PoissonSuffStatArray : public SimpleArray<PoissonSuffStat>	{
 	}
 };
 
-class BranchPoissonSuffStatArray : public virtual PoissonSuffStatArray, public virtual BranchArray<PoissonSuffStat>  {
+class PoissonSuffStatBranchArray : public SimpleBranchArray<PoissonSuffStat>	{
 
 	public:
 
-	BranchPoissonSuffStatArray(const Tree* intree) : Array<PoissonSuffStat>(intree->GetNbranch()), PoissonSuffStatArray(intree->GetNbranch()), BranchArray<PoissonSuffStat>(intree) {}
-	~BranchPoissonSuffStatArray() {}
+	PoissonSuffStatBranchArray(const Tree* intree) : SimpleBranchArray<PoissonSuffStat>(intree) {}
+	~PoissonSuffStatBranchArray() {}
+
+	void Clear()	{
+		for (int i=0; i<GetNbranch(); i++)	{
+			(*this)[i].Clear();
+		}
+	}
+
+	double GetLogProb(const ConstBranchArray<double>* ratearray) const{
+		double total = 0;
+		for (int i=0; i<GetNbranch(); i++)	{
+			total += GetVal(i).GetLogProb(ratearray->GetVal(i));
+		}
+		return total;
+	}
+
+	double GetMarginalLogProb(double shape, double scale)	const {
+		double total = 0;
+		for (int i=0; i<GetNbranch(); i++)	{
+			int count = GetVal(i).GetCount();
+			double beta = GetVal(i).GetBeta();
+			total += -(shape+count)*log(scale+beta) + Random::logGamma(shape+count);
+		}
+		total += GetNbranch() * (shape*log(scale) - Random::logGamma(shape));
+		return total;
+	}
 };
 
 #endif

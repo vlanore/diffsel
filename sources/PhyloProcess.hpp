@@ -7,7 +7,8 @@
 #include "Chrono.hpp"
 #include "SubMatrix.hpp"
 #include "Tree.hpp"
-
+#include "BranchSiteArray.hpp"
+ 
 // PhyloProcess is a dispatcher:
 // its responsibility is to create a random branch/site path
 // for each branch/site pair
@@ -17,13 +18,13 @@ class PhyloProcess	{
 public:
 
 	// generic constructor
-	PhyloProcess(const Tree* intree, const SequenceAlignment* indata, const BranchArray<double>* inbranchlength, const Array<double>* insiterate, const BranchSiteArray<SubMatrix>* insubmatrixarray, const Array<SubMatrix>* inrootsubmatrixarray);
+	PhyloProcess(const Tree* intree, const SequenceAlignment* indata, const ConstBranchArray<double>* inbranchlength, const ConstArray<double>* insiterate, const ConstBranchSiteArray<SubMatrix>* insubmatrixarray, const ConstArray<SubMatrix>* inrootsubmatrixarray);
 
 	// branch and site homogeneous
-	PhyloProcess(const Tree* intree, const SequenceAlignment* indata, const BranchArray<double>* inbranchlength, const Array<double>* insiterate, SubMatrix* insubmatrix);
+	PhyloProcess(const Tree* intree, const SequenceAlignment* indata, const ConstBranchArray<double>* inbranchlength, const ConstArray<double>* insiterate, const SubMatrix* insubmatrix);
 
 	// branch homogeneous, site heterogeneous
-	PhyloProcess(const Tree* intree, const SequenceAlignment* indata, const BranchArray<double>* inbranchlength, const Array<double>* insiterate, Array<SubMatrix>* insubmatrixarray);
+	// PhyloProcess(const Tree* intree, const SequenceAlignment* indata, const ConstBranchArray<double>* inbranchlength, const ConstArray<double>* insiterate, const ConstArray<SubMatrix>* insubmatrixarray);
 
 	~PhyloProcess();
 
@@ -116,8 +117,8 @@ public:
 	// void AddSuffStat(BranchSitePathSuffStatArray* branchsitesuffstatarray);
 
 	// homogeneous across sites
-	void AddLengthSuffStat(BranchPoissonSuffStatArray* branchlengthsuffstatarray);
-	void RecursiveAddLengthSuffStat(const Link* from, BranchPoissonSuffStatArray* branchlengthsuffstatarray);
+	void AddLengthSuffStat(PoissonSuffStatBranchArray* branchlengthsuffstatarray);
+	void RecursiveAddLengthSuffStat(const Link* from, PoissonSuffStatBranchArray* branchlengthsuffstatarray);
 
 	// homogeneous across branches
 	// void AddPoissonSuffStat(PoissonSuffStatArray* poissonsuffstatarray);
@@ -175,10 +176,10 @@ public:
 
 	const Tree *tree;
 	const SequenceAlignment *data;
-	const BranchArray<double>* branchlength;
-	const Array<double>* siterate;
-	const BranchSiteArray<SubMatrix>* submatrixarray; 
-	const Array<SubMatrix>* rootsubmatrixarray;
+	const ConstBranchArray<double>* branchlength;
+	const ConstArray<double>* siterate;
+	const ConstBranchSiteArray<SubMatrix>* submatrixarray; 
+	const ConstArray<SubMatrix>* rootsubmatrixarray;
 	bool allocsubmatrixarray;
 	bool allocrootsubmatrixarray;
 

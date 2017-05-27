@@ -3,6 +3,7 @@
 #define IIDGAMMA_H
 
 #include "Array.hpp"
+#include "BranchArray.hpp"
 #include "Random.hpp"
 #include "PoissonSuffStat.hpp"
 
@@ -35,12 +36,11 @@ class GammaSuffStat : public SuffStat	{
 	int n;
 };
 
-
-class IIDGamma: public virtual Array<double>	{
+class IIDGamma: public virtual SimpleArray<double>	{
 
 	public: 
 
-	IIDGamma(int insize, double inshape, double inscale) : Array(insize), array(insize), shape(inshape), scale(inscale)	{
+	IIDGamma(int insize, double inshape, double inscale) : SimpleArray<double>(insize), shape(inshape), scale(inscale)	{
 		Sample();
 	}
 
@@ -59,14 +59,14 @@ class IIDGamma: public virtual Array<double>	{
 
 	void Sample()	{
 		for (int i=0; i<GetSize(); i++)	{
-			array[i] = Random::Gamma(shape,scale);
+			(*this)[i] = Random::Gamma(shape,scale);
 		}
 	}
 
 	void GibbsResample(const PoissonSuffStatArray* suffstatarray)	{
 		for (int i=0; i<GetSize(); i++)	{
 			const PoissonSuffStat& suffstat = suffstatarray->GetVal(i);
-			array[i] = Random::Gamma(shape + suffstat.GetCount(), scale + suffstat.GetBeta());
+			(*this)[i] = Random::Gamma(shape + suffstat.GetCount(), scale + suffstat.GetBeta());
 		}
 	}
 
@@ -79,34 +79,75 @@ class IIDGamma: public virtual Array<double>	{
 	}
 
 	double GetLogProb(int index)	{
-		return shape * log(scale) - Random::logGamma(shape) + (shape-1)*log(array[index]) - scale*array[index];
+		return shape * log(scale) - Random::logGamma(shape) + (shape-1)*log((*this)[index]) - scale*(*this)[index];
 	}
 
 	void AddSuffStat(GammaSuffStat& suffstat)	{
 		for (int i=0; i<GetSize(); i++)	{
-			suffstat.AddSuffStat(array[i],log(array[i]));
+			suffstat.AddSuffStat((*this)[i],log((*this)[i]));
 		}
 	}
 
-	const double& GetVal(int index) const {
-		return array[index];
-	}
-	double& operator[](int index)	{
-		return array[index];
-	}
-
 	protected:
-	vector<double> array;
 	double shape;
 	double scale;
 };
 
-class BranchIIDGamma: public virtual BranchArray<double>, public virtual IIDGamma	{
+class BranchIIDGamma: public virtual SimpleBranchArray<double>	{
 
 	public: 
 
-	BranchIIDGamma(const Tree* intree, double inshape, double inscale) : Array<double>(intree->GetNbranch()), BranchArray<double>(intree), IIDGamma(intree->GetNbranch(),inshape,inscale) {}
+	BranchIIDGamma(const Tree* intree, double inshape, double inscale) : SimpleBranchArray<double>(intree), shape(inshape), scale(inscale)	{
+		Sample();
+	}
+
 	~BranchIIDGamma() {}
+
+	double GetShape() const {return shape;}
+	double GetScale() const {return scale;}
+
+	void SetShape(double inshape)	{
+		shape = inshape;
+	}
+
+	void SetScale(double inscale)	{
+		scale = inscale;
+	}
+
+	void Sample()	{
+		for (int i=0; i<GetNbranch(); i++)	{
+			(*this)[i] = Random::Gamma(shape,scale);
+		}
+	}
+
+	void GibbsResample(const PoissonSuffStatBranchArray* suffstatarray)	{
+		for (int i=0; i<GetNbranch(); i++)	{
+			const PoissonSuffStat& suffstat = suffstatarray->GetVal(i);
+			(*this)[i] = Random::Gamma(shape + suffstat.GetCount(), scale + suffstat.GetBeta());
+		}
+	}
+
+	double GetLogProb()	{
+		double total = 0;
+		for (int i=0; i<GetNbranch(); i++)	{
+			total += GetLogProb(i);
+		}
+		return total;
+	}
+
+	double GetLogProb(int index)	{
+		return shape * log(scale) - Random::logGamma(shape) + (shape-1)*log((*this)[index]) - scale*(*this)[index];
+	}
+
+	void AddSuffStat(GammaSuffStat& suffstat)	{
+		for (int i=0; i<GetNbranch(); i++)	{
+			suffstat.AddSuffStat((*this)[i],log((*this)[i]));
+		}
+	}
+
+	protected:
+	double shape;
+	double scale;
 };
 
 #endif

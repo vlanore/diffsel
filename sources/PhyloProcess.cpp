@@ -2,7 +2,7 @@
 #include "PhyloProcess.hpp"
 using namespace std;
 
-PhyloProcess::PhyloProcess(const Tree* intree, const SequenceAlignment* indata, const BranchArray<double>* inbranchlength, const Array<double>* insiterate, const BranchSiteArray<SubMatrix>* insubmatrixarray, const Array<SubMatrix>* inrootsubmatrixarray)	{
+PhyloProcess::PhyloProcess(const Tree* intree, const SequenceAlignment* indata, const ConstBranchArray<double>* inbranchlength, const ConstArray<double>* insiterate, const ConstBranchSiteArray<SubMatrix>* insubmatrixarray, const ConstArray<SubMatrix>* inrootsubmatrixarray)	{
 
     tree = intree;
     data = indata;
@@ -16,7 +16,7 @@ PhyloProcess::PhyloProcess(const Tree* intree, const SequenceAlignment* indata, 
     allocrootsubmatrixarray = false;
 }
 
-PhyloProcess::PhyloProcess(const Tree* intree, const SequenceAlignment* indata, const BranchArray<double>* inbranchlength, const Array<double>* insiterate, SubMatrix* insubmatrix)	{
+PhyloProcess::PhyloProcess(const Tree* intree, const SequenceAlignment* indata, const ConstBranchArray<double>* inbranchlength, const ConstArray<double>* insiterate, const SubMatrix* insubmatrix)	{
 
     tree = intree;
     data = indata;
@@ -24,13 +24,14 @@ PhyloProcess::PhyloProcess(const Tree* intree, const SequenceAlignment* indata, 
     maxtrial = DEFAULTMAXTRIAL;
     branchlength = inbranchlength;
     siterate = insiterate;
-    submatrixarray = new HomogeneousBranchSiteArray<SubMatrix>(tree,GetNsite(),insubmatrix);
+    submatrixarray = new HomogeneousBranchSiteArray<SubMatrix>(tree,GetNsite(),*insubmatrix);
     allocsubmatrixarray = true;
-    rootsubmatrixarray = new HomogeneousArray<SubMatrix>(GetNsite(),insubmatrix);
+    rootsubmatrixarray = new HomogeneousArray<SubMatrix>(GetNsite(),*insubmatrix);
     allocrootsubmatrixarray = true;
 }
 
-PhyloProcess::PhyloProcess(const Tree* intree, const SequenceAlignment* indata, const BranchArray<double>* inbranchlength, const Array<double>* insiterate, Array<SubMatrix>* insubmatrixarray)	{
+/*
+PhyloProcess::PhyloProcess(const Tree* intree, const SequenceAlignment* indata, const ConstBranchArray<double>* inbranchlength, const ConstArray<double>* insiterate, ConstArray<SubMatrix>* insubmatrixarray)	{
 
     tree = intree;
     data = indata;
@@ -47,6 +48,7 @@ PhyloProcess::PhyloProcess(const Tree* intree, const SequenceAlignment* indata, 
     rootsubmatrixarray = insubmatrixarray;
     allocrootsubmatrixarray = false;
 }
+*/
 
 PhyloProcess::~PhyloProcess() { 
 
@@ -743,12 +745,12 @@ void PhyloProcess::RecursiveAddPathSuffStat(const Link* from, PathSuffStatArray*
 	}
 }
 
-void PhyloProcess::AddLengthSuffStat(BranchPoissonSuffStatArray* branchlengthsuffstatarray)	{
+void PhyloProcess::AddLengthSuffStat(PoissonSuffStatBranchArray* branchlengthsuffstatarray)	{
 
 	RecursiveAddLengthSuffStat(GetRoot(),branchlengthsuffstatarray);
 }
 
-void PhyloProcess::RecursiveAddLengthSuffStat(const Link* from, BranchPoissonSuffStatArray* branchlengthsuffstatarray)	{
+void PhyloProcess::RecursiveAddLengthSuffStat(const Link* from, PoissonSuffStatBranchArray* branchlengthsuffstatarray)	{
 
 	for (const Link* link=from->Next(); link!=from; link=link->Next())	{
 		for (int i=0; i<GetNsite(); i++)	{

@@ -112,7 +112,7 @@ class PathSuffStatArray : public SimpleArray<PathSuffStat>	{
 
 	public:
 
-	PathSuffStatArray(int insize) : Array<PathSuffStat>(insize), SimpleArray<PathSuffStat>(insize) {}
+	PathSuffStatArray(int insize) : SimpleArray<PathSuffStat>(insize) {}
 	~PathSuffStatArray();
 
 	void Clear()	{

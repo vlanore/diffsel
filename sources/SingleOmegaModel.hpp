@@ -24,7 +24,7 @@ class SingleOmegaModel : public ProbModel	{
 
 	double lambda;
 	BranchIIDGamma* branchlength;
-	BranchPoissonSuffStatArray* lengthsuffstatarray;
+	PoissonSuffStatBranchArray* lengthsuffstatarray;
 	GammaSuffStat lambdasuffstat;
 
 	std::vector<double> nucstat;
@@ -82,7 +82,7 @@ class SingleOmegaModel : public ProbModel	{
 
 		lambda = 10;
 		branchlength = new BranchIIDGamma(tree,1.0,lambda);
-		lengthsuffstatarray = new BranchPoissonSuffStatArray(tree);
+		lengthsuffstatarray = new PoissonSuffStatBranchArray(tree);
 
 		nucrelrate.assign(Nrr,0);
 		double totrr = 0;
