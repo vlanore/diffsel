@@ -19,7 +19,7 @@ template<class T> class Array	{
 	int size;
 };
 
-template<class T> class HomogeneousArray : public virtual Array<T>	{
+template<class T> class HomogeneousArray : public Array<T>	{
 
 	public:
 	HomogeneousArray(int insize, T* invalue) : Array<T>(insize), value(invalue) {}
@@ -35,7 +35,7 @@ template<class T> class HomogeneousArray : public virtual Array<T>	{
 template<class T> class BranchArray : public virtual Array<T> {
 
 	public:
-	BranchArray(const Tree* intree) : Array(tree->GetNbranch()), tree(intree) {}
+	BranchArray(const Tree* intree) : Array<T>(tree->GetNbranch()), tree(intree) {}
 	virtual ~BranchArray() {}
 
 	const Tree* GetTree() const {return tree;}

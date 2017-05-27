@@ -4,6 +4,7 @@
 
 #include "SuffStat.hpp"
 #include "Array.hpp"
+#include <cmath>
 
 class PoissonSuffStat : public SuffStat	{
 
@@ -89,11 +90,11 @@ class PoissonSuffStatArray : public SimpleArray<PoissonSuffStat>	{
 	}
 };
 
-class BranchPoissonSuffStatArray : public PoissonSuffStatArray  {
+class BranchPoissonSuffStatArray : public virtual PoissonSuffStatArray, public virtual BranchArray<PoissonSuffStat>  {
 
 	public:
 
-	BranchPoissonSuffStatArray(const Tree* intree) : PoissonSuffStatArray(intree->GetNbranch()), tree(intree) {}
+	BranchPoissonSuffStatArray(const Tree* intree) : Array<PoissonSuffStat>(intree->GetNbranch()), PoissonSuffStatArray(intree->GetNbranch()), BranchArray<PoissonSuffStat>(intree) {}
 	~BranchPoissonSuffStatArray() {}
 };
 

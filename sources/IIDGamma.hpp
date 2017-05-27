@@ -101,11 +101,11 @@ class IIDGamma: public virtual Array<double>	{
 	double scale;
 };
 
-class BranchIIDGamma: public virtual BranchArray<double>, public IIDGamma	{
+class BranchIIDGamma: public virtual BranchArray<double>, public virtual IIDGamma	{
 
 	public: 
 
-	BranchIIDGamma(const Tree* intree, double inshape, double inscale) : BranchArray<double>(intree), Array<double>(intree->GetNbranch()), IIDGamma(intree->GetNbranch(),inshape,inscale) {}
+	BranchIIDGamma(const Tree* intree, double inshape, double inscale) : Array<double>(intree->GetNbranch()), BranchArray<double>(intree), IIDGamma(intree->GetNbranch(),inshape,inscale) {}
 	~BranchIIDGamma() {}
 };
 
