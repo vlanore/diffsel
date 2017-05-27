@@ -5,6 +5,8 @@
 #include "Tree.hpp"
 #include <vector>
 
+// Arrays
+
 template<class T> class Array	{
 
 	public:
@@ -33,6 +35,21 @@ template<class T> class HomogeneousArray : public Array<T>	{
 	T* value;
 };
 
+template<class T> class SimpleArray : public virtual Array<T>	{
+
+	public:
+	SimpleArray(int insize) : Array<T>(insize), array(insize) {}
+	virtual ~SimpleArray() {}
+
+	T& operator[](int index) override {return array[index];}
+	const T& GetVal(int index) const override {return array[index];}
+
+	private:
+	vector<T> array;
+};
+
+// Branch Arrays
+
 template<class T> class BranchArray : public virtual Array<T> {
 
 	public:
@@ -54,19 +71,6 @@ template<class T> class BranchHomogeneousArray : public virtual BranchArray<T>, 
 	~BranchHomogeneousArray() {}
 };
 
-template<class T> class SimpleArray : public virtual Array<T>	{
-
-	public:
-	SimpleArray(int insize) : Array<T>(insize), array(insize) {}
-	virtual ~SimpleArray() {}
-
-	T& operator[](int index) override {return array[index];}
-	const T& GetVal(int index) const override {return array[index];}
-
-	private:
-	vector<T> array;
-};
-
 template<class T> class SimpleBranchArray : public virtual SimpleArray<T>, public virtual BranchArray<T> {
 
 	public:
@@ -74,6 +78,8 @@ template<class T> class SimpleBranchArray : public virtual SimpleArray<T>, publi
 	SimpleBranchArray(const Tree* intree) : Array<T>(intree->GetNbranch()), SimpleArray<T>(intree->GetNbranch()), BranchArray<T>(intree) {}
 	~SimpleBranchArray() {}
 };
+
+// Branch Site Arrays 
 
 template<class T> class BranchSiteArray	{
 
@@ -92,7 +98,6 @@ template<class T> class BranchSiteArray	{
 	const Tree* tree;
 	int size;
 };
-
 
 template<class T> class HomogeneousBranchSiteArray : public virtual BranchSiteArray<T> {
 

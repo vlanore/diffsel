@@ -2,8 +2,9 @@
 #ifndef CODONSUFFSTAT_H
 #define CODONSUFFSTAT_H
 
-#include "SuffStat.hpp"
-#include "CodonStateSpace.hpp"
+#include "PoissonSuffStat.hpp"
+#include "PathSuffStat.hpp"
+#include "CodonSubMatrix.hpp"
 
 class NucPathSuffStat : public PathSuffStat	{
 
@@ -13,7 +14,8 @@ class NucPathSuffStat : public PathSuffStat	{
 
 	// assumes pathsuffstat is 61x61
 	// collect the 4x4 path suff stat out of codonpathsuffstat
-	void AddSuffStat(CodonStateSpace* codonstatespace, PathSuffStat* codonpathsuffstat);
+	void AddSuffStat(const MGCodonSubMatrix& codonstatespace, const PathSuffStat& codonpathsuffstat);
+	void AddSuffStat(const MGCodonSubMatrix& codonstatespace, const PathSuffStatArray& codonpathsuffstat);
 };
 
 class OmegaSuffStat : public PoissonSuffStat	{
@@ -25,10 +27,10 @@ class OmegaSuffStat : public PoissonSuffStat	{
 
 	// assumes pathsuffstat is 61x61
 	// tease out syn and non-syn substitutions and sum up count and beta stats  
-	void AddSuffStat(CodonStateSpace* codonstatespace, PathSuffStat* pathsuffstat);
+	void AddSuffStat(const MGOmegaCodonSubMatrix& codonsubmatrix, const PathSuffStat& pathsuffstat);
 
 	// summing over all entries of an array
-	void AddSuffStat(CodonStateSpace* codonstatespace, PathSuffStatArray* pathsuffstatarray)	{
+	void AddSuffStat(const MGOmegaCodonSubMatrix& codonsubmatrix, const PathSuffStatArray& pathsuffstatarray)	{
 		for (int i=0; i<GetSize(); i++)	{
 			AddSuffStat(codonstatespace,pathsuffstatarray->GetVal(i));
 		}
