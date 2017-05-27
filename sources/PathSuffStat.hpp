@@ -90,6 +90,7 @@ class PathSuffStat : public SuffStat	{
 			}
 			beta += i->second * totnonsynrate;
 		}
+		beta /= matrix.GetOmega();
 
 		int count = 0;
 		for (std::map<pair<int,int>, int>::iterator i = paircount.begin(); i!= paircount.end(); i++)	{

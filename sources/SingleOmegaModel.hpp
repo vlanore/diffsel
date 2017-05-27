@@ -139,8 +139,9 @@ class SingleOmegaModel : public ProbModel	{
 		suffstatlogprob = bksuffstatlogprob;
 	}
 
+	// exponential of mean 1
 	double OmegaLogProb()	{
-		return 0;
+		return -omega;
 	}
 
 	double LambdaLogProb()	{
@@ -210,9 +211,8 @@ class SingleOmegaModel : public ProbModel	{
 
 		omegasuffstat.Clear();
 		omegasuffstat.AddSuffStat(*codonmatrix,pathsuffstat);
-		MoveOmega(0.3,3);
-		MoveOmega(0.1,3);
-		MoveOmega(0.03,3);
+		omega = Random::Gamma(1 + omegasuffstat.GetCount(), 1 + omegasuffstat.GetBeta());
+		UpdateCodonMatrix();
 	}
 
 	double MoveRR(double tuning, int n, int nrep)	{
