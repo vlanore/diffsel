@@ -318,7 +318,7 @@ class SingleOmegaModel : public ProbModel	{
 	double GetTotalLength()	{
 		double tot = 0;
 		for (int j=1; j<Nbranch; j++)	{
-			tot += branchlength->GetBranchVal(j);
+			tot += branchlength->GetVal(j);
 		}
 		return tot;
 	}

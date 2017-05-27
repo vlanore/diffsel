@@ -32,36 +32,25 @@ template<class T> class HomogeneousArray : public virtual Array<T>	{
 	T* value;
 };
 
-template<class T> class BranchArray	{
+template<class T> class BranchArray : public virtual Array<T> {
 
 	public:
-	BranchArray(const Tree* intree) : tree(intree) {}
+	BranchArray(const Tree* intree) : Array(tree->GetNbranch()), tree(intree) {}
 	virtual ~BranchArray() {}
 
 	const Tree* GetTree() const {return tree;}
 	int GetNbranch() const {return tree->GetNbranch();}
 
-	virtual T& GetBranchVal(int branch) = 0;
-	virtual const T& GetBranchVal(int branch) const = 0;
-
 	protected:
 	const Tree* tree;
 };
 
-template<class T> class BranchHomogeneousArray : public virtual BranchArray<T> {
+template<class T> class BranchHomogeneousArray : public virtual BranchArray<T>, public virtual HomogeneousArray<T> {
 
 	public:
 
-	BranchHomogeneousArray(const Tree* intree, T* invalue) : BranchArray<T>(intree), value(invalue)	{}
+	BranchHomogeneousArray(const Tree* intree, T* invalue) : Array<T>(intree->GetNbranch()), BranchArray<T>(intree), HomogeneousArray<T>(intree->GetNbranch(), invalue) {}
 	~BranchHomogeneousArray() {}
-
-	T& GetBranchVal(int branch) override {return *value;}
-	const T& GetBranchVal(int branch) const override {return *value;}
-
-	private:
-	T* value;
-
-	
 };
 
 template<class T> class SimpleArray : public virtual Array<T>	{
@@ -83,35 +72,7 @@ template<class T> class SimpleBranchArray : public virtual SimpleArray<T>, publi
 
 	SimpleBranchArray(const Tree* intree) : Array<T>(intree->GetNbranch()), SimpleArray<T>(intree->GetNbranch()), BranchArray<T>(intree) {}
 	~SimpleBranchArray() {}
-
-	T& GetBranchVal(int index) override {return this->GetVal(index);}
-	const T& GetBranchVal(int index) const override {return this->GetVal(index);}
-
 };
-
-/*
-template<class T> class BranchPtrArray : public virtual BranchArray<T*>	{
-
-	public:
-	BranchPtrArray(const Tree* intree) : BranchArray<T*>(intree), array(intree->GetNbranch()) {
-		Create();
-	}
-
-	virtual ~BranchPtrArray() {
-		Delete();
-	}
-
-	void Create()	{
-		RecursiveCreate(GetTree()->GetRoot());
-	}
-
-	void Delete()	{
-		RecursiveDelete(GetTree()->GetRoot());
-	}
-
-	virtual void CreateBranchVal(const Link* link) = 0;
-};
-*/
 
 template<class T> class BranchSiteArray	{
 
@@ -164,8 +125,8 @@ template<class T> class BranchHeterogeneousSiteHomogeneousArray : public virtual
 	BranchHeterogeneousSiteHomogeneousArray(BranchArray<T>* inbrancharray, int insize) : BranchSiteArray<T>(inbrancharray->GetTree(),insize), brancharray(inbrancharray) {}
 	~BranchHeterogeneousSiteHomogeneousArray() {}
 
-	T& GetVal(int branch, int site) override {return brancharray->GetBranchVal(branch);}
-	const T& GetVal(int branch, int site) const override {return brancharray->GetBranchVal(branch);}
+	T& GetVal(int branch, int site) override {return brancharray->GetVal(branch);}
+	const T& GetVal(int branch, int site) const override {return brancharray->GetVal(branch);}
 
 	private:
 	BranchArray<T>* brancharray;

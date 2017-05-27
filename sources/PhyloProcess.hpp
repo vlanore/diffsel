@@ -30,7 +30,7 @@ public:
 	// accessors
 
 	double GetBranchLength(int branch) const {
-		return branchlength->GetBranchVal(branch);
+		return branchlength->GetVal(branch);
 	}
 
 	double GetSiteRate(int site) const {

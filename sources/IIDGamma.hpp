@@ -107,21 +107,6 @@ class BranchIIDGamma: public virtual BranchArray<double>, public IIDGamma	{
 
 	BranchIIDGamma(const Tree* intree, double inshape, double inscale) : BranchArray<double>(intree), Array<double>(intree->GetNbranch()), IIDGamma(intree->GetNbranch(),inshape,inscale) {}
 	~BranchIIDGamma() {}
-
-	const double& GetBranchVal(int index) const	{
-		return GetVal(index);
-	}
-
-	double& GetBranchVal(int index) {
-		return GetVal(index);
-	}
-
-	void GibbsResample(BranchPoissonSuffStatArray* branchsuffstatarray)	{
-		for (int i=0; i<GetNbranch(); i++)	{
-			const PoissonSuffStat& suffstat = branchsuffstatarray->GetBranchVal(i);
-			array[i] = Random::Gamma(shape + suffstat.GetCount(), scale + suffstat.GetBeta());
-		}
-	}
 };
 
 #endif

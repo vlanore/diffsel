@@ -752,7 +752,7 @@ void PhyloProcess::RecursiveAddLengthSuffStat(const Link* from, BranchPoissonSuf
 
 	for (const Link* link=from->Next(); link!=from; link=link->Next())	{
 		for (int i=0; i<GetNsite(); i++)	{
-			AddLengthSuffStat(link,i,branchlengthsuffstatarray->GetBranchVal(link->GetBranch()->GetIndex()));
+			AddLengthSuffStat(link,i,branchlengthsuffstatarray->GetVal(link->GetBranch()->GetIndex()));
 		}
 		RecursiveAddLengthSuffStat(link->Out(),branchlengthsuffstatarray);
 	}

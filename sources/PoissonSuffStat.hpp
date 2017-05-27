@@ -89,43 +89,12 @@ class PoissonSuffStatArray : public SimpleArray<PoissonSuffStat>	{
 	}
 };
 
-class BranchPoissonSuffStatArray : public SimpleBranchArray<PoissonSuffStat>	{
+class BranchPoissonSuffStatArray : public PoissonSuffStatArray  {
 
 	public:
 
-	BranchPoissonSuffStatArray(const Tree* intree) : Array<PoissonSuffStat>(intree->GetNbranch()), SimpleArray<PoissonSuffStat>(intree->GetNbranch()), BranchArray<PoissonSuffStat>(intree), SimpleBranchArray<PoissonSuffStat>(intree) {}
+	BranchPoissonSuffStatArray(const Tree* intree) : PoissonSuffStatArray(intree->GetNbranch()), tree(intree) {}
 	~BranchPoissonSuffStatArray() {}
-	
-	void Clear()	{
-		for (int i=0; i<GetNbranch(); i++)	{
-			GetBranchVal(i).Clear();
-		}
-	}
-
-	double GetLogProb(const BranchArray<double>* branchratearray) const {
-		double total = 0;
-		for (int i=0; i<GetNbranch(); i++)	{
-			total += GetBranchVal(i).GetLogProb(branchratearray->GetBranchVal(i));
-		}
-		return total;
-	}
-
-	double GetMarginalLogProb(double shape, double scale) const {
-		double total = 0;
-		/*
-		for (int i=0; i<GetNbranch(); i++)	{
-			total += GetBranchVal(i).GetMarginalLogProb(shape,scale);
-		}
-		*/
-		// factoring out prior factor
-		for (int i=0; i<GetNbranch(); i++)	{
-			int count = GetBranchVal(i).GetCount();
-			double beta = GetBranchVal(i).GetBeta();
-			total += -(shape+count)*log(scale+beta) + Random::logGamma(shape+count);
-		}
-		total += GetNbranch() * (shape*log(scale) - Random::logGamma(shape));
-		return total;
-	}
 };
 
 #endif
