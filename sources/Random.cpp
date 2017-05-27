@@ -448,7 +448,7 @@ double Random::logMultivariateGamma(double a, int p) {
     return ret;
 }
 
-double Random::ProfileProposeMove(double* profile, int dim, double tuning, int n) {  // n==0dirichlet resampling, otherwise, vase communiquants
+double Random::ProfileProposeMove(std::vector<double>& profile, int dim, double tuning, int n) {  // n==0dirichlet resampling, otherwise, vase communiquants
 
     double ret = 0;
     if (n == 0) {  // dirichlet
@@ -504,7 +504,7 @@ double Random::ProfileProposeMove(double* profile, int dim, double tuning, int n
     return ret;
 }
 
-double Random::RealVectorProposeMove(double* x, int dim, double tuning, int n)	{
+double Random::RealVectorProposeMove(std::vector<double>& x, int dim, double tuning, int n)	{
 	auto indices = new int[n];
 	Random::DrawFromUrn(indices, n, dim);
 	for (int i=0; i<n; i++)	{

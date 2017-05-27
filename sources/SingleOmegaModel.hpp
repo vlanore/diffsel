@@ -26,8 +26,8 @@ class SingleOmegaModel : public ProbModel	{
 	BranchPoissonSuffStatArray* lengthsuffstatarray;
 	GammaSuffStat lambdasuffstat;
 
-	double* nucstat;
-	double* nucrelrate;
+	std::vector<double> nucstat;
+	std::vector<double> nucrelrate;
 	GTRSubMatrix* nucmatrix;
 
 	double omega;
@@ -82,7 +82,7 @@ class SingleOmegaModel : public ProbModel	{
 		branchlength = new BranchIIDGamma(tree,1.0,lambda);
 		lengthsuffstatarray = new BranchPoissonSuffStatArray(tree);
 
-		nucrelrate = new double[Nrr];
+		nucrelrate.assign(Nrr,0);
 		double totrr = 0;
 		for (int k=0; k<Nrr; k++)	{
 			nucrelrate[k] = Random::sExpo();
@@ -92,7 +92,7 @@ class SingleOmegaModel : public ProbModel	{
 			nucrelrate[k] /= totrr;
 		}
 
-		nucstat = new double[Nnuc];
+		nucstat.assign(Nnuc,0);
 		double totstat = 0;
 		for (int k=0; k<Nnuc; k++)	{
 			nucstat[k] = Random::sGamma(1.0);
@@ -335,7 +335,7 @@ class SingleOmegaModel : public ProbModel	{
 		return phyloprocess->GetLogProb();
 	}
 
-	double GetEntropy(double* profile, int dim)	{
+	double GetEntropy(const std::vector<double>& profile, int dim) const {
 		double tot = 0;
 		for (int i=0; i<dim; i++)	{
 			tot -= (profile[i] < 1e-6) ? 0 : profile[i]*log(profile[i]);

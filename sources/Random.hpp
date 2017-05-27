@@ -2,6 +2,7 @@
 #define RANDOM_H
 
 #define MT_LEN 624  // (VL) required for magic
+#include <vector>
 
 class Random {
   public:
@@ -31,8 +32,8 @@ class Random {
 
     static double logMultivariateGamma(double a, int p);
 
-    static double ProfileProposeMove(double* profile, int dim, double tuning, int n);
-    static double RealVectorProposeMove(double* x, int dim, double tuning, int n);
+    static double ProfileProposeMove(std::vector<double>& profile, int dim, double tuning, int n);
+    static double RealVectorProposeMove(std::vector<double>& x, int dim, double tuning, int n);
 
   private:
     static int Seed;
