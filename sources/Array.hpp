@@ -12,7 +12,8 @@ template<class T> class Array	{
 	virtual ~Array() {}
 
 	int GetSize() const {return size;}
-	virtual T& GetVal(int index) = 0;
+
+	virtual T& operator[](int index) = 0;
 	virtual const T& GetVal(int index) const = 0;
 
 	protected:
@@ -25,7 +26,7 @@ template<class T> class HomogeneousArray : public Array<T>	{
 	HomogeneousArray(int insize, T* invalue) : Array<T>(insize), value(invalue) {}
 	~HomogeneousArray() {}
 
-	T& GetVal(int index) override {return *value;}
+	T& operator[](int index) override {return *value;}
 	const T& GetVal(int index) const override {return *value;}
 
 	private:
@@ -59,7 +60,7 @@ template<class T> class SimpleArray : public virtual Array<T>	{
 	SimpleArray(int insize) : Array<T>(insize), array(insize) {}
 	virtual ~SimpleArray() {}
 
-	T& GetVal(int index) override {return array[index];}
+	T& operator[](int index) override {return array[index];}
 	const T& GetVal(int index) const override {return array[index];}
 
 	private:
@@ -84,7 +85,7 @@ template<class T> class BranchSiteArray	{
 	int GetNbranch() const {return tree->GetNbranch();}
 	int GetSize() const {return size;}
 
-	virtual T& GetVal(int branch, int site) = 0;
+	virtual T& operator()(int branch, int site) = 0;
 	virtual const T& GetVal(int branch, int site) const = 0;
 
 	protected:
@@ -99,7 +100,7 @@ template<class T> class HomogeneousBranchSiteArray : public virtual BranchSiteAr
 	HomogeneousBranchSiteArray(const Tree* intree, int insize, T* invalue) : BranchSiteArray<T>(intree,insize), value(invalue) {}
 	~HomogeneousBranchSiteArray() {}
 
-	T& GetVal(int branch, int site) override {return *value;}
+	T& operator()(int branch, int site) override {return *value;}
 	const T& GetVal(int branch, int site) const override {return *value;}
 
 	private:
@@ -112,7 +113,7 @@ template<class T> class BranchHomogeneousSiteHeterogeneousArray : public virtual
 	BranchHomogeneousSiteHeterogeneousArray(const Tree* intree, Array<T>* inarray) : BranchSiteArray<T>(intree,inarray->GetSize()), array(inarray) {}
 	~BranchHomogeneousSiteHeterogeneousArray() {}
 
-	T& GetVal(int branch, int site) override {return array->GetVal(site);}
+	T& operator()(int branch, int site) override {return (*array)[site];}
 	const T& GetVal(int branch, int site) const override {return array->GetVal(site);}
 
 	private:
@@ -125,7 +126,7 @@ template<class T> class BranchHeterogeneousSiteHomogeneousArray : public virtual
 	BranchHeterogeneousSiteHomogeneousArray(BranchArray<T>* inbrancharray, int insize) : BranchSiteArray<T>(inbrancharray->GetTree(),insize), brancharray(inbrancharray) {}
 	~BranchHeterogeneousSiteHomogeneousArray() {}
 
-	T& GetVal(int branch, int site) override {return brancharray->GetVal(branch);}
+	T& operator()(int branch, int site) override {return (*brancharray)[branch];}
 	const T& GetVal(int branch, int site) const override {return brancharray->GetVal(branch);}
 
 	private:

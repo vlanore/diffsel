@@ -60,7 +60,7 @@ class PoissonSuffStatArray : public SimpleArray<PoissonSuffStat>	{
 
 	void Clear()	{
 		for (int i=0; i<GetSize(); i++)	{
-			GetVal(i).Clear();
+			(*this)[i].Clear();
 		}
 	}
 

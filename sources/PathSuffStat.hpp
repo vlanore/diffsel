@@ -84,20 +84,9 @@ class PathSuffStatArray : public SimpleArray<PathSuffStat>	{
 
 	void Clear()	{
 		for (int i=0; i<GetSize(); i++)	{
-			GetVal(i).Clear();
+			(*this)[i].Clear();
 		}
 	}
-
-	/*
-	double GetLogProb(const SubMatrix& mat) const 	{
-
-		double total = 0;
-		for (int i=0; i<GetSize(); i++)	{
-			total += GetVal(i).GetLogProb(mat);
-		}
-		return total;
-	}
-	*/
 
 	double GetLogProb(const Array<SubMatrix>* matrixarray) const	{
 

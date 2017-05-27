@@ -91,7 +91,7 @@ class IIDGamma: public virtual Array<double>	{
 	const double& GetVal(int index) const {
 		return array[index];
 	}
-	double& GetVal(int index) {
+	double& operator[](int index)	{
 		return array[index];
 	}
 
