@@ -1,0 +1,233 @@
+5c5,34
+< PhyloProcess::PhyloProcess(Tree* intree, SequenceAlignment* indata, double* inbranchlength, double* insiterate, SubMatrix*** insubmatrix, double** inrootfreq, SubMatrix** inrootsubmatrix)	{
+---
+> PhyloProcess::PhyloProcess(const Tree* intree, const SequenceAlignment* indata, const ConstBranchArray<double>* inbranchlength, const ConstArray<double>* insiterate, const ConstBranchSiteArray<SubMatrix>* insubmatrixarray, const ConstArray<SubMatrix>* inrootsubmatrixarray)	{
+> 
+>     tree = intree;
+>     data = indata;
+>     Nstate = data->GetNstate();
+>     maxtrial = DEFAULTMAXTRIAL;
+>     branchlength = inbranchlength;
+>     siterate = insiterate;
+>     submatrixarray = insubmatrixarray;
+>     allocsubmatrixarray = false;
+>     rootsubmatrixarray = inrootsubmatrixarray;
+>     allocrootsubmatrixarray = false;
+> }
+> 
+> PhyloProcess::PhyloProcess(const Tree* intree, const SequenceAlignment* indata, const ConstBranchArray<double>* inbranchlength, const ConstArray<double>* insiterate, const SubMatrix* insubmatrix)	{
+> 
+>     tree = intree;
+>     data = indata;
+>     Nstate = data->GetNstate();
+>     maxtrial = DEFAULTMAXTRIAL;
+>     branchlength = inbranchlength;
+>     siterate = insiterate;
+>     submatrixarray = new HomogeneousBranchSiteArray<SubMatrix>(tree,GetNsite(),*insubmatrix);
+>     allocsubmatrixarray = true;
+>     rootsubmatrixarray = new HomogeneousArray<SubMatrix>(GetNsite(),*insubmatrix);
+>     allocrootsubmatrixarray = true;
+> }
+> 
+> PhyloProcess::PhyloProcess(const Tree* intree, const SequenceAlignment* indata, const ConstBranchArray<double>* inbranchlength, const ConstArray<double>* insiterate, const ConstArray<SubMatrix>* insubmatrixarray)	{
+> 
+12,14c41,48
+<     submatrix = insubmatrix;
+<     rootfreq = inrootfreq;
+<     rootsubmatrix = inrootsubmatrix;
+---
+>     if (insubmatrixarray->GetSize() != GetNsite())	{
+>         std::cerr << "error in PhyloProcess constructor: size of matrix array does not match alignment size\n";
+>         exit(1);
+>     }
+>     submatrixarray = new BranchHomogeneousSiteHeterogeneousArray<SubMatrix>(tree,insubmatrixarray);
+>     allocsubmatrixarray = true;
+>     rootsubmatrixarray = insubmatrixarray;
+>     allocrootsubmatrixarray = false;
+17c51
+< PhyloProcess::~PhyloProcess() { Cleanup(); }
+---
+> PhyloProcess::~PhyloProcess() { 
+19c53,62
+< void PhyloProcess::SetData(SequenceAlignment *indata) { data = indata; }
+---
+> 	Cleanup(); 
+> 	if (allocsubmatrixarray)	{
+> 		delete submatrixarray;
+> 	}
+> 	if (allocrootsubmatrixarray)	{
+> 		delete rootsubmatrixarray;
+> 	}
+> }
+> 
+> void PhyloProcess::SetData(const SequenceAlignment *indata) { data = indata; }
+74,80c117,121
+<     // if (! from->isRoot())	{
+< 	    auto array = new BranchSitePath *[GetNsite()];
+< 	    for (int i=0; i<GetNsite(); i++)	{
+< 		array[i] = 0;
+< 	    }	
+< 	    pathmap[from->GetBranch()] = array;
+<     // }
+---
+>     auto array = new BranchSitePath *[GetNsite()];
+>     for (int i=0; i<GetNsite(); i++)	{
+> 	array[i] = 0;
+>     }	
+>     pathmap[from->GetNode()] = array;
+93,98c134,138
+<     // if (! from->isRoot())	{
+< 	    BranchSitePath **path = pathmap[from->GetBranch()];
+< 	    for (int i = 0; i < GetNsite(); i++) {
+< 		delete path[i];
+< 	    }
+<     // }
+---
+> 
+>     BranchSitePath **path = pathmap[from->GetNode()];
+>     for (int i = 0; i < GetNsite(); i++) {
+> 	delete path[i];
+>     }
+205c245
+< 	// total += GetPath(from->GetBranch(),site)->GetLogProb(GetBranchLength(from->GetBranch()),GetSiteRate(site),GetSubMatrix(from->GetBranch(),site));
+---
+> 	// total += GetPath(from->GetNode(),site)->GetLogProb(GetBranchLength(from->GetBranch()->GetIndex()),GetSiteRate(site),GetSubMatrix(from->GetBranch()->GetIndex(),site));
+244,245c284,285
+<                     GetSubMatrix(link->GetBranch(), site)
+<                         ->BackwardPropagate(GetCondLikelihood(link->Out()),
+---
+>                     GetSubMatrix(link->GetBranch()->GetIndex(), site)
+>                         .BackwardPropagate(GetCondLikelihood(link->Out()),
+247c287
+< 					    GetBranchLength(link->GetBranch()) * GetSiteRate(site));
+---
+> 					    GetBranchLength(link->GetBranch()->GetIndex()) * GetSiteRate(site));
+327c367
+<                 GetSubMatrix(link->GetBranch(), site)->GetFiniteTimeTransitionProb(state, aux, GetBranchLength(link->GetBranch()) * GetSiteRate(site));
+---
+>                 GetSubMatrix(link->GetBranch()->GetIndex(), site).GetFiniteTimeTransitionProb(state, aux, GetBranchLength(link->GetBranch()->GetIndex()) * GetSiteRate(site));
+344c384
+< 	  	    const double* stat = GetSubMatrix(link->GetBranch(),site)->GetStationary();
+---
+> 	  	    const double* stat = GetSubMatrix(link->GetBranch()->GetIndex(),site).GetStationary();
+405c445
+<             GetState(link->Out()->GetNode(), site) = GetSubMatrix(link->GetBranch(), site)->DrawWaitingTime(state);
+---
+>             GetState(link->Out()->GetNode(), site) = GetSubMatrix(link->GetBranch()->GetIndex(), site).DrawWaitingTime(state);
+478,479c518,519
+< 	delete pathmap[nullptr][site];
+< 	pathmap[nullptr][site] = SampleRootPath(GetState(from->GetNode(), site));
+---
+> 	delete pathmap[from->GetNode()][site];
+> 	pathmap[from->GetNode()][site] = SampleRootPath(GetState(from->GetNode(), site));
+484,485c524,525
+< 	    delete pathmap[link->GetBranch()][site];
+<             pathmap[link->GetBranch()][site] = SamplePath(GetState(link->GetNode(), site), GetState(link->Out()->GetNode(), site),GetBranchLength(link->GetBranch()), GetSiteRate(site), GetSubMatrix(link->GetBranch(),site));
+---
+> 	    delete pathmap[link->GetNode()][site];
+>             pathmap[link->GetNode()][site] = SamplePath(GetState(link->GetNode(), site), GetState(link->Out()->GetNode(), site),GetBranchLength(link->GetBranch()->GetIndex()), GetSiteRate(site), GetSubMatrix(link->GetBranch()->GetIndex(),site));
+530c570
+< BranchSitePath* PhyloProcess::SamplePath(int stateup, int statedown, double time, double rate, SubMatrix* matrix)	{
+---
+> BranchSitePath* PhyloProcess::SamplePath(int stateup, int statedown, double time, double rate, const SubMatrix& matrix)	{
+539c579
+< BranchSitePath* PhyloProcess::ResampleAcceptReject(int maxtrial, int stateup, int statedown, double rate, double totaltime, SubMatrix* matrix)	{
+---
+> BranchSitePath* PhyloProcess::ResampleAcceptReject(int maxtrial, int stateup, int statedown, double rate, double totaltime, const SubMatrix& matrix)	{
+567c607
+< 			double q = - rate * (*matrix)(state,state);
+---
+> 			double q = - rate * matrix(state,state);
+571c611
+< 			int newstate = matrix->DrawOneStep(state);
+---
+> 			int newstate = matrix.DrawOneStep(state);
+578c618
+< 			double q = - rate * (*matrix)(state,state);
+---
+> 			double q = - rate * matrix(state,state);
+597c637
+< 				int newstate = matrix->DrawOneStep(state);
+---
+> 				int newstate = matrix.DrawOneStep(state);
+626c666
+< BranchSitePath* PhyloProcess::ResampleUniformized(int stateup, int statedown, double rate, double totaltime, SubMatrix* matrix)	{
+---
+> BranchSitePath* PhyloProcess::ResampleUniformized(int stateup, int statedown, double rate, double totaltime, const SubMatrix& matrix)	{
+629c669
+< 	int m = matrix->DrawUniformizedSubstitutionNumber(stateup, statedown, length);
+---
+> 	int m = matrix.DrawUniformizedSubstitutionNumber(stateup, statedown, length);
+645c685
+< 		int k = (r== m-1) ? statedown : matrix->DrawUniformizedTransition(state,statedown,m-r-1);
+---
+> 		int k = (r== m-1) ? statedown : matrix.DrawUniformizedTransition(state,statedown,m-r-1);
+658,659c698,699
+< void PhyloProcess::AddRootSuffStat(int site, SuffStat& suffstat)	{
+< 	suffstat.rootcount[GetState(GetRoot()->GetNode(),site)]++;
+---
+> void PhyloProcess::AddRootSuffStat(int site, PathSuffStat& suffstat)	{
+> 	suffstat.IncrementRootCount(GetState(GetRoot()->GetNode(),site));
+662,663c702,703
+< void PhyloProcess::AddSuffStat(int site, const Branch* branch, SuffStat& suffstat)	{
+< 	pathmap[branch][site]->AddSuffStat(suffstat,GetBranchLength(branch) * GetSiteRate(site));
+---
+> void PhyloProcess::AddPathSuffStat(const Link* link, int site, PathSuffStat& suffstat)	{
+> 	pathmap[link->GetNode()][site]->AddPathSuffStat(suffstat,GetBranchLength(link->GetBranch()->GetIndex()) * GetSiteRate(site));
+666,667c706,758
+< void PhyloProcess::AddLengthSuffStat(int site, const Branch* branch, int& count, double& beta)	{
+< 	pathmap[branch][site]->AddLengthSuffStat(count,beta,GetSiteRate(site),GetSubMatrix(branch,site));
+---
+> void PhyloProcess::AddLengthSuffStat(const Link* link, int site, PoissonSuffStat& suffstat)	{
+> 	pathmap[link->GetNode()][site]->AddLengthSuffStat(suffstat,GetSiteRate(site),GetSubMatrix(link->GetBranch()->GetIndex(),site));
+> }
+> 
+> void PhyloProcess::AddPathSuffStat(PathSuffStat& suffstat)	{
+> 
+> 	for (int i=0; i<GetNsite(); i++)	{
+> 		AddRootSuffStat(i,suffstat);
+> 	}
+> 	RecursiveAddPathSuffStat(GetRoot(),suffstat);
+> }
+> 
+> void PhyloProcess::RecursiveAddPathSuffStat(const Link* from, PathSuffStat& suffstat)	{
+> 
+> 	for (const Link* link=from->Next(); link!=from; link=link->Next())	{
+> 		for (int i=0; i<GetNsite(); i++)	{
+> 			AddPathSuffStat(link,i,suffstat);
+> 		}
+> 		RecursiveAddPathSuffStat(link->Out(),suffstat);
+> 	}
+> }
+> 
+> void PhyloProcess::AddPathSuffStat(PathSuffStatArray* suffstatarray)	{
+> 
+> 	for (int i=0; i<GetNsite(); i++)	{
+> 		AddRootSuffStat(i,(*suffstatarray)[i]);
+> 	}
+> 	RecursiveAddPathSuffStat(GetRoot(),suffstatarray);
+> }
+> 
+> void PhyloProcess::RecursiveAddPathSuffStat(const Link* from, PathSuffStatArray* suffstatarray)	{
+> 
+> 	for (const Link* link=from->Next(); link!=from; link=link->Next())	{
+> 		for (int i=0; i<GetNsite(); i++)	{
+> 			AddPathSuffStat(link,i,(*suffstatarray)[i]);
+> 		}
+> 		RecursiveAddPathSuffStat(link->Out(),suffstatarray);
+> 	}
+> }
+> 
+> void PhyloProcess::AddLengthSuffStat(PoissonSuffStatBranchArray* branchlengthsuffstatarray)	{
+> 
+> 	RecursiveAddLengthSuffStat(GetRoot(),branchlengthsuffstatarray);
+> }
+> 
+> void PhyloProcess::RecursiveAddLengthSuffStat(const Link* from, PoissonSuffStatBranchArray* branchlengthsuffstatarray)	{
+> 
+> 	for (const Link* link=from->Next(); link!=from; link=link->Next())	{
+> 		for (int i=0; i<GetNsite(); i++)	{
+> 			AddLengthSuffStat(link,i,(*branchlengthsuffstatarray)[link->GetBranch()->GetIndex()]);
+> 		}
+> 		RecursiveAddLengthSuffStat(link->Out(),branchlengthsuffstatarray);
+> 	}
