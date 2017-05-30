@@ -3,7 +3,8 @@
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
-#include "linalg.hpp"
+// #include "linalg.hpp"
+#include "linalg2.hpp"
 using namespace std;
 
 int SubMatrix::nuni = 0;
@@ -113,7 +114,7 @@ void SubMatrix::ScalarMul(double e) {
 // ---------------------------------------------------------------------------
 //     Diagonalise()
 // ---------------------------------------------------------------------------
-
+/*
 int SubMatrix::Diagonalise() const {
     if (!ArrayUpdated()) {
         UpdateMatrix();
@@ -132,6 +133,42 @@ int SubMatrix::Diagonalise() const {
     }
     diagflag = true;
     return static_cast<int>(failed);
+}
+*/
+
+int SubMatrix::Diagonalise() const {
+    if (!ArrayUpdated()) {
+        UpdateMatrix();
+    }
+
+	// copy Q into aux
+	for (int i=0; i<Nstate; i++)	{
+		for (int j=0; j<Nstate; j++)	{
+			aux[i][j] = Q[i][j];
+		}
+	}
+
+	double * w = new double[Nstate];
+	int* iw = new int[Nstate];
+
+	// diagonalise a into v and u
+	int success = EigenRealGeneral(Nstate, aux, v, vi, u, iw, w);
+
+	// copy u into aux
+	for (int i=0; i<Nstate; i++)	{
+		for (int j=0; j<Nstate; j++)	{
+			aux[i][j] = u[i][j];
+		}
+	}
+
+	// invert a into invu
+	InvertMatrix(aux, Nstate, w, iw, invu);
+
+	// CheckDiag();
+
+	delete[] w;
+	delete[] iw;
+	return success;
 }
 
 // ---------------------------------------------------------------------------
