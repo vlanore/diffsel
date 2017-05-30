@@ -479,13 +479,10 @@ class DiffSelModel : public ProbModel {
 
 	void UpdateAll()	{
 
-        cerr << "nuc matrix\n";
 		CorruptNucMatrix();
-        cerr << "sites\n";
 		for (int i=0; i<Nsite; i++)	{
 			UpdateSite(i);
 		}
-        cerr << "ok\n";
 	}
 
 	void BackupAll()	{
@@ -504,28 +501,24 @@ class DiffSelModel : public ProbModel {
 
 	void UpdateSite(int i)	{
 
-        cerr << "fitness\n";
 		UpdateSiteFitnessProfiles(i);
-        cerr << "codon matrix\n";
 		CorruptSiteCodonMatrices(i);
-        cerr << "suff stat log prob\n";
 		for (int k=0; k<Ncond; k++)	{
-			sitecondsuffstatlogprob[i][k] = SiteCondSuffStatLogProb(i,k);
+			sitecondsuffstatlogprob[k][i] = SiteCondSuffStatLogProb(i,k);
 		}
-        cerr << "ok\n";
 	}
 
 	void BackupSite(int i)	{
 
 		for (int k=0; k<Ncond; k++)	{
-			bksitecondsuffstatlogprob[i][k] = sitecondsuffstatlogprob[i][k];
+			bksitecondsuffstatlogprob[k][i] = sitecondsuffstatlogprob[k][i];
 		}
 	}
 
 	void RestoreSite(int i)	{
 
 		for (int k=0; k<Ncond; k++)	{
-			sitecondsuffstatlogprob[i][k] = bksitecondsuffstatlogprob[i][k];
+			sitecondsuffstatlogprob[k][i] = bksitecondsuffstatlogprob[k][i];
 		}
 	}
 
@@ -536,7 +529,7 @@ class DiffSelModel : public ProbModel {
 		CorruptSiteFlaggedCodonMatrices(i,condflag);
 		for (int k=0; k<Ncond; k++)	{
 			if (condalloc[condflag][k])	{
-				sitecondsuffstatlogprob[i][k] = SiteCondSuffStatLogProb(i,k);
+				sitecondsuffstatlogprob[k][i] = SiteCondSuffStatLogProb(i,k);
 			}
 		}
 	}
@@ -558,7 +551,7 @@ class DiffSelModel : public ProbModel {
 
 		double total = 0;
 		for (int k=0; k<Ncond; k++)	{
-			total += sitecondsuffstatlogprob[i][k];
+			total += sitecondsuffstatlogprob[k][i];
 		}
 		return total;
 	}
@@ -725,40 +718,32 @@ class DiffSelModel : public ProbModel {
 	// does not yet implement any monitoring (success rates, time spent, etc)
 	double Move()	{
 
-        cerr << "resample sub\n";
 		phyloprocess->ResampleSub();
 
 		int nrep = 30;
 
 		for (int rep=0; rep<nrep; rep++)	{
 
-            cerr << "length\n";
 			CollectLengthSuffStat();
 			MoveBranchLength();
 			MoveLambda(1.0,10);
 			MoveLambda(0.3,10);
 
-            cerr << "collect suff stat\n";
 			CollectSuffStat();
 
-            cerr << "update all\n";
 			UpdateAll();
 
-            cerr << "baseline\n";
 			MoveBaseline(1,2,10);
 			MoveBaseline(0.3,5,10);
 			MoveBaseline(0.1,10,10);
 
-            cerr << "delta\n";
 			for (int k=1; k<Ncond; k++)	{
 				MoveDelta(k,5,1,10);
 			}
 
-            cerr << "var sel\n";
 			MoveVarSel(1.0,10);
 			MoveVarSel(0.3,10);
 
-            cerr << "rr and nuc stat\n";
 			MoveRR(0.1,1,3);
 			MoveRR(0.03,3,3);
 			MoveRR(0.01,3,3);
@@ -766,7 +751,6 @@ class DiffSelModel : public ProbModel {
 			MoveNucStat(0.1,1,3);
 			MoveNucStat(0.01,1,3);
 
-            cerr << "update all\n";
 			UpdateAll();
 		}
 			
