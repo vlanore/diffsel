@@ -3,8 +3,8 @@
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
-#include "linalg2.hpp"
-// #include "linalg.hpp"
+// #include "linalg2.hpp"
+#include "linalg.hpp"
 using namespace std;
 
 int SubMatrix::nuni = 0;
@@ -115,7 +115,6 @@ void SubMatrix::ScalarMul(double e) {
 //     Diagonalise()
 // ---------------------------------------------------------------------------
 
-/*
 int SubMatrix::Diagonalise() {
     if (!ArrayUpdated()) {
         UpdateMatrix();
@@ -135,8 +134,8 @@ int SubMatrix::Diagonalise() {
     diagflag = true;
     return static_cast<int>(failed);
 }
-*/
 
+/*
 int SubMatrix::Diagonalise() {
     if (!ArrayUpdated()) {
         UpdateMatrix();
@@ -171,6 +170,7 @@ int SubMatrix::Diagonalise() {
 	delete[] iw;
 	return success;
 }
+*/
 
 // ---------------------------------------------------------------------------
 //     ComputeRate()

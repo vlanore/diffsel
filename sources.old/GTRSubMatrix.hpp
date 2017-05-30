@@ -17,7 +17,6 @@ class GTRSubMatrix : public virtual SubMatrix {
                        : (2 * nstate - j - 1) * j / 2 + i - j - 1;
     }
 
-  protected:
     // make a copy of the entries (not of the pointer)
     void CopyStationary(const double *instat);
 

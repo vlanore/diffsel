@@ -200,7 +200,7 @@ class DiffSelModel : public ProbModel {
 
 		lambda = 10;
 		branchlength = new double[Nbranch];
-		for (int j=1; j<Nbranch; j++)	{
+		for (int j=0; j<Nbranch; j++)	{
 			branchlength[j] = Random::sExpo() / lambda;
 		}
 
@@ -306,7 +306,7 @@ class DiffSelModel : public ProbModel {
 		// arrays of pointers for phyloprocess
 		// sub matrices per branch and per site 
 		phylosubmatrix = new SubMatrix**[Nbranch];
-		for (int j=1; j<Nbranch; j++)	{
+		for (int j=0; j<Nbranch; j++)	{
 			int k = branchalloc[j];
 			phylosubmatrix[j] = new SubMatrix*[Nsite];
 			for (int i=0; i<Nsite; i++)	{
@@ -453,6 +453,7 @@ class DiffSelModel : public ProbModel {
 	}
 
 	void CorruptNucMatrix()	{
+		nucmatrix->CopyStationary(nucstat);
 		nucmatrix->CorruptMatrix();
 	}
 
@@ -478,10 +479,13 @@ class DiffSelModel : public ProbModel {
 
 	void UpdateAll()	{
 
+        cerr << "nuc matrix\n";
 		CorruptNucMatrix();
+        cerr << "sites\n";
 		for (int i=0; i<Nsite; i++)	{
 			UpdateSite(i);
 		}
+        cerr << "ok\n";
 	}
 
 	void BackupAll()	{
@@ -500,11 +504,15 @@ class DiffSelModel : public ProbModel {
 
 	void UpdateSite(int i)	{
 
+        cerr << "fitness\n";
 		UpdateSiteFitnessProfiles(i);
+        cerr << "codon matrix\n";
 		CorruptSiteCodonMatrices(i);
+        cerr << "suff stat log prob\n";
 		for (int k=0; k<Ncond; k++)	{
 			sitecondsuffstatlogprob[i][k] = SiteCondSuffStatLogProb(i,k);
 		}
+        cerr << "ok\n";
 	}
 
 	void BackupSite(int i)	{
@@ -669,7 +677,7 @@ class DiffSelModel : public ProbModel {
 		}
 		else	{
 			for (int i=0; i<Nsite; i++)	{
-				phyloprocess->AddSuffStat(i,from,suffstatarray[branchalloc[from->GetBranch()->GetIndex()]][i]);
+				phyloprocess->AddSuffStat(i,from->Out(),suffstatarray[branchalloc[from->GetBranch()->GetIndex()]][i]);
 			}
 		}
 		for (const Link* link=from->Next(); link!=from; link=link->Next())	{
@@ -686,7 +694,7 @@ class DiffSelModel : public ProbModel {
 
 	void ClearLengthSuffStat()	{
 
-		for (int j=1; j<Nbranch; j++)	{
+		for (int j=0; j<Nbranch; j++)	{
 			branchlengthcount[j] = 0;
 			branchlengthbeta[j] = 0;
 		}
@@ -696,7 +704,7 @@ class DiffSelModel : public ProbModel {
 
 		if (! from->isRoot())	{
 			for (int i=0; i<Nsite; i++)	{
-				phyloprocess->AddLengthSuffStat(i,from,branchlengthcount[from->GetBranch()->GetIndex()],branchlengthbeta[from->GetBranch()->GetIndex()]);
+				phyloprocess->AddLengthSuffStat(i,from->Out(),branchlengthcount[from->GetBranch()->GetIndex()],branchlengthbeta[from->GetBranch()->GetIndex()]);
 			}
 		}
 		for (const Link* link=from->Next(); link!=from; link=link->Next())	{
@@ -717,32 +725,40 @@ class DiffSelModel : public ProbModel {
 	// does not yet implement any monitoring (success rates, time spent, etc)
 	double Move()	{
 
+        cerr << "resample sub\n";
 		phyloprocess->ResampleSub();
 
 		int nrep = 30;
 
 		for (int rep=0; rep<nrep; rep++)	{
 
+            cerr << "length\n";
 			CollectLengthSuffStat();
 			MoveBranchLength();
 			MoveLambda(1.0,10);
 			MoveLambda(0.3,10);
 
+            cerr << "collect suff stat\n";
 			CollectSuffStat();
 
+            cerr << "update all\n";
 			UpdateAll();
 
+            cerr << "baseline\n";
 			MoveBaseline(1,2,10);
 			MoveBaseline(0.3,5,10);
 			MoveBaseline(0.1,10,10);
 
+            cerr << "delta\n";
 			for (int k=1; k<Ncond; k++)	{
 				MoveDelta(k,5,1,10);
 			}
 
+            cerr << "var sel\n";
 			MoveVarSel(1.0,10);
 			MoveVarSel(0.3,10);
 
+            cerr << "rr and nuc stat\n";
 			MoveRR(0.1,1,3);
 			MoveRR(0.03,3,3);
 			MoveRR(0.01,3,3);
@@ -750,6 +766,7 @@ class DiffSelModel : public ProbModel {
 			MoveNucStat(0.1,1,3);
 			MoveNucStat(0.01,1,3);
 
+            cerr << "update all\n";
 			UpdateAll();
 		}
 			
@@ -926,7 +943,7 @@ class DiffSelModel : public ProbModel {
 
 	double MoveBranchLength()	{
 
-		for (int j=1; j<Nbranch; j++)	{
+		for (int j=0; j<Nbranch; j++)	{
 			branchlength[j] = Random::Gamma(1.0 + branchlengthcount[j],lambda+branchlengthbeta[j]);
 			if (! branchlength[j])	{
 				cerr << "error: resampled branch length is 0\n";
@@ -971,7 +988,7 @@ class DiffSelModel : public ProbModel {
 
 	double GetTotalLength()	{
 		double tot = 0;
-		for (int j=1; j<Nbranch; j++)	{
+		for (int j=0; j<Nbranch; j++)	{
 			tot += branchlength[j];
 		}
 		return tot;

@@ -47,6 +47,7 @@ class DiffSelChain: public Chain {
         model = new DiffSelModel(datafile, treefile, category, level, fixglob, fixvar, conjugate, codonmodel, true);
         cerr << "-- Reset" << endl;
         Reset(force);
+        cerr << "-- New ok\n";
     }
 
     void Open() override {
@@ -176,6 +177,7 @@ int main(int argc, char* argv[]) {
 		exit(1);
 	}
 	DiffSelChain* chain = new DiffSelChain(datafile,treefile,ncond,nlevel,every,until,fixglob,fixvar,codonmodel,conjugate,name,true);
+    cerr << "start\n";
 	chain->Start();
     }
 }
