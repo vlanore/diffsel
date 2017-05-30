@@ -48,7 +48,7 @@ template<class T> class SimpleArray : public Array<T>	{
 	T& operator[](int index) override {return array[index];}
 	const T& GetVal(int index) const override {return array[index];}
 
-	private:
+    protected:
 	vector<T> array;
 };
 

@@ -7,6 +7,7 @@
 #include "CodonSubMatrix.hpp"
 #include "SubMatrix.hpp"
 #include "CodonSubMatrix.hpp"
+#include "CodonSubMatrixArray.hpp"
 #include "Array.hpp"
 #include <map>
 
@@ -113,7 +114,7 @@ class PathSuffStatArray : public SimpleArray<PathSuffStat>	{
 	public:
 
 	PathSuffStatArray(int insize) : SimpleArray<PathSuffStat>(insize) {}
-	~PathSuffStatArray();
+	~PathSuffStatArray() {}
 
 	void Clear()	{
 		for (int i=0; i<GetSize(); i++)	{
@@ -129,6 +130,15 @@ class PathSuffStatArray : public SimpleArray<PathSuffStat>	{
 		}
 		return total;
 	}
+
+    /*
+    void AddOmegaSuffStat(PoissonSuffStatArray* omegasuffstatarray, const MGOmegaHeterogeneousCodonSubMatrixArray* matrixarray) const {
+		for (int i=0; i<GetSize(); i++)	{
+                GetVal(i).AddOmegaSuffStat(omegasuffstatarray->GetOmegaSuffStat(i),matrixarray->GetMGOmegaCodonSubMatrix(i));
+                // GetVal(i).AddOmegaSuffStat((*omegasuffstatarray)[i],matrixarray->GetMGOmegaCodonSubMatrix(i));
+        }
+    }
+    */
 };
 
 #endif

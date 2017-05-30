@@ -30,8 +30,7 @@ PhyloProcess::PhyloProcess(const Tree* intree, const SequenceAlignment* indata, 
     allocrootsubmatrixarray = true;
 }
 
-/*
-PhyloProcess::PhyloProcess(const Tree* intree, const SequenceAlignment* indata, const ConstBranchArray<double>* inbranchlength, const ConstArray<double>* insiterate, ConstArray<SubMatrix>* insubmatrixarray)	{
+PhyloProcess::PhyloProcess(const Tree* intree, const SequenceAlignment* indata, const ConstBranchArray<double>* inbranchlength, const ConstArray<double>* insiterate, const ConstArray<SubMatrix>* insubmatrixarray)	{
 
     tree = intree;
     data = indata;
@@ -40,15 +39,14 @@ PhyloProcess::PhyloProcess(const Tree* intree, const SequenceAlignment* indata, 
     branchlength = inbranchlength;
     siterate = insiterate;
     if (insubmatrixarray->GetSize() != GetNsite())	{
-	std::cerr << "error in PhyloProcess constructor: size of matrix array does not match alignment size\n";
-	exit(1);
+        std::cerr << "error in PhyloProcess constructor: size of matrix array does not match alignment size\n";
+        exit(1);
     }
     submatrixarray = new BranchHomogeneousSiteHeterogeneousArray<SubMatrix>(tree,insubmatrixarray);
     allocsubmatrixarray = true;
     rootsubmatrixarray = insubmatrixarray;
     allocrootsubmatrixarray = false;
 }
-*/
 
 PhyloProcess::~PhyloProcess() { 
 

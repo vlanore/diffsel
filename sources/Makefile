@@ -28,7 +28,7 @@ ALL_SRCS=$(wildcard *.cpp)
 ALL_OBJS=$(patsubst %.cpp,%.o,$(ALL_SRCS))
 
 PROGSDIR=..
-ALL= som
+ALL= som siteom
 PROGS=$(addprefix $(PROGSDIR)/, $(ALL))
 
 # If we are on a windows platform, executables are .exe files
@@ -65,6 +65,10 @@ endif
 som$(EXEEXT): $(PROGSDIR)/som$(EXEEXT)
 $(PROGSDIR)/som$(EXEEXT): SingleOmega.o $(OBJS)
 	$(CC) SingleOmega.o $(OBJS) $(LDFLAGS) $(LIBS) -o $@
+
+siteom$(EXEEXT): $(PROGSDIR)/siteom$(EXEEXT)
+$(PROGSDIR)/siteom$(EXEEXT): SiteOmega.o $(OBJS)
+	$(CC) SiteOmega.o $(OBJS) $(LDFLAGS) $(LIBS) -o $@
 
 diffsel$(EXEEXT): $(PROGSDIR)/diffsel$(EXEEXT)
 $(PROGSDIR)/diffsel$(EXEEXT): DiffSel.o $(OBJS)

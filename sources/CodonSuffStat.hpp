@@ -3,6 +3,8 @@
 #define CODONSUFFSTAT_H
 
 #include "PathSuffStat.hpp"
+#include "CodonSubMatrixArray.hpp"
+#include <typeinfo>
 
 /*
 class NucPathSuffStat : public PathSuffStat	{
@@ -37,9 +39,9 @@ class OmegaSuffStat : public PoissonSuffStat	{
 			AddSuffStat(codonsubmatrix,pathsuffstatarray.GetVal(i));
 		}
 	}
+
 };
 
-/*
 class OmegaSuffStatArray : public PoissonSuffStatArray	{
 
 	public:
@@ -47,13 +49,22 @@ class OmegaSuffStatArray : public PoissonSuffStatArray	{
 	OmegaSuffStatArray(int insize) : PoissonSuffStatArray(insize) {}
 	~OmegaSuffStatArray() {}
 
-	void AddSuffStat(const MGOmegaCodonSubMatrix& codonsubmatrix, const PathSuffStatArray* pathsuffstatarray)	{
-		for (int i=0; i<GetSize(); i++)	{
-			(*this)[i].AddSuffStat(codonsubmatrix,pathsuffstatarray->GetVal(i));
+    OmegaSuffStat& GetOmegaSuffStat(int i)  {
+        try {
+            return dynamic_cast<OmegaSuffStat&> ((*this)[i]);
+        }
+        catch(std::bad_cast exp)    {
+            std::cerr << "in OmegaSuffStatArray: bad cast exception\n";
+            exit(1);
+        }
+    }
+
+	void AddSuffStat(const MGOmegaHeterogeneousCodonSubMatrixArray& codonsubmatrixarray, const PathSuffStatArray& pathsuffstatarray)	{
+		for (int i=0; i<pathsuffstatarray.GetSize(); i++)	{
+            pathsuffstatarray.GetVal(i).AddOmegaSuffStat((*this)[i],*codonsubmatrixarray.GetMGOmegaCodonSubMatrix(i));
 		}
 	}
 };
-*/
 
 /*
 class BranchOmegaSuffStatArray : public BranchPoissonSuffStatArray	{
@@ -61,7 +72,7 @@ class BranchOmegaSuffStatArray : public BranchPoissonSuffStatArray	{
 	public:
 	void AddSuffStat(CodonStateSpace* codonstatespace, BranchPathSuffStatArray* branchpathsuffstatarray)	{
 		for (int i=0; i<GetNbranch(); i++)	{
-			GetVal(i).AddSuffStat(codonstatespace,branchpathsuffstatarray->GetVal(i));
+			GetOmegaSuffStat(i).AddSuffStat(codonstatespace,branchpathsuffstatarray->GetVal(i));
 		}
 	}
 };

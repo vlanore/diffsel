@@ -9,7 +9,7 @@ int main(int argc, char* argv[])	{
 	string treefile = argv[2];
 	string name = argv[3];
 
-	SiteOmegaModel* model = new SingleOmegaModel(datafile,treefile);
+	SiteOmegaModel* model = new SiteOmegaModel(datafile,treefile);
 	ofstream os((name + ".trace").c_str());
 	model->TraceHeader(os);
 	os.flush();
