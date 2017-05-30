@@ -1,2 +1,2 @@
-sources/*.o
-sources/*.d
+sources*/*.o
+sources*/*.d

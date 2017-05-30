@@ -158,7 +158,7 @@ class SingleOmegaModel : public ProbModel	{
 		}
 		else	{
 			for (int i=0; i<Nsite; i++)	{
-				phyloprocess->AddSuffStat(i,from->GetBranch(),suffstat);
+				phyloprocess->AddSuffStat(i,from,suffstat);
 			}
 		}
 		for (const Link* link=from->Next(); link!=from; link=link->Next())	{
@@ -181,7 +181,7 @@ class SingleOmegaModel : public ProbModel	{
 	void RecursiveCollectLengthSuffStat(const Link* from)	{
 		if (! from->isRoot())	{
 			for (int i=0; i<Nsite; i++)	{
-				phyloprocess->AddLengthSuffStat(i,from->GetBranch(),branchlengthcount[from->GetBranch()->GetIndex()],branchlengthbeta[from->GetBranch()->GetIndex()]);
+				phyloprocess->AddLengthSuffStat(i,from,branchlengthcount[from->GetBranch()->GetIndex()],branchlengthbeta[from->GetBranch()->GetIndex()]);
 			}
 		}
 		for (const Link* link=from->Next(); link!=from; link=link->Next())	{

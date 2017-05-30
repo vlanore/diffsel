@@ -26,7 +26,7 @@ class DiffSelModel : public ProbModel {
 
 	Tree* tree;
 	FileSequenceAlignment* data;
-	TaxonSet* taxonset;
+	const TaxonSet* taxonset;
 	CodonSequenceAlignment* codondata;
 
 	// number of sites
@@ -60,8 +60,8 @@ class DiffSelModel : public ProbModel {
 	int* branchalloc;
 
 	// nucleotide exchange rates, eq frequencies and GTR substitution matrix
-	double* nucrelrate;
-	double* nucstat;
+	std::vector<double> nucstat;
+	std::vector<double> nucrelrate;
 	GTRSubMatrix* nucmatrix;
 
 	// codon usage factors (uniform in the current version)
@@ -295,10 +295,10 @@ class DiffSelModel : public ProbModel {
 			condsubmatrixarray[k] = new CodonSubMatrix*[Nsite];
 			for (int i=0; i<Nsite; i++)	{
 				if (codonmodel == 0)	{
-					condsubmatrixarray[k][i] = new MGSRFitnessCodonUsageSubMatrix((CodonStateSpace*)codondata->GetStateSpace(), nucmatrix, fitnessprofile[k][i],codonusage, false);
+					condsubmatrixarray[k][i] = new MGSRFitnessCodonUsageSubMatrix((const CodonStateSpace*)codondata->GetStateSpace(), nucmatrix, fitnessprofile[k][i],codonusage, false);
 				}
 				else	{
-					condsubmatrixarray[k][i] = new MGMSFitnessCodonUsageSubMatrix((CodonStateSpace*)codondata->GetStateSpace(), nucmatrix, fitnessprofile[k][i],codonusage, false);
+					condsubmatrixarray[k][i] = new MGMSFitnessCodonUsageSubMatrix((const CodonStateSpace*)codondata->GetStateSpace(), nucmatrix, fitnessprofile[k][i],codonusage, false);
 				}
 			}
 		}

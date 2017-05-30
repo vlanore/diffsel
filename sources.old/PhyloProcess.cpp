@@ -71,13 +71,11 @@ void PhyloProcess::RecursiveCreate(const Link *from) {
     auto state = new int[GetNsite()];
     statemap[from->GetNode()] = state;
 
-    // if (! from->isRoot())	{
-	    auto array = new BranchSitePath *[GetNsite()];
-	    for (int i=0; i<GetNsite(); i++)	{
-		array[i] = 0;
-	    }	
-	    pathmap[from->GetBranch()] = array;
-    // }
+    auto array = new BranchSitePath *[GetNsite()];
+    for (int i=0; i<GetNsite(); i++)	{
+	array[i] = 0;
+    }	
+    pathmap[from->GetNode()] = array;
 
     for (const Link *link = from->Next(); link != from; link = link->Next()) {
         RecursiveCreate(link->Out());
@@ -90,12 +88,10 @@ void PhyloProcess::RecursiveDelete(const Link *from) {
     }
 
     delete[] statemap[from->GetNode()];
-    // if (! from->isRoot())	{
-	    BranchSitePath **path = pathmap[from->GetBranch()];
-	    for (int i = 0; i < GetNsite(); i++) {
-		delete path[i];
-	    }
-    // }
+    BranchSitePath **path = pathmap[from->GetNode()];
+    for (int i = 0; i < GetNsite(); i++) {
+	delete path[i];
+    }
 }
 
 void PhyloProcess::RecursiveCreateTBL(const Link *from) {
@@ -202,7 +198,7 @@ double PhyloProcess::GetPathLogProb(const Link *from, int site) {
 	total += log(stat[GetState(from->GetNode(),site)]);
     }
     else	{
-	// total += GetPath(from->GetBranch(),site)->GetLogProb(GetBranchLength(from->GetBranch()),GetSiteRate(site),GetSubMatrix(from->GetBranch(),site));
+	// total += GetPath(from->GetNode(),site)->GetLogProb(GetBranchLength(from->GetBranch()),GetSiteRate(site),GetSubMatrix(from->GetBranch(),site));
     }
 
     for (const Link *link = from->Next(); link != from; link = link->Next()) {
@@ -475,14 +471,14 @@ void PhyloProcess::ResampleSub(int site) {
 
 void PhyloProcess::ResampleSub(const Link *from, int site) {
     if (from->isRoot()) {
-	delete pathmap[nullptr][site];
-	pathmap[nullptr][site] = SampleRootPath(GetState(from->GetNode(), site));
+	delete pathmap[from->GetNode()][site];
+	pathmap[from->GetNode()][site] = SampleRootPath(GetState(from->GetNode(), site));
     }
 
     for (const Link *link = from->Next(); link != from; link = link->Next()) {
         if (!isMissing(link->Out(), site)) {
-	    delete pathmap[link->GetBranch()][site];
-            pathmap[link->GetBranch()][site] = SamplePath(GetState(link->GetNode(), site), GetState(link->Out()->GetNode(), site),GetBranchLength(link->GetBranch()), GetSiteRate(site), GetSubMatrix(link->GetBranch(),site));
+	    delete pathmap[link->GetNode()][site];
+            pathmap[link->GetNode()][site] = SamplePath(GetState(link->GetNode(), site), GetState(link->Out()->GetNode(), site),GetBranchLength(link->GetBranch()), GetSiteRate(site), GetSubMatrix(link->GetBranch(),site));
             ResampleSub(link->Out(), site);
         }
     }
@@ -659,11 +655,11 @@ void PhyloProcess::AddRootSuffStat(int site, SuffStat& suffstat)	{
 	suffstat.rootcount[GetState(GetRoot()->GetNode(),site)]++;
 }
 
-void PhyloProcess::AddSuffStat(int site, const Branch* branch, SuffStat& suffstat)	{
-	pathmap[branch][site]->AddSuffStat(suffstat,GetBranchLength(branch) * GetSiteRate(site));
+void PhyloProcess::AddSuffStat(int site, const Link* link, SuffStat& suffstat)	{
+	pathmap[link->GetNode()][site]->AddSuffStat(suffstat,GetBranchLength(link->GetBranch()) * GetSiteRate(site));
 }
 
-void PhyloProcess::AddLengthSuffStat(int site, const Branch* branch, int& count, double& beta)	{
-	pathmap[branch][site]->AddLengthSuffStat(count,beta,GetSiteRate(site),GetSubMatrix(branch,site));
+void PhyloProcess::AddLengthSuffStat(int site, const Link* link, int& count, double& beta)	{
+	pathmap[link->GetNode()][site]->AddLengthSuffStat(count,beta,GetSiteRate(site),GetSubMatrix(link->GetBranch(),site));
 }
 

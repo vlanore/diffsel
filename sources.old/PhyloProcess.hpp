@@ -102,10 +102,9 @@ class PhyloProcess	{
     void ResampleSub();  // clamped Nielsen
     void ResampleSub(int site);
 
-    void AddSuffStat(int site, const Branch* branch, SuffStat& suffstat);
+    void AddSuffStat(int site, const Link* link, SuffStat& suffstat);
     void AddRootSuffStat(int site, SuffStat& suffstat);
-    void AddLengthSuffStat(int site, const Branch* branch, int& count, double& beta);
-    // void AddRateSuffStat(int site, const Branch* branch, int& count, double& beta);
+    void AddLengthSuffStat(int site, const Link* link, int& count, double& beta);
 
     void PostPredSample(bool rootprior = false);  // unclamped Nielsen
     void PostPredSample(int site, bool rootprior = false);
@@ -119,18 +118,8 @@ class PhyloProcess	{
 
     bool isMissing(const Link *link, int site) {
 	return false;
-	/*
-        if ((!missingmap[link->GetNode()][site]) && (!missingmap[link->Out()->GetNode()][site]) &&
-            ((pathmap[link->GetBranch()]) != nullptr) &&
-            (pathmap[link->GetBranch()][site] == nullptr)) {
-            std::cerr << "error in is missing\n";
-            exit(1);
-        }
-	*/
         return (missingmap[link->GetNode()][site] || missingmap[link->Out()->GetNode()][site]);
     }
-
-    // bool isMissing(const Branch *branch, int site) { return pathmap[branch][site] == nullptr); }
 
     void CreateMissingMap();
     void RecursiveCreateMissingMap(const Link *from);
@@ -194,21 +183,17 @@ class PhyloProcess	{
 
     bool clampdata;
 
-    BranchSitePath *GetPath(const Branch *branch, int site)	{
-	    if(branch == nullptr)	{
-		std::cerr << "error in phyloprocess: accessing path for null branch (root?)\n";
-		exit(1);
-	    }
-	    if (pathmap[branch][site] == nullptr) {
+    BranchSitePath *GetPath(const Node* node, int site)	{
+	    if (pathmap[node][site] == nullptr) {
 		std::cerr << "error in phyloprocess::getpath: null path\n";
 		exit(1);
 	    }
-	    return pathmap[branch][site];
+	    return pathmap[node][site];
     }
 
   private:
 
-    std::map<const Branch *, BranchSitePath **> pathmap;
+    std::map<const Node*, BranchSitePath **> pathmap;
     std::map<const Node *, int *> statemap;
     std::map<const Node *, bool *> missingmap;
     std::map<const Node *, int> totmissingmap;
