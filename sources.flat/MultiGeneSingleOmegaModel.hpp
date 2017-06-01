@@ -92,6 +92,8 @@ class MultiGeneSingleOmegaModel : public ProbModel	{
 		phyloprocess[gene]->Unfold();
 		std::cerr << "-- mapping substitutions\n";
 		phyloprocess[gene]->ResampleSub();
+		std::cerr << "-- collect suffstat\n";
+		CollectSuffStat(gene);
 		}
 		Trace(cerr);
 	}
@@ -167,6 +169,10 @@ class MultiGeneSingleOmegaModel : public ProbModel	{
 
             // phyloprocess
             phyloprocess[gene] = new PhyloProcess(tree,codondata[gene],branchlength,0,phylosubmatrix[gene],0,rootsubmatrix[gene]);
+
+		suffstat = new SuffStat[Ngene];
+		suffstatlogprob = new double[Ngene];
+		bksuffstatlogprob = new double[Ngene];
         }
     }
 
@@ -207,6 +213,7 @@ class MultiGeneSingleOmegaModel : public ProbModel	{
             branchlengthcount[j] = 0;
             branchlengthbeta[j] = 0;
             for (int gene=0; gene<Ngene; gene++)    {
+		CollectLengthSuffStat(gene);
                 branchlengthcount[j] += genebranchlengthcount[gene][j];
                 branchlengthbeta[j] += genebranchlengthbeta[gene][j];
             }
