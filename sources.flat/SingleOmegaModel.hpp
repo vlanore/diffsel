@@ -208,7 +208,7 @@ class SingleOmegaModel : public ProbModel	{
 	}
 
 	double OmegaLogProb()	{
-		return 0;
+		return -omega;
 	}
 
 	double LambdaLogProb()	{
@@ -216,7 +216,7 @@ class SingleOmegaModel : public ProbModel	{
 	}
 
 	double LengthLogProb()	{
-		return -lambda*GetTotalLength();
+		return Nbranch*log(lambda)-lambda*GetTotalLength();
 	}
 
 	double Move()	{
@@ -229,10 +229,8 @@ class SingleOmegaModel : public ProbModel	{
 
 			CollectLengthSuffStat();
 			MoveBranchLength();
-			/*
 			MoveLambda(1.0,10);
 			MoveLambda(0.3,10);
-			*/
 
 			CollectSuffStat();
 			UpdateSuffStatLogProb();
