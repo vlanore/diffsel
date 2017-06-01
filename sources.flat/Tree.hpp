@@ -468,7 +468,6 @@ class Tree : public NewickTree {
 		Nlink = 0;
 		Nnode = GetSize();
 		Nbranch = 0;
-		// Nbranch = 0;
 		linkmap.clear();
 		nodemap.clear();
 		branchmap.clear();

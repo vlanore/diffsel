@@ -83,7 +83,7 @@ class SingleOmegaModel : public ProbModel	{
 
 		lambda = 10;
 		branchlength = new double[Nbranch];
-		for (int j=1; j<Nbranch; j++)	{
+		for (int j=0; j<Nbranch; j++)	{
 			branchlength[j] = Random::sExpo() / lambda;
 		}
 
@@ -118,7 +118,7 @@ class SingleOmegaModel : public ProbModel	{
 		// per branch and per site 
 		// (array of ptrs based on condsubmatrixarray)
 		phylosubmatrix = new SubMatrix**[Nbranch];
-		for (int j=1; j<Nbranch; j++)	{
+		for (int j=0; j<Nbranch; j++)	{
 			phylosubmatrix[j] = new SubMatrix*[Nsite];
 			for (int i=0; i<Nsite; i++)	{
 				phylosubmatrix[j][i] = codonmatrix;
@@ -136,6 +136,7 @@ class SingleOmegaModel : public ProbModel	{
 	}
 
 	void UpdateNucMatrix()	{
+		nucmatrix->CopyStationary(nucstat);
 		nucmatrix->CorruptMatrix();
 	}
 
@@ -158,7 +159,7 @@ class SingleOmegaModel : public ProbModel	{
 		}
 		else	{
 			for (int i=0; i<Nsite; i++)	{
-				phyloprocess->AddSuffStat(i,from,suffstat);
+				phyloprocess->AddSuffStat(i,from->Out(),suffstat);
 			}
 		}
 		for (const Link* link=from->Next(); link!=from; link=link->Next())	{
@@ -172,7 +173,7 @@ class SingleOmegaModel : public ProbModel	{
 	}
 
 	void ClearLengthSuffStat()	{
-		for (int j=1; j<Nbranch; j++)	{
+		for (int j=0; j<Nbranch; j++)	{
 			branchlengthcount[j] = 0;
 			branchlengthbeta[j] = 0;
 		}
@@ -181,7 +182,7 @@ class SingleOmegaModel : public ProbModel	{
 	void RecursiveCollectLengthSuffStat(const Link* from)	{
 		if (! from->isRoot())	{
 			for (int i=0; i<Nsite; i++)	{
-				phyloprocess->AddLengthSuffStat(i,from,branchlengthcount[from->GetBranch()->GetIndex()],branchlengthbeta[from->GetBranch()->GetIndex()]);
+				phyloprocess->AddLengthSuffStat(i,from->Out(),branchlengthcount[from->GetBranch()->GetIndex()],branchlengthbeta[from->GetBranch()->GetIndex()]);
 			}
 		}
 		for (const Link* link=from->Next(); link!=from; link=link->Next())	{
@@ -310,7 +311,7 @@ class SingleOmegaModel : public ProbModel	{
 
 	double MoveBranchLength()	{
 
-		for (int j=1; j<Nbranch; j++)	{
+		for (int j=0; j<Nbranch; j++)	{
 			branchlength[j] = Random::Gamma(1.0 + branchlengthcount[j],lambda+branchlengthbeta[j]);
 			if (! branchlength[j])	{
 				cerr << "error: resampled branch length is 0\n";
@@ -373,7 +374,7 @@ class SingleOmegaModel : public ProbModel	{
 
 	double GetTotalLength()	{
 		double tot = 0;
-		for (int j=1; j<Nbranch; j++)	{
+		for (int j=0; j<Nbranch; j++)	{
 			tot += branchlength[j];
 		}
 		return tot;
