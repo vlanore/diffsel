@@ -51,12 +51,12 @@ class MultiGeneSingleOmegaModel : public ProbModel	{
 
 	public:
 
-	SingleOmegaModel(string genelistfile, string treefile)	{
+	MultiGeneSingleOmegaModel(string genelistfile, string treefile)	{
 
         ifstream is(genelistfile.c_str());
         is >> Ngene;
         data = new FileSequenceAlignment*[Ngene];
-        codondata = new FileSequenceAlignment*[Ngene];
+        codondata = new CodonSequenceAlignment*[Ngene];
         Nsite = new int[Ngene];
 
         std::cerr << "-- Number of sites: \n";
@@ -87,13 +87,12 @@ class MultiGeneSingleOmegaModel : public ProbModel	{
 		std::cerr << "-- Tree and data fit together\n";
 
 		Allocate();
+		for (int gene=0; gene<Ngene; gene++)	{
 		cerr << "-- unfold\n";
-		phyloprocess->Unfold();
-		cerr << phyloprocess->GetLogProb() << '\n';
+		phyloprocess[gene]->Unfold();
 		std::cerr << "-- mapping substitutions\n";
-		phyloprocess->ResampleSub();
-		std::cerr << "-- collect suffstat\n";
-		CollectSuffStat();
+		phyloprocess[gene]->ResampleSub();
+		}
 		Trace(cerr);
 	}
 
@@ -124,6 +123,7 @@ class MultiGeneSingleOmegaModel : public ProbModel	{
 		rootsubmatrix = new SubMatrix**[Ngene];
 		phyloprocess = new PhyloProcess*[Ngene];
 
+	alpha = beta = 1.0;
         for (int gene=0; gene<Ngene; gene++)    {
             nucrelrate[gene] = new double[Nrr];
             double totrr = 0;
@@ -145,9 +145,9 @@ class MultiGeneSingleOmegaModel : public ProbModel	{
                 nucstat[gene][k] /= totstat;
             }
 
-            nucmatrix[gene] = new GTRSubMatrix(Nnuc,nucrelrate,nucstat,true);
+            nucmatrix[gene] = new GTRSubMatrix(Nnuc,nucrelrate[gene],nucstat[gene],true);
             omega[gene] = 1.0;
-            codonmatrix[gene] = new MGOmegaCodonSubMatrix((CodonStateSpace*) codondata->GetStateSpace(), nucmatrix, omega);
+            codonmatrix[gene] = new MGOmegaCodonSubMatrix((CodonStateSpace*) codondata[gene]->GetStateSpace(), nucmatrix[gene], omega[gene]);
 
             // codon matrices
             // per branch and per site 
@@ -166,7 +166,7 @@ class MultiGeneSingleOmegaModel : public ProbModel	{
             }
 
             // phyloprocess
-            phyloprocess[gene] = new PhyloProcess(tree,codondata,branchlength,0,phylosubmatrix,0,rootsubmatrix);
+            phyloprocess[gene] = new PhyloProcess(tree,codondata[gene],branchlength,0,phylosubmatrix[gene],0,rootsubmatrix[gene]);
         }
     }
 
@@ -182,7 +182,7 @@ class MultiGeneSingleOmegaModel : public ProbModel	{
 		
 	void CollectSuffStat(int gene)	{
 		suffstat[gene].Clear();
-		RecursiveCollectSuffStat(tree->GetRoot());
+		RecursiveCollectSuffStat(gene,tree->GetRoot());
 	}
 
 	void RecursiveCollectSuffStat(int gene, const Link* from)	{
@@ -262,7 +262,7 @@ class MultiGeneSingleOmegaModel : public ProbModel	{
         return total;
     }
 
-	double OmegaLogProb(gene)	{
+	double OmegaLogProb(int gene)	{
 		return alpha*log(beta) - Random::logGamma(alpha) + (alpha-1)*log(omega[gene]) - beta*omega[gene];
 	}
 
@@ -504,7 +504,11 @@ class MultiGeneSingleOmegaModel : public ProbModel	{
 	}
 
 	double GetLogLikelihood()	{
-		return phyloprocess->GetLogProb();
+		double total = 0;
+		for (int gene=0; gene<Ngene; gene++)	{
+			total += phyloprocess[gene]->GetLogProb();
+		}
+		return total;
 	}
 
 	double GetEntropy(double* profile, int dim)	{
@@ -526,9 +530,7 @@ class MultiGeneSingleOmegaModel : public ProbModel	{
 	void TraceHeader(std::ostream& os)  {
 		os << "#logprior\tlnL\tlength\tlambda\t";
 		os << "omega\t";
-        os << "alpha\tbeta\t";
-		os << "statent\t";
-		os << "rrent\n";
+		os << "alpha\tbeta\n";
 	}
 
 	void Trace(ostream& os) {	
@@ -537,9 +539,7 @@ class MultiGeneSingleOmegaModel : public ProbModel	{
 		os << GetTotalLength() << '\t';
 		os << lambda << '\t';
 		os << GetMeanOmega() << '\t';
-        os << alpha << '\t' << beta << '\t';
-		os << GetEntropy(nucstat,Nnuc) << '\t';
-		os << GetEntropy(nucrelrate,Nrr) << '\n';
+		os << alpha << '\t' << beta << '\n';
 	}
 
 	void Monitor(ostream& os) {}
