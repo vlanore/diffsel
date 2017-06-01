@@ -401,7 +401,7 @@ class SingleOmegaModel : public ProbModel	{
 	}
 
 	void TraceHeader(std::ostream& os)  {
-		os << "#logprior\tlnL\tlength\t";
+		os << "#logprior\tlnL\tlength\tlambda\t";
 		os << "omega\t";
 		os << "statent\t";
 		os << "rrent\n";
@@ -411,6 +411,7 @@ class SingleOmegaModel : public ProbModel	{
 		os << GetLogPrior() << '\t';
 		os << GetLogLikelihood() << '\t';
 		os << GetTotalLength() << '\t';
+		os << lambda << '\t';
 		os << omega << '\t';
 		os << GetEntropy(nucstat,Nnuc) << '\t';
 		os << GetEntropy(nucrelrate,Nrr) << '\n';
