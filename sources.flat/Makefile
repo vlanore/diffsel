@@ -28,7 +28,7 @@ ALL_SRCS=$(wildcard *.cpp)
 ALL_OBJS=$(patsubst %.cpp,%.o,$(ALL_SRCS))
 
 PROGSDIR=..
-ALL= flatdiffsel flatsom
+ALL= flatdiffsel flatglobom
 PROGS=$(addprefix $(PROGSDIR)/, $(ALL))
 
 # If we are on a windows platform, executables are .exe files
@@ -62,8 +62,8 @@ endif
 
 # Targets
 
-flatsom$(EXEEXT): $(PROGSDIR)/flatsom$(EXEEXT)
-$(PROGSDIR)/flatsom$(EXEEXT): SingleOmega.o $(OBJS)
+flatglobom$(EXEEXT): $(PROGSDIR)/flatglobom$(EXEEXT)
+$(PROGSDIR)/flatglobom$(EXEEXT): SingleOmega.o $(OBJS)
 	$(CC) SingleOmega.o $(OBJS) $(LDFLAGS) $(LIBS) -o $@
 
 flatdiffsel$(EXEEXT): $(PROGSDIR)/flatdiffsel$(EXEEXT)
