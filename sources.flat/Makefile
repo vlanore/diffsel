@@ -28,7 +28,7 @@ ALL_SRCS=$(wildcard *.cpp)
 ALL_OBJS=$(patsubst %.cpp,%.o,$(ALL_SRCS))
 
 PROGSDIR=..
-ALL= flatdiffsel flatglobom
+ALL= flatdiffsel flatglobom flatgeneglobom
 PROGS=$(addprefix $(PROGSDIR)/, $(ALL))
 
 # If we are on a windows platform, executables are .exe files
@@ -65,6 +65,10 @@ endif
 flatglobom$(EXEEXT): $(PROGSDIR)/flatglobom$(EXEEXT)
 $(PROGSDIR)/flatglobom$(EXEEXT): SingleOmega.o $(OBJS)
 	$(CC) SingleOmega.o $(OBJS) $(LDFLAGS) $(LIBS) -o $@
+
+flatgeneglobom$(EXEEXT): $(PROGSDIR)/flatgeneglobom$(EXEEXT)
+$(PROGSDIR)/flatgeneglobom$(EXEEXT): MultiGeneSingleOmega.o $(OBJS)
+	$(CC) MultiGeneSingleOmega.o $(OBJS) $(LDFLAGS) $(LIBS) -o $@
 
 flatdiffsel$(EXEEXT): $(PROGSDIR)/flatdiffsel$(EXEEXT)
 $(PROGSDIR)/flatdiffsel$(EXEEXT): DiffSel.o $(OBJS)
