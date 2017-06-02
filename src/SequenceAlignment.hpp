@@ -211,7 +211,7 @@ class SequenceAlignment {
         }
     }
 
-    bool GroupCompatible(int i, std::map<std::string, int> &group, int ngroup) {
+    bool GroupCompatible(int i, std::map<std::string, int> &group, int ngroup) const {
         std::vector<int> presence(ngroup);
         for (int n = 0; n < ngroup; n++) {
             presence[n] = 0;
@@ -231,7 +231,7 @@ class SequenceAlignment {
         return ok != 0;
     }
 
-    double MissingFrac(int i) {
+    double MissingFrac(int i) const {
         double n = 0;
         for (int k = 0; k < GetNtaxa(); k++) {
             if (Data[k][i] != unknown) {
@@ -263,9 +263,9 @@ class SequenceAlignment {
     virtual ~SequenceAlignment() = default;
 
     // the set of characters (A,C,G,T for nucleotides, etc..)
-    StateSpace *GetStateSpace() { return statespace; }
+    const StateSpace *GetStateSpace() const { return statespace; }
 
-    void RegisterWith(TaxonSet *intaxset) {
+    void RegisterWith(const TaxonSet *intaxset) {
         std::cerr << "register\n";
         if (taxset->GetNtaxa() != intaxset->GetNtaxa()) {
             std::cerr << "error in register seq\n";
@@ -300,18 +300,18 @@ class SequenceAlignment {
         }
     }
 
-    int GetNstate() { return statespace->GetNstate(); }
+    int GetNstate() const { return statespace->GetNstate(); }
 
     // the list of taxa
-    TaxonSet *GetTaxonSet() { return taxset; }
+    const TaxonSet *GetTaxonSet() const { return taxset; }
 
-    int GetNsite() { return Nsite; }
+    int GetNsite() const { return Nsite; }
 
-    int GetNtaxa() { return taxset->GetNtaxa(); }
+    int GetNtaxa() const { return taxset->GetNtaxa(); }
 
-    bool isMissing(int taxon, int site) { return Data[taxon][site] == -1; }
+    bool isMissing(int taxon, int site) const { return Data[taxon][site] == -1; }
 
-    bool AllMissingTaxon(int tax) {
+    bool AllMissingTaxon(int tax) const {
         bool ret = true;
         int site = 0;
         while ((site < GetNsite()) && ret) {
@@ -321,7 +321,7 @@ class SequenceAlignment {
         return ret;
     }
 
-    bool AllMissingTaxon(std::string taxname) {
+    bool AllMissingTaxon(std::string taxname) const {
         int index = taxset->GetTaxonIndex(taxname);
         if (index == -1) {
             std::cerr << "error in all missing taxon: did not recognize " << taxname << '\n';
@@ -330,7 +330,7 @@ class SequenceAlignment {
         return AllMissingTaxon(index);
     }
 
-    bool AllMissingColumn(int site) {
+    bool AllMissingColumn(int site) const {
         bool ret = true;
         int tax = 0;
         while ((tax < GetNtaxa()) && ret) {
@@ -340,7 +340,7 @@ class SequenceAlignment {
         return ret;
     }
 
-    bool NoMissingColumn(int site) {
+    bool NoMissingColumn(int site) const {
         bool ret = true;
         int tax = 0;
         while ((tax < GetNtaxa()) && ret) {
@@ -350,7 +350,7 @@ class SequenceAlignment {
         return ret;
     }
 
-    bool ConstantColumn(int site) {
+    bool ConstantColumn(int site) const {
         bool ret = true;
         int tax = 0;
         while ((tax < GetNtaxa()) && (Data[tax][site] == unknown)) {
@@ -372,16 +372,16 @@ class SequenceAlignment {
 
     void SetState(int taxon, int site, int state) { Data[taxon][site] = state; }
 
-    int GetState(int taxon, int site) { return Data[taxon][site]; }
+    int GetState(int taxon, int site) const { return Data[taxon][site]; }
 
-    void GetEmpiricalFreq(double *in);
+    void GetEmpiricalFreq(double *in) const;
 
-    void GetSiteEmpiricalFreq(double **in, double pseudocount = 0);
+    void GetSiteEmpiricalFreq(double **in, double pseudocount = 0) const;
 
-    void ToStream(std::ostream &os);
-    void ToStreamTriplet(std::ostream &os);
-    int GetNonMissingTriplet();
-    void ToFasta(std::ostream &os);
+    void ToStream(std::ostream &os) const;
+    void ToStreamTriplet(std::ostream &os) const;
+    int GetNonMissingTriplet() const;
+    void ToFasta(std::ostream &os) const;
 
     void DeleteConstantSites() {
         int i = 0;
@@ -427,7 +427,7 @@ class SequenceAlignment {
         }
     }
 
-    double GetMeanDiversity() {
+    double GetMeanDiversity() const {
         int Nstate = GetNstate();
         std::vector<int> found(Nstate);
 
@@ -452,7 +452,7 @@ class SequenceAlignment {
         return mean;
     }
 
-    void GetTaxEmpiricalFreq(double **taxfreq) {
+    void GetTaxEmpiricalFreq(double **taxfreq) const {
         int Nstate = GetNstate();
         for (int j = 0; j < Ntaxa; j++) {
             for (int k = 0; k < Nstate; k++) {
@@ -480,7 +480,7 @@ class SequenceAlignment {
         }
     }
 
-    double CompositionalHeterogeneity(std::ostream *os) {
+    double CompositionalHeterogeneity(std::ostream *os) const {
         int Nstate = GetNstate();
         auto taxfreq = new double *[Ntaxa];
         for (int j = 0; j < Ntaxa; j++) {
@@ -561,8 +561,8 @@ class SequenceAlignment {
 
     int Ntaxa;
     int Nsite;
-    TaxonSet *taxset;
-    StateSpace *statespace;
+    const TaxonSet *taxset;
+    const StateSpace *statespace;
     int **Data;
 };
 

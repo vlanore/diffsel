@@ -10,12 +10,12 @@ class StateSpace {
   public:
     virtual ~StateSpace() = default;
 
-    virtual std::string GetState(int state) = 0;
-    virtual int GetNstate() = 0;
+    virtual std::string GetState(int state) const = 0;
+    virtual int GetNstate() const = 0;
 
-    virtual int GetState(std::string from) = 0;
+    virtual int GetState(std::string from) const = 0;
 
-    virtual bool isCompatible(int state1, int state2) {
+    virtual bool isCompatible(int state1, int state2) const {
         return ((state1 == unknown) || (state2 == unknown) || (state1 == state2));
     }
 };
@@ -25,11 +25,11 @@ class StateSpace {
 //
 class SimpleStateSpace : public StateSpace {
   public:
-    int GetState(std::string from) override;
+    int GetState(std::string from) const override;
 
-    int GetNstate() override { return Nstate; }
+    int GetNstate() const override { return Nstate; }
 
-    std::string GetState(int state) override;
+    std::string GetState(int state) const override;
 
   protected:
     int Nstate;

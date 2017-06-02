@@ -14,7 +14,7 @@ int Int(string s) { return atoi(s.c_str()); }
 
 double Double(string s) { return atof(s.c_str()); }
 
-void SequenceAlignment::GetEmpiricalFreq(double *in) {
+void SequenceAlignment::GetEmpiricalFreq(double *in) const {
     int n = GetNstate();
     for (int i = 0; i < GetNstate(); i++) {
         in[i] = 1;
@@ -32,7 +32,7 @@ void SequenceAlignment::GetEmpiricalFreq(double *in) {
     }
 }
 
-void SequenceAlignment::GetSiteEmpiricalFreq(double **in, double pseudocount) {
+void SequenceAlignment::GetSiteEmpiricalFreq(double **in, double pseudocount) const {
     if (pseudocount < 0) {
         for (int j = 0; j < GetNsite(); j++) {
             for (int i = 0; i < GetNstate(); i++) {
@@ -65,7 +65,7 @@ void SequenceAlignment::GetSiteEmpiricalFreq(double **in, double pseudocount) {
     }
 }
 
-void SequenceAlignment::ToFasta(ostream &os) {
+void SequenceAlignment::ToFasta(ostream &os) const {
     for (int i = 0; i < Ntaxa; i++) {
         os << '>' << taxset->GetTaxon(i) << '\n';
         for (int j = 0; j < Nsite; j++) {
@@ -101,7 +101,7 @@ void SequenceAlignment::ToFasta(ostream &os) {
   }
 */
 
-void SequenceAlignment::ToStream(ostream &os) {
+void SequenceAlignment::ToStream(ostream &os) const {
     // os << Ntaxa << '\t' << 876<< '\n';
     os << Ntaxa << '\t' << Nsite << '\n';
     int max = 0;
@@ -125,7 +125,7 @@ void SequenceAlignment::ToStream(ostream &os) {
     os << '\n';
 }
 
-int SequenceAlignment::GetNonMissingTriplet() {
+int SequenceAlignment::GetNonMissingTriplet() const {
     int nsite = 0;
     for (int j = 2; j < Nsite - 3; j += 3) {
         if (NoMissingColumn(j - 1) && NoMissingColumn(j) && NoMissingColumn(j + 1)) {
@@ -135,7 +135,7 @@ int SequenceAlignment::GetNonMissingTriplet() {
     return nsite;
 }
 
-void SequenceAlignment::ToStreamTriplet(ostream &os) {
+void SequenceAlignment::ToStreamTriplet(ostream &os) const {
     int nsite = 0;
     for (int j = 2; j < Nsite - 3; j += 3) {
         if (NoMissingColumn(j - 1) && NoMissingColumn(j) && NoMissingColumn(j + 1)) {

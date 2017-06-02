@@ -436,7 +436,7 @@ void Tree::Subdivide(Link *from, int Ninterpol) {
     }
 }
 
-int Tree::CountInternalNodes(const Link *from) {
+int Tree::CountInternalNodes(const Link *from) const {
     int total = 0;
     if (!from->isLeaf()) {
         // if ((! from->isLeaf()) && (! from->isRoot()))	{
@@ -448,7 +448,7 @@ int Tree::CountInternalNodes(const Link *from) {
     return total;
 }
 
-const Link *Tree::ChooseInternalNode(const Link *from, const Link *&fromup, int &n) {
+const Link *Tree::ChooseInternalNode(const Link *from, const Link *&fromup, int &n) const {
     if (from->isLeaf()) {
         return nullptr;
     }
@@ -472,7 +472,7 @@ const Link *Tree::ChooseInternalNode(const Link *from, const Link *&fromup, int 
     return ret;
 }
 
-int Tree::CountNodes(const Link *from) {
+int Tree::CountNodes(const Link *from) const {
     int total = 1;
     for (const Link *link = from->Next(); link != from; link = link->Next()) {
         total += CountNodes(link->Out());
@@ -480,7 +480,7 @@ int Tree::CountNodes(const Link *from) {
     return total;
 }
 
-const Link *Tree::ChooseNode(const Link *from, const Link *&fromup, int &n) {
+const Link *Tree::ChooseNode(const Link *from, const Link *&fromup, int &n) const {
     const Link *ret = nullptr;
     if (n == 0) {
         ret = from;

@@ -26,7 +26,7 @@ class DiffSelModel : public ProbModel {
 
 	Tree* tree;
 	FileSequenceAlignment* data;
-	TaxonSet* taxonset;
+	const TaxonSet* taxonset;
 	CodonSequenceAlignment* codondata;
 
 	// number of sites

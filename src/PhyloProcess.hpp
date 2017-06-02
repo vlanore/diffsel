@@ -62,8 +62,8 @@ class PhyloProcess	{
     double SiteLogLikelihood(int site);
     double FastSiteLogLikelihood(int site);
 
-    StateSpace* GetStateSpace() { return data->GetStateSpace(); }
-    TaxonSet* GetTaxonSet() { return data->GetTaxonSet(); }
+    const StateSpace* GetStateSpace() const { return data->GetStateSpace(); }
+    const TaxonSet* GetTaxonSet() { return data->GetTaxonSet(); }
 
     int GetNsite() { return data->GetNsite(); }
     int GetNtaxa() { return data->GetNtaxa(); }

@@ -35,7 +35,7 @@ using namespace std;
 //     return cont;
 // }
 
-string SimpleStateSpace::GetState(int state) {
+string SimpleStateSpace::GetState(int state) const {
     ostringstream s;
     if (state == unknown) {
         s << "-";
@@ -45,7 +45,7 @@ string SimpleStateSpace::GetState(int state) {
     return s.str();
 }
 
-int SimpleStateSpace::GetState(string from) {
+int SimpleStateSpace::GetState(string from) const {
     if (from.length() != 1) {
         cerr << "error in SingleLetterStateSpace\n";
         exit(1);

@@ -13,7 +13,7 @@ class MultiGeneSingleOmegaModel : public ProbModel	{
 
 	Tree* tree;
 	FileSequenceAlignment** data;
-	TaxonSet* taxonset;
+	const TaxonSet* taxonset;
 	CodonSequenceAlignment** codondata;
 
     int Ngene;

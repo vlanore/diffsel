@@ -20,25 +20,25 @@ class CodonStateSpace : public StateSpace {
     // generic methods
     // exist for any state space, and should have a consistent meaning throughout
 
-    int GetNstate() override { return Nstate; }
+    int GetNstate() const override { return Nstate; }
 
     // give a three letter code, returns codon (if stop exits with error message)
-    int GetState(std::string word) override;
+    int GetState(std::string word) const override;
 
     // give a codon (stops excluded), returns a three letter code
-    std::string GetState(int codon) override;
+    std::string GetState(int codon) const override;
 
     // -----
     // codon specific methods
 
-    DNAStateSpace *GetDNAStateSpace() { return nucstatespace; }
+    const DNAStateSpace *GetDNAStateSpace() const { return nucstatespace; }
 
-    ProteinStateSpace *GetProteinStateSpace() { return protstatespace; }
+    const ProteinStateSpace *GetProteinStateSpace() const { return protstatespace; }
 
     // returns a codon based on three letters
     // returns -1 (== unknown) if at least one of the positions is unknown
     // if stop exits with error message...
-    int GetCodonFromDNA(int pos1, int pos2, int pos3);
+    int GetCodonFromDNA(int pos1, int pos2, int pos3) const;
 
     /*
       string TranslateDNASequenceWithStops(string s);
@@ -52,11 +52,11 @@ class CodonStateSpace : public StateSpace {
     // otherwise, returns the position at which codons differ (i.e. returns 0,1 or
     // 2 if the codons
     // differ at position 1,2 or 3)
-    int GetDifferingPosition(int i, int j);
+    int GetDifferingPosition(int i, int j) const;
 
     // return the integer encoding for the base at requested position
     // stops excluded
-    int GetCodonPosition(int pos, int codon) {
+    int GetCodonPosition(int pos, int codon) const {
         if ((pos < 0) || (pos >= Npos)) {
             std::cerr << "GetCodonPosition: pos out of bound\n";
             std::cerr << pos << '\n';
@@ -73,21 +73,21 @@ class CodonStateSpace : public StateSpace {
         return CodonPos[pos][codon];
     }
 
-    int IsNonCTNearest(int a, int b);
+    int IsNonCTNearest(int a, int b) const;
 
     // translation stops excluded
-    int Translation(int codon) { return CodonCode[codon]; }
+    int Translation(int codon) const { return CodonCode[codon]; }
 
     // stops excluded
-    bool Synonymous(int codon1, int codon2) { return (CodonCode[codon1] == CodonCode[codon2]); }
+    bool Synonymous(int codon1, int codon2) const { return (CodonCode[codon1] == CodonCode[codon2]); }
 
     // returns -1 if stop codon
     // otherwise returns integer in [0,19] standing for an amino-acid (one letter
     // code, alphabetical
     // order)
-    int TranslationWithStops(int codon) { return CodonCodeWithStops[codon]; }
+    int TranslationWithStops(int codon) const { return CodonCodeWithStops[codon]; }
 
-    bool CheckStop(int pos1, int pos2, int pos3);
+    bool CheckStop(int pos1, int pos2, int pos3) const;
 
     /*
       cannot exist: indexing system excludes stop codons anyway...
@@ -100,22 +100,22 @@ class CodonStateSpace : public StateSpace {
       }
     */
 
-    int GetDegeneracy(int codon);
+    int GetDegeneracy(int codon) const;
 
-    int GetNstop() { return Nstop; }
+    int GetNstop() const { return Nstop; }
 
-    const int *GetStopPos1() { return StopPos1; }
+    const int *GetStopPos1() const { return StopPos1; }
 
-    const int *GetStopPos2() { return StopPos2; }
+    const int *GetStopPos2() const { return StopPos2; }
 
-    const int *GetStopPos3() { return StopPos3; }
+    const int *GetStopPos3() const { return StopPos3; }
 
   private:
-    void MakeDegeneracyMap();
+    void MakeDegeneracyMap() const;
 
     GeneticCodeType code;
-    DNAStateSpace *nucstatespace;
-    ProteinStateSpace *protstatespace;
+    const DNAStateSpace *nucstatespace;
+    const ProteinStateSpace *protstatespace;
     // number of codons, not including stops (61 in general)
     int Nstate;
 
@@ -132,7 +132,7 @@ class CodonStateSpace : public StateSpace {
     int *StopPos2;
     int *StopPos3;
 
-    std::map<int, int> degeneracy;
+    mutable std::map<int, int> degeneracy;
 };
 
 #endif

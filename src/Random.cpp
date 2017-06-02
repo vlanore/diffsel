@@ -29,8 +29,8 @@ const double Pi = 3.1415926535897932384626;
 class random_init {
   public:
     random_init() {
-        Random::InitRandom();
-        // Random::InitRandom(1001);
+        // Random::InitRandom();
+        Random::InitRandom(1001);
         std::cerr << "-- [Random] Seed : " << Random::GetSeed() << std::endl;
     }
 };

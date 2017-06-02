@@ -132,7 +132,7 @@ CodonStateSpace::~CodonStateSpace() {
     delete protstatespace;
 }
 
-string CodonStateSpace::GetState(int codon) {
+string CodonStateSpace::GetState(int codon) const {
     ostringstream s;
     if (codon == -1) {
         s << "---";
@@ -147,13 +147,13 @@ string CodonStateSpace::GetState(int codon) {
     return s.str();
 }
 
-int CodonStateSpace::GetState(string word) {
+int CodonStateSpace::GetState(string word) const {
     return GetCodonFromDNA(GetDNAStateSpace()->GetState(word.substr(0, 1)),
                            GetDNAStateSpace()->GetState(word.substr(1, 1)),
                            GetDNAStateSpace()->GetState(word.substr(2, 1)));
 }
 
-bool CodonStateSpace::CheckStop(int pos1, int pos2, int pos3) {
+bool CodonStateSpace::CheckStop(int pos1, int pos2, int pos3) const {
     if ((pos1 == unknown) || (pos2 == unknown) || (pos3 == unknown)) {
         return false;
     }
@@ -165,7 +165,7 @@ bool CodonStateSpace::CheckStop(int pos1, int pos2, int pos3) {
     return (l < Nstop);
 }
 
-int CodonStateSpace::GetCodonFromDNA(int pos1, int pos2, int pos3) {
+int CodonStateSpace::GetCodonFromDNA(int pos1, int pos2, int pos3) const {
     if ((pos1 == unknown) || (pos2 == unknown) || (pos3 == unknown)) {
         return unknown;
     }
@@ -197,7 +197,7 @@ int CodonStateSpace::GetCodonFromDNA(int pos1, int pos2, int pos3) {
     return l;
 }
 
-int CodonStateSpace::GetDifferingPosition(int i, int j) {
+int CodonStateSpace::GetDifferingPosition(int i, int j) const {
     // identical
     if ((GetCodonPosition(0, i) == GetCodonPosition(0, j)) &&
         (GetCodonPosition(1, i) == GetCodonPosition(1, j)) &&
@@ -228,7 +228,7 @@ int CodonStateSpace::GetDifferingPosition(int i, int j) {
     return 3;
 }
 
-int CodonStateSpace::GetDegeneracy(int codon) {
+int CodonStateSpace::GetDegeneracy(int codon) const {
     if (degeneracy.empty()) {
         MakeDegeneracyMap();
     }
@@ -238,7 +238,7 @@ int CodonStateSpace::GetDegeneracy(int codon) {
     return degeneracy[codon];
 }
 
-void CodonStateSpace::MakeDegeneracyMap() {
+void CodonStateSpace::MakeDegeneracyMap() const {
     for (int codon = 0; codon < Nstate; codon++) {
         cerr << codon << '\t' << GetState(codon) << '\t';
         int pos1 = GetCodonPosition(0, codon);
@@ -264,7 +264,7 @@ void CodonStateSpace::MakeDegeneracyMap() {
     cerr << "ok\n";
 }
 
-int CodonStateSpace::IsNonCTNearest(int a, int b) {
+int CodonStateSpace::IsNonCTNearest(int a, int b) const {
     int noct = 1;
     int nn = 0;
     for (int c1 = 0; c1 < GetNstate(); c1++) {

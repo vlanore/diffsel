@@ -138,7 +138,7 @@ class Link {
 class NewickTree {
   public:
     virtual ~NewickTree() = default;
-    virtual const Link *GetRoot() const = 0;
+    virtual Link *GetRoot() const = 0;
 
     void ToStream(std::ostream &os) const;
     void ToStream(std::ostream &os, const Link *from) const;
@@ -182,20 +182,20 @@ class NewickTree {
 
     static void Simplify() { simplify = true; }
 
-    void PrintTab(std::ostream &os) { RecursivePrintTab(os, GetRoot()); }
+    void PrintTab(std::ostream &os) const { RecursivePrintTab(os, GetRoot()); }
 
-    void RecursivePrintTab(std::ostream &os, const Link *from) {
+    void RecursivePrintTab(std::ostream &os, const Link *from) const {
         os << GetLeftMost(from) << '\t' << GetRightMost(from) << '\t' << GetNodeName(from) << '\n';
         for (const Link *link = from->Next(); link != from; link = link->Next()) {
             RecursivePrintTab(os, link->Out());
         }
     }
 
-    int GetNnode() { return RecursiveGetNnode(GetRoot()); }
+    int GetNnode() const { return RecursiveGetNnode(GetRoot()); }
 
-    int GetNinternalNode() { return RecursiveGetNinternalNode(GetRoot()); }
+    int GetNinternalNode() const { return RecursiveGetNinternalNode(GetRoot()); }
 
-    int RecursiveGetNinternalNode(const Link *from) {
+    int RecursiveGetNinternalNode(const Link *from) const {
         int n = 0;
         if (!from->isLeaf()) {
             n++;
@@ -206,7 +206,7 @@ class NewickTree {
         return n;
     }
 
-    int RecursiveGetNnode(const Link *from) {
+    int RecursiveGetNnode(const Link *from) const {
         int n = 1;
         for (const Link *link = from->Next(); link != from; link = link->Next()) {
             n += RecursiveGetNnode(link->Out());
@@ -247,8 +247,7 @@ class Tree : public NewickTree {
     // Delete the unary Node wich from is paart of and set everithing right.
     void DeleteUnaryNode(Link *from);
 
-    Link *GetRoot() const override { return root; }
-    // const Link* GetRoot() const {return root;}
+    Link* GetRoot() const {return root;}
     const TaxonSet *GetTaxonSet() const { return taxset; }
 
     void RootAt(Link *from);
@@ -296,7 +295,7 @@ class Tree : public NewickTree {
         return min;
     }
 
-    void ToStreamRenorm(const Link *from, std::ostream &os, double normfactor) {
+    void ToStreamRenorm(const Link *from, std::ostream &os, double normfactor) const {
         if (from->isLeaf()) {
             os << GetNodeName(from);
         } else {
@@ -379,14 +378,14 @@ class Tree : public NewickTree {
         return 0;
     }
 
-    virtual const Link *GetLCA(std::string tax1, std::string tax2) {
+    virtual const Link *GetLCA(std::string tax1, std::string tax2) const {
         bool found1 = false;
         bool found2 = false;
         const Link *link = RecursiveGetLCA(GetRoot(), tax1, tax2, found1, found2);
         return link;
     }
 
-    virtual const Link *GetLCA(const Link *from1, const Link *from2) {
+    virtual const Link *GetLCA(const Link *from1, const Link *from2) const {
         bool found1 = false;
         bool found2 = false;
         const Link *link = RecursiveGetLCA(GetRoot(), from1, from2, found1, found2);
@@ -395,7 +394,7 @@ class Tree : public NewickTree {
 
     void Subdivide(Link *from, int Ninterpol);
 
-    std::string Reduce(Link *from = nullptr) {
+    std::string Reduce(const Link *from = nullptr) {
         if (from == nullptr) {
             from = GetRoot();
         }
@@ -443,7 +442,7 @@ class Tree : public NewickTree {
         }
     }
 
-    const Link *ChooseInternalNode() {
+    const Link *ChooseInternalNode() const {
         int n = CountInternalNodes(GetRoot());
         int m = (int)(n * Random::Uniform());
         const Link *tmp;
@@ -455,10 +454,10 @@ class Tree : public NewickTree {
         return chosen;
     }
 
-    int CountInternalNodes(const Link *from);
-    const Link *ChooseInternalNode(const Link *from, const Link *&fromup, int &n);
-    int CountNodes(const Link *from);
-    const Link *ChooseNode(const Link *from, const Link *&fromup, int &n);
+    int CountInternalNodes(const Link *from) const;
+    const Link *ChooseInternalNode(const Link *from, const Link *&fromup, int &n) const ;
+    int CountNodes(const Link *from) const;
+    const Link *ChooseNode(const Link *from, const Link *&fromup, int &n) const;
 
 	// index links, nodes and branches through a recursive traversal of the tree
 	// nodes: tip nodes are assumed already numbered between 0 and Ntaxa-1 based on their correspondance with data
@@ -474,36 +473,36 @@ class Tree : public NewickTree {
 		SetIndices(GetRoot(),Nlink,Nnode,Nbranch);
 	}
 
-	int GetNlink()	{
+	int GetNlink() const {
 		return Nlink;
 	}
 
-	int GetNbranch()	{
+	int GetNbranch() const {
 		return Nbranch;
 	}
 
-	int GetNnode()	{
+	int GetNnode()	const {
 		return Nnode;
 	}
 
-	const Node* GetNode(int index)	{
+	const Node* GetNode(int index) const {
 		return nodemap[index];
 	}
-	const Branch* GetBranch(int index)	{
+	const Branch* GetBranch(int index) const  {
 		return branchmap[index];
 	}
 
-	Link* GetLink(int index)	{
+	Link* GetLink(int index) const {
 		return linkmap[index];
 	}
 
 	protected:
 
-	map<int,const Node*> nodemap;
-	map<int,const Branch*> branchmap;
-	map<int,Link*> linkmap;
+	mutable map<int,const Node*> nodemap;
+	mutable map<int,const Branch*> branchmap;
+	mutable map<int,Link*> linkmap;
 
-	void CheckIndices(Link* from)	{
+	void CheckIndices(Link* from) const {
 
 		if (! from->isRoot())	{
 			if (from->GetBranch() != branchmap[from->GetBranch()->GetIndex()])	{
@@ -538,7 +537,7 @@ class Tree : public NewickTree {
 		}
 	}
 
-	void SetIndices(Link* from, int& linkindex, int& nodeindex, int& branchindex)	{
+	void SetIndices(Link* from, int& linkindex, int& nodeindex, int& branchindex) {
 
 		if (! from->isRoot())	{
 			from->GetBranch()->SetIndex(branchindex);
@@ -573,7 +572,7 @@ class Tree : public NewickTree {
     // returns 0 if not found
     // returns link if found (then found1 and found2 must
     const Link *RecursiveGetLCA(const Link *from, std::string tax1, std::string tax2, bool &found1,
-                                bool &found2) {
+                                bool &found2)  const {
         const Link *ret = nullptr;
         if (from->isLeaf()) {
             // found1 |= (from->GetNode()->GetName() == tax1);
@@ -621,7 +620,7 @@ class Tree : public NewickTree {
     }
 
     const Link *RecursiveGetLCA(const Link *from, const Link *from1, const Link *from2,
-                                bool &found1, bool &found2) {
+                                bool &found1, bool &found2) const {
         const Link *ret = nullptr;
         found1 |= static_cast<int>(from == from1);
         found2 |= static_cast<int>(from == from2);
@@ -693,9 +692,9 @@ class Tree : public NewickTree {
     // just 2 pointers, to the root and to a list of taxa
     Link *root;
     const TaxonSet *taxset;
-	int Nlink;
-	int Nbranch;
-	int Nnode;
+	mutable int Nlink;
+	mutable int Nbranch;
+	mutable int Nnode;
 };
 
 #endif  // TREE_H
