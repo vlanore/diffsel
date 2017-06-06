@@ -34,27 +34,11 @@
 #include <cstdlib>
 #include <iostream>
 #include "Random.hpp"
-#include "SuffStat.hpp"
-
-class AbstractTransitionMatrix {
-  public:
-    virtual ~AbstractTransitionMatrix() = default;
-
-    virtual void BackwardPropagate(const double *down, double *up, double length) = 0;
-    virtual void ForwardPropagate(const double *up, double *down, double length) = 0;
-    virtual const double *GetStationary() = 0;
-    virtual double Stationary(int i) = 0;
-
-    virtual int GetNstate() = 0;
-    virtual void CorruptMatrix() = 0;
-    virtual double operator()(int, int) = 0;
-    virtual const double *GetRow(int i) = 0;
-
-    virtual bool check() { return true; }
-};
+#include "PathSuffStat.hpp"
 
 
-class SubMatrix : public virtual AbstractTransitionMatrix {
+class SubMatrix {
+
   protected:
     // these 2 pure virtual functions are the most essential component of the
     // SubMatrix class
@@ -64,13 +48,13 @@ class SubMatrix : public virtual AbstractTransitionMatrix {
     // matrix
     // corresponding to all possible rates of substitution AWAY from state
     //
-    virtual void ComputeArray(int state) = 0;
+    virtual void ComputeArray(int state) const = 0;
 
     // ComputeStationary() is in charge of computing the vector of stationary
     // probabilities
     // (equilibirum frequencies)
     // of the substitution process
-    virtual void ComputeStationary() = 0;
+    virtual void ComputeStationary() const = 0;
 
   public:
     static const int UniSubNmax = 500;
@@ -83,49 +67,49 @@ class SubMatrix : public virtual AbstractTransitionMatrix {
     static double GetMeanUni() { return ((double)nunimax) / nuni; }
 
     SubMatrix(int inNstate, bool innormalise = false);
-    ~SubMatrix() override;
+    virtual ~SubMatrix();
 
     void Create();
 
-    double operator()(int /*i*/, int /*j*/) override;
-    const double *GetRow(int i) override;
+    double operator()(int /*i*/, int /*j*/) const;
+    const double *GetRow(int i) const;
 
-    const double *GetStationary() override;
-    double Stationary(int i) override;
+    const double *GetStationary() const;
+    double Stationary(int i) const;
 
-    int GetNstate() override { return Nstate; }
+    int GetNstate() const { return Nstate; }
 
-    double GetRate();
+    double GetRate() const;
     void ScalarMul(double e);
 
-    bool isNormalised() { return normalise; }
-    void Normalise();
+    bool isNormalised() const { return normalise; }
+    void Normalise() const;
 
-    void CorruptMatrix() override;
-    void UpdateMatrix();
+    virtual void CorruptMatrix();
+    void UpdateMatrix() const;
 
-    void ActivatePowers();
-    void InactivatePowers();
-    double Power(int n, int i, int j);
-    double GetUniformizationMu();
+    void ActivatePowers() const;
+    void InactivatePowers() const;
+    double Power(int n, int i, int j) const;
+    double GetUniformizationMu() const;
 
-    double *GetEigenVal();
-    double **GetEigenVect();
-    double **GetInvEigenVect();
+    double *GetEigenVal() const;
+    double **GetEigenVect() const;
+    double **GetInvEigenVect() const;
 
-    virtual void ToStream(std::ostream &os);
-    void CheckReversibility();
+    virtual void ToStream(std::ostream &os) const;
+    void CheckReversibility() const;
 
-    int GetDiagStat() { return ndiagfailed; }
+    int GetDiagStat() const { return ndiagfailed; }
 
-    void BackwardPropagate(const double *up, double *down, double length) override;
-    void ForwardPropagate(const double *down, double *up, double length) override;
+    void BackwardPropagate(const double *up, double *down, double length) const;
+    void ForwardPropagate(const double *down, double *up, double length) const;
     // virtual void     FiniteTime(int i0, double* down, double length);
 
-    double **GetQ() { return Q; }
-    void ComputeExponential(double range, double **expo);
-    void ApproachExponential(double range, double **expo, int prec = 1024);
-    void PowerOf2(double **y, int z);
+    double **GetQ() const { return Q; }
+    void ComputeExponential(double range, double **expo) const;
+    void ApproachExponential(double range, double **expo, int prec = 1024) const;
+    void PowerOf2(double **y, int z) const;
 
     static double meanz;
     static double maxz;
@@ -133,54 +117,54 @@ class SubMatrix : public virtual AbstractTransitionMatrix {
 
 	// uniformization resampling methods
 	// CPU level 1
-	void GetFiniteTimeTransitionProb(int state, double* down, double efflength);
-	double 			GetFiniteTimeTransitionProb(int stateup, int statedown, double efflength);
-	int 			DrawUniformizedTransition(int state, int statedown, int n);
-	int 			DrawUniformizedSubstitutionNumber(int stateup, int statedown, double efflength);
+	void GetFiniteTimeTransitionProb(int state, double* down, double efflength) const;
+	double 			GetFiniteTimeTransitionProb(int stateup, int statedown, double efflength) const;
+	int 			DrawUniformizedTransition(int state, int statedown, int n) const;
+	int 			DrawUniformizedSubstitutionNumber(int stateup, int statedown, double efflength) const;
 	//
 
 	// used by accept-reject resampling method
 	// CPU level 1
-	int 			DrawOneStep(int state);
-	double			DrawWaitingTime(int state);
-	int 			DrawFromStationary();
+	int 			DrawOneStep(int state) const;
+	double			DrawWaitingTime(int state) const;
+	int 			DrawFromStationary() const;
 
-	double SuffStatLogProb(SuffStat* suffstat);
+	double SuffStatLogProb(PathSuffStat* suffstat);
 
   protected:
-    void UpdateRow(int state);
-    void UpdateStationary();
+    void UpdateRow(int state) const;
+    void UpdateStationary() const;
 
-    void ComputePowers(int N);
-    void CreatePowers(int n);
+    void ComputePowers(int N) const;
+    void CreatePowers(int n) const;
 
-    bool ArrayUpdated();
+    bool ArrayUpdated() const;
 
-    int Diagonalise();
+    int Diagonalise() const;
 
     // data members
 
-    bool powflag;
-    bool diagflag;
-    bool statflag;
-    bool *flagarray;
+    mutable bool powflag;
+    mutable bool diagflag;
+    mutable bool statflag;
+    mutable bool *flagarray;
 
     int Nstate;
-    int npow;
-    double UniMu;
+    mutable int npow;
+    mutable double UniMu;
 
     double ***mPow;
 
     // Q : the infinitesimal generator matrix
-    double **Q;
+    mutable double **Q;
 
     // the stationary probabilities of the matrix
-    double *mStationary;
+    mutable double *mStationary;
 
     bool normalise;
 
     // an auxiliary matrix
-    double **aux;
+    mutable double **aux;
 
   protected:
     // v : eigenvalues
@@ -188,40 +172,40 @@ class SubMatrix : public virtual AbstractTransitionMatrix {
     // u : the matrix of eigen vectors
     // invu : the inverse of u
 
-    double **u;
-    double **invu;
-    double *v;
-    double *vi;
+    mutable double **u;
+    mutable double **invu;
+    mutable double *v;
+    mutable double *vi;
 
-    int ndiagfailed;
+    mutable int ndiagfailed;
 };
 
 //-------------------------------------------------------------------------
 //	* Inline definitions
 //-------------------------------------------------------------------------
 
-inline double SubMatrix::operator()(int i, int j) {
+inline double SubMatrix::operator()(int i, int j) const {
     if (!flagarray[i]) {
         UpdateRow(i);
     }
     return Q[i][j];
 }
 
-inline const double *SubMatrix::GetRow(int i) {
+inline const double *SubMatrix::GetRow(int i) const {
     if (!flagarray[i]) {
         UpdateRow(i);
     }
     return Q[i];
 }
 
-inline const double *SubMatrix::GetStationary() {
+inline const double *SubMatrix::GetStationary() const {
     if (!statflag) {
         UpdateStationary();
     }
     return mStationary;
 }
 
-inline double SubMatrix::Stationary(int i) {
+inline double SubMatrix::Stationary(int i) const {
     if (!statflag) {
         UpdateStationary();
     }
@@ -237,7 +221,7 @@ inline void SubMatrix::CorruptMatrix() {
     InactivatePowers();
 }
 
-inline bool SubMatrix::ArrayUpdated() {
+inline bool SubMatrix::ArrayUpdated() const {
     bool qflag = true;
     for (int k = 0; k < Nstate; k++) {
         qflag &= static_cast<int>(flagarray[k]);
@@ -245,12 +229,12 @@ inline bool SubMatrix::ArrayUpdated() {
     return qflag;
 }
 
-inline void SubMatrix::UpdateStationary() {
+inline void SubMatrix::UpdateStationary() const {
     ComputeStationary();
     statflag = true;
 }
 
-inline void SubMatrix::UpdateRow(int state) {
+inline void SubMatrix::UpdateRow(int state) const {
     if (isNormalised()) {
         UpdateMatrix();
     } else {
@@ -262,7 +246,7 @@ inline void SubMatrix::UpdateRow(int state) {
     }
 }
 
-inline void SubMatrix::BackwardPropagate(const double *up, double *down, double length) {
+inline void SubMatrix::BackwardPropagate(const double *up, double *down, double length) const {
     double **eigenvect = GetEigenVect();
     double **inveigenvect = GetInvEigenVect();
     double *eigenval = GetEigenVal();
@@ -339,7 +323,7 @@ inline void SubMatrix::BackwardPropagate(const double *up, double *down, double 
     delete[] aux;
 }
 
-inline void SubMatrix::ForwardPropagate(const double *down, double *up, double length) {
+inline void SubMatrix::ForwardPropagate(const double *down, double *up, double length) const {
     double **eigenvect = GetEigenVect();
     double **inveigenvect = GetInvEigenVect();
     double *eigenval = GetEigenVal();
@@ -373,7 +357,7 @@ inline void SubMatrix::ForwardPropagate(const double *down, double *up, double l
     delete[] aux;
 }
 
-inline double SubMatrix::GetFiniteTimeTransitionProb(int stateup, int statedown, double efflength)	{
+inline double SubMatrix::GetFiniteTimeTransitionProb(int stateup, int statedown, double efflength)	const {
 	double** invp = GetInvEigenVect();
 	double** p = GetEigenVect();
 	double* l = GetEigenVal();
@@ -384,7 +368,7 @@ inline double SubMatrix::GetFiniteTimeTransitionProb(int stateup, int statedown,
 	return tot;
 }
 
-inline void SubMatrix::GetFiniteTimeTransitionProb(int state, double* p, double efflength)	{
+inline void SubMatrix::GetFiniteTimeTransitionProb(int state, double* p, double efflength)	const {
 
 	double* p1 = new double[GetNstate()];
 	for (int k=0; k<GetNstate(); k++)	{
@@ -405,7 +389,7 @@ inline void SubMatrix::GetFiniteTimeTransitionProb(int state, double* p, double 
 	delete[] p1;
 }
 
-inline int SubMatrix::DrawUniformizedTransition(int state, int statedown, int n)	{
+inline int SubMatrix::DrawUniformizedTransition(int state, int statedown, int n)	const {
 
 	double* p = new double[GetNstate()];
 	double tot = 0;
@@ -428,7 +412,7 @@ inline int SubMatrix::DrawUniformizedTransition(int state, int statedown, int n)
 }
 
 
-inline int SubMatrix::DrawUniformizedSubstitutionNumber(int stateup, int statedown, double efflength)	{
+inline int SubMatrix::DrawUniformizedSubstitutionNumber(int stateup, int statedown, double efflength)	const {
 
 	double mu = GetUniformizationMu();
 	double fact = exp(- efflength * mu);
@@ -459,14 +443,14 @@ inline int SubMatrix::DrawUniformizedSubstitutionNumber(int stateup, int statedo
 	return m;
 }
 
-inline double SubMatrix::DrawWaitingTime(int state)	{
+inline double SubMatrix::DrawWaitingTime(int state)	const {
 
 	const double* row = GetRow(state);
 	double t = Random::sExpo() / (-row[state]);
 	return t;
 }
 
-inline int SubMatrix::DrawOneStep(int state)	{
+inline int SubMatrix::DrawOneStep(int state)	const {
 
 	const double* row = GetRow(state);
 	double p = -row[state] * Random::Uniform();
@@ -490,7 +474,7 @@ inline int SubMatrix::DrawOneStep(int state)	{
 	return k;
 }
 
-inline int SubMatrix::DrawFromStationary()	{
+inline int SubMatrix::DrawFromStationary()	const {
 
 	double p = Random::Uniform();
 	int k = 0;

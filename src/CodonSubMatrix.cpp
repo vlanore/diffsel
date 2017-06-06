@@ -1,7 +1,7 @@
 #include "CodonSubMatrix.hpp"
 using namespace std;
 
-void MGCodonSubMatrix::ComputeArray(int i) {
+void MGCodonSubMatrix::ComputeArray(int i) const {
     double total = 0;
     for (int j = 0; j < GetNstate(); j++) {
         if (i != j) {
@@ -19,7 +19,7 @@ void MGCodonSubMatrix::ComputeArray(int i) {
     Q[i][i] = -total;
 }
 
-void MGCodonSubMatrix::ComputeStationary() {
+void MGCodonSubMatrix::ComputeStationary() const {
     // compute stationary probabilities
     double total = 0;
     for (int i = 0; i < GetNstate(); i++) {
@@ -35,6 +35,7 @@ void MGCodonSubMatrix::ComputeStationary() {
     }
 }
 
+/*
 void MGCodonSubMatrix::ComputeNucArrays() {
     cerr << "error: in mg codon sub matrix compute nuc array\n";
     exit(1);
@@ -55,8 +56,9 @@ void MGCodonSubMatrix::ComputeNucArrays() {
         stopstat += stat[stoppos1[i]] * stat[stoppos2[i]] * stat[stoppos3[i]];
     }
 }
+*/
 
-void MGOmegaCodonSubMatrix::ComputeArray(int i) {
+void MGOmegaCodonSubMatrix::ComputeArray(int i) const {
     double total = 0;
     for (int j = 0; j < GetNstate(); j++) {
         if (i != j) {
@@ -87,6 +89,7 @@ void MGOmegaCodonSubMatrix::ComputeArray(int i) {
     }
 }
 
+/*
 void MGOmegaCodonSubMatrix::ComputeNucArrays() {
     for (int i = 0; i < Nnuc; i++) {
         for (int j = 0; j < Nnuc; j++) {
@@ -105,7 +108,9 @@ void MGOmegaCodonSubMatrix::ComputeNucArrays() {
         stopstat += stat[stoppos1[i]] * stat[stoppos2[i]] * stat[stoppos3[i]];
     }
 }
+*/
 
+/*
 void AminoAcidReducedCodonSubMatrix::ComputeStationary() {
     // Stat[a] = \sum_{i|a} CodonStat[i]
 
@@ -150,3 +155,4 @@ void AminoAcidReducedCodonSubMatrix::ComputeArray(int a) {
     }
     Q[a][a] = -total;
 }
+*/

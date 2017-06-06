@@ -3,6 +3,8 @@
 
 #define MT_LEN 624  // (VL) required for magic
 
+static const double Pi = 3.1415926535897932384626;
+
 class Random {
   public:
     static const double INFPROB;

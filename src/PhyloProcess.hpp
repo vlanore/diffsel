@@ -62,7 +62,7 @@ class PhyloProcess	{
     double SiteLogLikelihood(int site);
     double FastSiteLogLikelihood(int site);
 
-    const StateSpace* GetStateSpace() const { return data->GetStateSpace(); }
+    const StateSpace* GetStateSpace() { return data->GetStateSpace(); }
     const TaxonSet* GetTaxonSet() { return data->GetTaxonSet(); }
 
     int GetNsite() { return data->GetNsite(); }
@@ -102,8 +102,8 @@ class PhyloProcess	{
     void ResampleSub();  // clamped Nielsen
     void ResampleSub(int site);
 
-    void AddSuffStat(int site, const Link* link, SuffStat& suffstat);
-    void AddRootSuffStat(int site, SuffStat& suffstat);
+    void AddSuffStat(int site, const Link* link, PathSuffStat& suffstat);
+    void AddRootSuffStat(int site, PathSuffStat& suffstat);
     void AddLengthSuffStat(int site, const Link* link, int& count, double& beta);
 
     void PostPredSample(bool rootprior = false);  // unclamped Nielsen

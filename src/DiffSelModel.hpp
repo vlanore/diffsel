@@ -15,7 +15,6 @@ class DiffSelModel : public ProbModel {
 	// model selectors
 	// ----- 
 
-	int conjugate;
 	int fixglob;
 	int fixvar;
 	int codonmodel;
@@ -100,7 +99,7 @@ class DiffSelModel : public ProbModel {
 
 	// suff stats, for each site and under each condition
 	// Ncond * Nsite
-	SuffStat** suffstatarray;
+	PathSuffStat** suffstatarray;
 
 	// storing cond/site suff stat log probs
 	double** sitecondsuffstatlogprob;
@@ -116,11 +115,13 @@ class DiffSelModel : public ProbModel {
 	public:
 
 	DiffSelModel(std::string datafile, std::string treefile, int inNcond,
-					      int inNlevel, int infixglob, int infixvar,
-					      int inconjugate, int incodonmodel,
-					      bool sample) {
-		conjugate = inconjugate;
+					      int inNlevel, int infixglob, int infixvar, int incodonmodel, bool sample) {
+
 		fixglob = infixglob;
+        if (! fixglob)  {
+            cerr << "error: free hyperparameters for baseline (global profile) not yet implemented\n";
+            exit(1);
+        }
 		fixvar = infixvar;
 		codonmodel = incodonmodel;
 		Ncond = inNcond;
@@ -323,9 +324,9 @@ class DiffSelModel : public ProbModel {
 		phyloprocess = new PhyloProcess(tree,codondata,branchlength,0,phylosubmatrix,0,rootsubmatrix);
 
 		// create suffstat arrays
-		suffstatarray = new SuffStat*[Ncond];
+		suffstatarray = new PathSuffStat*[Ncond];
 		for (int k=0; k<Ncond; k++)	{
-			suffstatarray[k] = new SuffStat[Nsite];
+			suffstatarray[k] = new PathSuffStat[Nsite];
 		}
 
 		// -----
@@ -508,6 +509,25 @@ class DiffSelModel : public ProbModel {
 		}
 	}
 
+    void CheckSite(int i)   {
+		UpdateSiteFitnessProfiles(i);
+		CorruptSiteCodonMatrices(i);
+		for (int k=0; k<Ncond; k++)	{
+			if (fabs(sitecondsuffstatlogprob[k][i] - SiteCondSuffStatLogProb(i,k)) > 1e-8)  {
+                cerr << "error for site " << i << '\n';
+                cerr << sitecondsuffstatlogprob[k][i] << SiteCondSuffStatLogProb(i,k) << '\n';
+                exit(1);
+            }
+		}
+	}
+
+    void CheckAll() {
+		CorruptNucMatrix();
+        for (int i=0; i<Nsite; i++) {
+            CheckSite(i);
+        }
+    }
+
 	void BackupSite(int i)	{
 
 		for (int k=0; k<Ncond; k++)	{
@@ -567,7 +587,7 @@ class DiffSelModel : public ProbModel {
 	double GlobalProfileLogProb()	{
 
 		// uniform dirichlet: log prob is constant
-		return 0;
+        return Nsite * Random::logGamma((double) Naa);
 		/*
 		double total = 0;
 		for (int i=0; i<Nsite; i++)	{
@@ -597,7 +617,7 @@ class DiffSelModel : public ProbModel {
 		for (int i=0; i<Nsite; i++)	{
 			total += SiteCondProfileLogProb(i,k);
 		}
-		total -= 0.5 * Nsite * log(varsel[k]);
+		total -= 0.5 * Nsite * log(2 * Pi * varsel[k]);
 		return total;
 	}
 
@@ -611,7 +631,6 @@ class DiffSelModel : public ProbModel {
 			sum2 += delta[k][i][a] * delta[k][i][a];
 		}
 		return - 0.5 * sum2 / varsel[k];
-		//  - 0.5 * log(varsel[k]);
 	}
 
 	double VarSelLogProb()	{
@@ -631,13 +650,13 @@ class DiffSelModel : public ProbModel {
 
 	double LambdaLogProb()	{
 
-		return -lambda/10;
+		return -log(10.0) - lambda/10;
 	}
 
 	double LengthLogProb()	{
 
 		// iid exp of rate lambda: total length is suff stat
-		return -lambda*GetTotalLength();
+		return Nbranch*log(lambda)-lambda*GetTotalLength();
 	}
 
 	// ---------------
@@ -670,7 +689,7 @@ class DiffSelModel : public ProbModel {
 		}
 		else	{
 			for (int i=0; i<Nsite; i++)	{
-				phyloprocess->AddSuffStat(i,from->Out(),suffstatarray[branchalloc[from->GetBranch()->GetIndex()]][i]);
+				phyloprocess->AddSuffStat(i,from,suffstatarray[branchalloc[from->GetBranch()->GetIndex()]][i]);
 			}
 		}
 		for (const Link* link=from->Next(); link!=from; link=link->Next())	{
@@ -697,7 +716,7 @@ class DiffSelModel : public ProbModel {
 
 		if (! from->isRoot())	{
 			for (int i=0; i<Nsite; i++)	{
-				phyloprocess->AddLengthSuffStat(i,from->Out(),branchlengthcount[from->GetBranch()->GetIndex()],branchlengthbeta[from->GetBranch()->GetIndex()]);
+				phyloprocess->AddLengthSuffStat(i,from,branchlengthcount[from->GetBranch()->GetIndex()],branchlengthbeta[from->GetBranch()->GetIndex()]);
 			}
 		}
 		for (const Link* link=from->Next(); link!=from; link=link->Next())	{
@@ -725,6 +744,7 @@ class DiffSelModel : public ProbModel {
 		for (int rep=0; rep<nrep; rep++)	{
 
 			CollectLengthSuffStat();
+
 			MoveBranchLength();
 			MoveLambda(1.0,10);
 			MoveLambda(0.3,10);
@@ -741,8 +761,10 @@ class DiffSelModel : public ProbModel {
 				MoveDelta(k,5,1,10);
 			}
 
-			MoveVarSel(1.0,10);
-			MoveVarSel(0.3,10);
+            if (! fixvar)   {
+                MoveVarSel(1.0,10);
+                MoveVarSel(0.3,10);
+            }
 
 			MoveRR(0.1,1,3);
 			MoveRR(0.03,3,3);
@@ -765,6 +787,8 @@ class DiffSelModel : public ProbModel {
 		double* bk = new double[Naa];
 		for (int rep=0; rep<nrep; rep++)	{
 			for (int i=0; i<Nsite; i++)	{
+
+                // CheckSite(i);
 
 				for (int a=0; a<Naa; a++)	{
 					bk[a] = baseline[i][a];
@@ -790,6 +814,7 @@ class DiffSelModel : public ProbModel {
 					RestoreSite(i);
 				}
 				ntot++;
+                // CheckSite(i);
 			}
 		}
 		return nacc / ntot;
@@ -803,6 +828,8 @@ class DiffSelModel : public ProbModel {
 		for (int rep=0; rep<nrep; rep++)	{
 			for (int i=0; i<Nsite; i++)	{
 
+                // CheckSite(i);
+
 				for (int a=0; a<Naa; a++)	{
 					bk[a] = delta[k][i][a];
 				}
@@ -812,7 +839,8 @@ class DiffSelModel : public ProbModel {
 				double loghastings = Random::RealVectorProposeMove(delta[k][i],Naa,tuning,n);
 				deltalogprob += loghastings;
 
-				UpdateSiteFlagged(i,k);
+				UpdateSite(i);
+				// UpdateSiteFlagged(i,k);
 
 				deltalogprob += SiteCondProfileLogProb(i,k) + GetSiteSuffStatLogProb(i);
 
@@ -827,6 +855,7 @@ class DiffSelModel : public ProbModel {
 					RestoreSite(i);
 				}
 				ntot++;
+                // CheckSite(i);
 			}
 		}
 		return nacc / ntot;
@@ -837,6 +866,9 @@ class DiffSelModel : public ProbModel {
 		double ntot = 0;
 		double bk[Nrr];
 		for (int rep=0; rep<nrep; rep++)	{
+
+            // CheckAll();
+
 			for (int l=0; l<Nrr; l++)	{
 				bk[l] = nucrelrate[l];
 			}
@@ -861,6 +893,7 @@ class DiffSelModel : public ProbModel {
 				RestoreAll();
 			}
 			ntot++;
+            // CheckAll();
 		}
 		return nacc/ntot;
 	}
@@ -870,6 +903,7 @@ class DiffSelModel : public ProbModel {
 		double ntot = 0;
 		double bk[Nnuc];
 		for (int rep=0; rep<nrep; rep++)	{
+            // CheckAll();
 			for (int l=0; l<Nnuc; l++)	{
 				bk[l] = nucstat[l];
 			}
@@ -895,6 +929,7 @@ class DiffSelModel : public ProbModel {
 				RestoreAll();
 			}
 			ntot++;
+            // CheckAll();
 		}
 		return nacc/ntot;
 	}
@@ -1002,21 +1037,31 @@ class DiffSelModel : public ProbModel {
 	}
 
 	double GetLogPrior() {
+
 		double total = 0;
+
+        // branchlengths
 		total += LambdaLogProb();
 		total += LengthLogProb();
+
+        // uniform on relrates and nucstat
+        total += Random::logGamma((double) Nnuc);
+        total += Random::logGamma((double) Nrr);
+
+        // uniform on baseline
 		total += GlobalProfileLogProb();
+
+        // variance parameters
 		total += VarSelLogProb();
+
+        // differential selection effects
 		total += ProfileLogProb();
+
 		return total;
 	}
 
 	double GetLogLikelihood()	{
 		return phyloprocess->GetLogProb();
-		/*
-		UpdateFitnessProfiles();
-		return SuffStatLogProb();
-		*/
 	}
 
 	void TraceHeader(std::ostream& os)  {
@@ -1043,8 +1088,66 @@ class DiffSelModel : public ProbModel {
 
 	void Monitor(ostream& os) {}
 
-	void FromStream(istream& is) {}
-	void ToStream(ostream& os) {}
+	void FromStream(istream& is) {
+        is >> lambda;
+        for (int i=0; i<Nbranch; i++)   {
+            is >> branchlength[i];
+        }
+        for (int i=0; i<Nrr; i++)   {
+            is >> nucrelrate[i];
+        }
+        for (int i=0; i<Nnuc; i++)  {
+            is >> nucstat[i];
+        }
+        for (int i=0; i<Nsite; i++) {
+            for (int a=0; a<Naa; a++)   {
+                is >> baseline[i][a];
+            }
+        }
+        for (int k=1; k<Ncond; k++) {
+            is >> varsel[k];
+        }
+        for (int k=1; k<Ncond; k++) {
+            for (int i=0; i<Nsite; i++) {
+                for (int a=0; a<Naa; a++)   {
+                    is >> delta[k][i][a];
+                }
+            }
+        }
+    }
+
+	void ToStream(ostream& os) {
+        os << lambda << '\n';
+        for (int i=0; i<Nbranch; i++)   {
+            os << branchlength[i] << '\t';
+        }
+        os << '\n';
+        for (int i=0; i<Nrr; i++)   {
+            os << nucrelrate[i] << '\t';
+        }
+        os << '\n';
+        for (int i=0; i<Nnuc; i++)  {
+            os << nucstat[i] << '\t';
+        }
+        os << '\n';
+        for (int i=0; i<Nsite; i++) {
+            for (int a=0; a<Naa; a++)   {
+                os << baseline[i][a] << '\t';
+            }
+            os << '\n';
+        }
+        for (int k=1; k<Ncond; k++) {
+            os << varsel[k] << '\n';
+        }
+        for (int k=1; k<Ncond; k++) {
+            for (int i=0; i<Nsite; i++) {
+                for (int a=0; a<Naa; a++)   {
+                    os << delta[k][i][a] << '\t';
+                }
+                os << '\n';
+            }
+        }
+    }
 
 };
 

@@ -37,7 +37,7 @@ class SingleOmegaModel : public ProbModel	{
 
 	PhyloProcess* phyloprocess;
 
-	SuffStat suffstat;
+	PathSuffStat suffstat;
 	double suffstatlogprob;
 	double bksuffstatlogprob;
 

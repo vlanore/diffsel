@@ -3,8 +3,8 @@
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
-// #include "linalg2.hpp"
 #include "linalg.hpp"
+// #include "linalg2.hpp"
 using namespace std;
 
 int SubMatrix::nuni = 0;
@@ -115,7 +115,7 @@ void SubMatrix::ScalarMul(double e) {
 //     Diagonalise()
 // ---------------------------------------------------------------------------
 
-int SubMatrix::Diagonalise() {
+int SubMatrix::Diagonalise() const {
     if (!ArrayUpdated()) {
         UpdateMatrix();
     }
@@ -136,7 +136,7 @@ int SubMatrix::Diagonalise() {
 }
 
 /*
-int SubMatrix::Diagonalise() {
+int SubMatrix::Diagonalise() const {
     if (!ArrayUpdated()) {
         UpdateMatrix();
     }
@@ -152,7 +152,10 @@ int SubMatrix::Diagonalise() {
 	int* iw = new int[Nstate];
 
 	// diagonalise a into v and u
+    cerr << "diag\n";
 	int success = EigenRealGeneral(Nstate, aux, v, vi, u, iw, w);
+    cerr << "diag ok\n";
+    cerr << success << '\n';
 
 	// copy u into aux
 	for (int i=0; i<Nstate; i++)	{
@@ -176,7 +179,7 @@ int SubMatrix::Diagonalise() {
 //     ComputeRate()
 // ---------------------------------------------------------------------------
 
-double SubMatrix::GetRate() {
+double SubMatrix::GetRate() const {
     if (!ArrayUpdated()) {
         UpdateStationary();
         for (int k = 0; k < Nstate; k++) {
@@ -195,21 +198,21 @@ double SubMatrix::GetRate() {
     return 2 * norm;
 }
 
-double *SubMatrix::GetEigenVal() {
+double *SubMatrix::GetEigenVal() const {
     if (!diagflag) {
         Diagonalise();
     }
     return v;
 }
 
-double **SubMatrix::GetEigenVect() {
+double **SubMatrix::GetEigenVect() const {
     if (!diagflag) {
         Diagonalise();
     }
     return u;
 }
 
-double **SubMatrix::GetInvEigenVect() {
+double **SubMatrix::GetInvEigenVect() const {
     if (!diagflag) {
         Diagonalise();
     }
@@ -220,7 +223,7 @@ double **SubMatrix::GetInvEigenVect() {
 //     Update()
 // ---------------------------------------------------------------------------
 
-void SubMatrix::UpdateMatrix() {
+void SubMatrix::UpdateMatrix() const {
     UpdateStationary();
     for (int k = 0; k < Nstate; k++) {
         ComputeArray(k);
@@ -238,7 +241,7 @@ void SubMatrix::UpdateMatrix() {
 //     Normalise()
 // ---------------------------------------------------------------------------
 
-void SubMatrix::Normalise() {
+void SubMatrix::Normalise() const {
     double norm = GetRate();
     for (int i = 0; i < Nstate; i++) {
         for (int j = 0; j < Nstate; j++) {
@@ -253,7 +256,7 @@ void SubMatrix::Normalise() {
 // ---------------------------------------------------------------------------
 // ---------------------------------------------------------------------------
 
-void SubMatrix::ActivatePowers() {
+void SubMatrix::ActivatePowers() const {
     if (!powflag) {
         if (!ArrayUpdated()) {
             UpdateMatrix();
@@ -291,7 +294,7 @@ void SubMatrix::ActivatePowers() {
     }
 }
 
-void SubMatrix::InactivatePowers() {
+void SubMatrix::InactivatePowers() const {
     if (powflag) {
         for (int n = 0; n < UniSubNmax; n++) {
             if (mPow[n] != nullptr) {
@@ -310,7 +313,7 @@ void SubMatrix::InactivatePowers() {
     }
 }
 
-void SubMatrix::CreatePowers(int n) {
+void SubMatrix::CreatePowers(int n) const {
     if (mPow[n] == nullptr) {
         mPow[n] = new double *[Nstate];
         for (int i = 0; i < Nstate; i++) {
@@ -319,14 +322,14 @@ void SubMatrix::CreatePowers(int n) {
     }
 }
 
-double SubMatrix::GetUniformizationMu() {
+double SubMatrix::GetUniformizationMu() const {
     if (!powflag) {
         ActivatePowers();
     }
     return UniMu;
 }
 
-double SubMatrix::Power(int n, int i, int j) {
+double SubMatrix::Power(int n, int i, int j) const {
     if (!powflag) {
         ActivatePowers();
     }
@@ -342,7 +345,7 @@ double SubMatrix::Power(int n, int i, int j) {
     return mPow[n - 1][i][j];
 }
 
-void SubMatrix::ComputePowers(int N) {
+void SubMatrix::ComputePowers(int N) const {
     if (!powflag) {
         ActivatePowers();
     }
@@ -363,7 +366,7 @@ void SubMatrix::ComputePowers(int N) {
     }
 }
 
-void SubMatrix::ToStream(ostream &os) {
+void SubMatrix::ToStream(ostream &os) const {
     os << GetNstate() << '\n';
     os << "stationaries: \n";
     for (int i = 0; i < GetNstate(); i++) {
@@ -386,7 +389,7 @@ void SubMatrix::ToStream(ostream &os) {
     os << '\n';
 }
 
-void SubMatrix::CheckReversibility() {
+void SubMatrix::CheckReversibility() const {
     double max = 0;
     int imax = 0;
     int jmax = 0;
@@ -408,7 +411,7 @@ void SubMatrix::CheckReversibility() {
     }
 }
 
-void SubMatrix::ComputeExponential(double range, double **expo) {
+void SubMatrix::ComputeExponential(double range, double **expo) const {
     Diagonalise();
 
     for (int i = 0; i < Nstate; i++) {
@@ -439,7 +442,7 @@ void SubMatrix::ComputeExponential(double range, double **expo) {
     }
 }
 
-void SubMatrix::ApproachExponential(double range, double **expo, int /*unused*/) {
+void SubMatrix::ApproachExponential(double range, double **expo, int /*unused*/) const {
     for (int i = 0; i < Nstate; i++) {
         if (!flagarray[i]) {
             UpdateRow(i);
@@ -531,7 +534,7 @@ void SubMatrix::ApproachExponential(double range, double **expo, int /*unused*/)
     }
 }
 
-void SubMatrix::PowerOf2(double **y, int z) {
+void SubMatrix::PowerOf2(double **y, int z) const {
     if (z == 1) {
         return;
     }
@@ -551,7 +554,7 @@ void SubMatrix::PowerOf2(double **y, int z) {
     PowerOf2(y, z / 2);
 }
 
-double SubMatrix::SuffStatLogProb(SuffStat* suffstat)	{
+double SubMatrix::SuffStatLogProb(PathSuffStat* suffstat)	{
 
 	double total = 0;
 	const double* stat = GetStationary();
@@ -566,4 +569,3 @@ double SubMatrix::SuffStatLogProb(SuffStat* suffstat)	{
 	}
 	return total;
 }
-

@@ -247,7 +247,7 @@ class Tree : public NewickTree {
     // Delete the unary Node wich from is paart of and set everithing right.
     void DeleteUnaryNode(Link *from);
 
-    Link* GetRoot() const {return root;}
+    Link *GetRoot() const override { return root; }
     const TaxonSet *GetTaxonSet() const { return taxset; }
 
     void RootAt(Link *from);
