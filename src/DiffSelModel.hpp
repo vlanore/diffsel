@@ -617,7 +617,7 @@ class DiffSelModel : public ProbModel {
 		for (int i=0; i<Nsite; i++)	{
 			total += SiteCondProfileLogProb(i,k);
 		}
-		total -= 0.5 * Nsite * log(2 * Pi * varsel[k]);
+		total -= 0.5 * Nsite * Naa * log(2 * Pi * varsel[k]);
 		return total;
 	}
 
