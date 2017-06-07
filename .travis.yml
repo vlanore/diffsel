@@ -1,0 +1,27 @@
+language: cpp
+
+dist: trusty
+sudo: false
+
+matrix:
+  include:
+    - addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-5
+      env: COMPILER=g++-5
+    - addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.6
+          packages:
+            - clang-3.6
+      env: COMPILER=clang++-3.6
+
+script:
+  - export CXX=$COMPILER
+  - $CXX -v
+  - cd src ; make
