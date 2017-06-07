@@ -995,7 +995,12 @@ class DiffSelModel : public ProbModel {
 		return nacc/ntot;
 	}
 
+	// accessors and
 	// summary statistics
+
+	int GetNsite() {return Nsite;}
+	int GetNcond() {return Ncond;}
+	double* GetDelta(int k, int i) {return delta[k][i];}
 
 	double GetEntropy(double* profile, int dim)	{
 		double tot = 0;

@@ -21,14 +21,14 @@ CPPFLAGS= -std=c++11 -g -Wall -O3 $(USE_GSL) $(INCLUDES)
 LDFLAGS=$(STATIC)
 INSTALL_DIR=
 INSTALL_LIB=
-SRCS= BranchSitePath.cpp Chrono.cpp CodonSequenceAlignment.cpp CodonStateSpace.cpp CodonSubMatrix.cpp GTRSubMatrix.cpp MSCodonSubMatrix.cpp PhyloProcess.cpp Random.cpp SequenceAlignment.cpp StateSpace.cpp SubMatrix.cpp TaxonSet.cpp Tree.cpp linalg.cpp linalg2.cpp Chain.cpp
+SRCS= BranchSitePath.cpp Chrono.cpp CodonSequenceAlignment.cpp CodonStateSpace.cpp CodonSubMatrix.cpp GTRSubMatrix.cpp MSCodonSubMatrix.cpp PhyloProcess.cpp Random.cpp SequenceAlignment.cpp StateSpace.cpp SubMatrix.cpp TaxonSet.cpp Tree.cpp linalg.cpp linalg2.cpp Chain.cpp Sample.cpp
 
 OBJS=$(patsubst %.cpp,%.o,$(SRCS))
 ALL_SRCS=$(wildcard *.cpp)
 ALL_OBJS=$(patsubst %.cpp,%.o,$(ALL_SRCS))
 
 PROGSDIR=..
-ALL= flatdiffsel flatglobom flatgeneglobom
+ALL= flatdiffsel readflatdiffsel flatglobom flatgeneglobom
 PROGS=$(addprefix $(PROGSDIR)/, $(ALL))
 
 # If we are on a windows platform, executables are .exe files
@@ -73,6 +73,10 @@ $(PROGSDIR)/flatgeneglobom$(EXEEXT): MultiGeneSingleOmega.o $(OBJS)
 flatdiffsel$(EXEEXT): $(PROGSDIR)/flatdiffsel$(EXEEXT)
 $(PROGSDIR)/flatdiffsel$(EXEEXT): DiffSel.o $(OBJS)
 	$(CC) DiffSel.o $(OBJS) $(LDFLAGS) $(LIBS) -o $@
+
+readflatdiffsel$(EXEEXT): $(PROGSDIR)/readflatdiffsel$(EXEEXT)
+$(PROGSDIR)/readflatdiffsel$(EXEEXT): ReadDiffSel.o $(OBJS)
+	$(CC) ReadDiffSel.o $(OBJS) $(LDFLAGS) $(LIBS) -o $@
 
 clean:
 	-rm -f *.o *.d *.d.*
