@@ -119,6 +119,7 @@ class DiffSelSample : public Sample	{
 				}
 			}
 		}
+		cerr << '\n';
 
 		for (int k=1; k<K; k++)	{
 

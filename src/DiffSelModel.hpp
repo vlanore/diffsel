@@ -145,15 +145,15 @@ class DiffSelModel : public ProbModel {
 		// unfold phyloprocess (allocate conditional likelihood vectors, etc)
 		std::cerr << "-- unfolding\n";
 		phyloprocess->Unfold();
-		cerr << phyloprocess->GetLogProb() << '\n';
 
-		// stochastic mapping of substitution histories
-		std::cerr << "-- mapping substitutions\n";
-		phyloprocess->ResampleSub();
+		if (sample)	{
+			// stochastic mapping of substitution histories
+			std::cerr << "-- mapping substitutions\n";
+			phyloprocess->ResampleSub();
 
-		std::cerr << "-- collect suffstat\n";
-		CollectSuffStat();
-		Trace(cerr);
+			std::cerr << "-- collect suffstat\n";
+			CollectSuffStat();
+		}
 	}
 
 	void ReadFiles(string datafile, string treefile)	{
@@ -476,6 +476,13 @@ class DiffSelModel : public ProbModel {
 				condsubmatrixarray[k][i]->CorruptMatrix();
 			}
 		}
+	}
+
+	void Update() override {
+		cerr << "in diffsel update\n";
+		UpdateFitnessProfiles();
+		CorruptNucMatrix();
+		CorruptCodonMatrices();
 	}
 
 	void UpdateAll()	{

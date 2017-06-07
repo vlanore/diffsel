@@ -47,6 +47,7 @@ class DiffSelChain: public Chain {
         cerr << "-- Reset" << endl;
         Reset(force);
         cerr << "-- New ok\n";
+	model->Trace(cerr);
     }
 
     void Open() override {
@@ -68,7 +69,7 @@ class DiffSelChain: public Chain {
 
         if (modeltype == "DIFFSEL") {
             model = new DiffSelModel(
-                datafile, treefile, category, level, fixglob, fixvar, codonmodel, true);
+                datafile, treefile, category, level, fixglob, fixvar, codonmodel, false);
         } else {
             cerr << "-- Error when opening file " << name
                  << " : does not recognise model type : " << modeltype << '\n';
@@ -77,7 +78,8 @@ class DiffSelChain: public Chain {
         model->FromStream(is);
 
         model->Update();
-        cerr << size << "-- Points saved, current ln prob = " << GetModel()->GetLogProb() << "\n";
+        cerr << size << "-- Points saved\n";
+	model->Trace(cerr);
     }
 
     void Save() override {
@@ -112,6 +114,10 @@ int main(int argc, char* argv[]) {
     if (argc == 2 && argv[1][0] != '-') {
         string name = argv[1];
         cerr << "-- Trying to reopen existing chain named " << name << " on disk\n";
+        DiffSelChain* chain = new DiffSelChain(name);
+        cerr << "start\n";
+        chain->Start();
+        cerr << "chain stopped\n";
     }
 
     // this is a new chain

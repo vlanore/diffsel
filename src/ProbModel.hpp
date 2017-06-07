@@ -29,7 +29,6 @@ class ProbModel {
     /// nodes to the tips
 
     // returns the log of the probability (or probability density) mentioned above
-    double GetLogProb() {return 0;}
 
     virtual void MakeScheduler() {}
 
