@@ -1,18 +1,24 @@
 language: cpp
 
-dist: trusty
 sudo: false
 
 matrix:
   include:
-    - addons:
+    - os: osx
+      compiler: clang
+      env: COMPILER=clang++
+    - os: linux
+      dist: trusty
+      addons:
         apt:
           sources:
             - ubuntu-toolchain-r-test
           packages:
             - g++-5
       env: COMPILER=g++-5
-    - addons:
+    - os: linux
+      dist: trusty
+      addons:
         apt:
           sources:
             - ubuntu-toolchain-r-test
