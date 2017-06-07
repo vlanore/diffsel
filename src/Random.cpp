@@ -28,8 +28,8 @@ const double gammacoefs[] = {0.9999999999995183,  676.5203681218835,      -1259.
 class random_init {
   public:
     random_init() {
-        // Random::InitRandom();
-        Random::InitRandom(1001);
+        Random::InitRandom();
+        // Random::InitRandom(1001);
         std::cerr << "-- [Random] Seed : " << Random::GetSeed() << std::endl;
     }
 };
