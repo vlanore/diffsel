@@ -112,7 +112,7 @@ void MGMSFitnessCodonUsageSubMatrix::ComputeArray(int i) const {
                     // else	{
                     Q[i][j] *= deltaS / (1.0 - exp(-deltaS));
                 }
-                if (isinf(Q[i][j])) {
+                if (std::isinf(Q[i][j])) {
                     cerr << "Q matrix infinite: " << Q[i][j] << '\n';
                     cerr << deltaS << '\t' << GetFitness(GetCodonStateSpace()->Translation(i))
                          << '\t' << GetFitness(GetCodonStateSpace()->Translation(j)) << '\n';
@@ -129,7 +129,7 @@ void MGMSFitnessCodonUsageSubMatrix::ComputeArray(int i) const {
             }
             total += Q[i][j];
 
-            if (isinf(Q[i][j])) {
+            if (std::isinf(Q[i][j])) {
                 cerr << "Q matrix infinite: " << Q[i][j] << '\n';
                 exit(1);
             }
