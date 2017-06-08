@@ -9,3 +9,5 @@ cscope*
 *.run
 *.chain
 *.gcno
+*.gcov
+*.gcda

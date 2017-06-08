@@ -1,4 +1,4 @@
-CPPFLAGS= -std=c++11 -g -Wall -Wextra -Werror -O3 $(DIFFSEL_FLAGS)
+CPPFLAGS= -std=c++11 -g -Wall -Wextra -O3 $(DIFFSEL_FLAGS)
 LDFLAGS = $(DIFFSEL_FLAGS)
 
 SRCS= BranchSitePath.cpp Chrono.cpp CodonSequenceAlignment.cpp CodonStateSpace.cpp CodonSubMatrix.cpp GTRSubMatrix.cpp MSCodonSubMatrix.cpp PhyloProcess.cpp Random.cpp SequenceAlignment.cpp StateSpace.cpp SubMatrix.cpp TaxonSet.cpp Tree.cpp linalg.cpp linalg2.cpp Chain.cpp Sample.cpp
