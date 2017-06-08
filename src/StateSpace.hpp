@@ -25,6 +25,8 @@ class StateSpace {
 //
 class SimpleStateSpace : public StateSpace {
   public:
+
+      virtual ~SimpleStateSpace() {}
     int GetState(std::string from) const override;
 
     int GetNstate() const override { return Nstate; }
