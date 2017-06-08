@@ -1,5 +1,5 @@
-CPPFLAGS= -std=c++11 -g -Wall -Wextra -Werror -O3 $(DIFFSEL_FLAGS)
-LDFLAGS = $(DIFFSEL_FLAGS)
+CPPFLAGS= --std=gnu++11 -g -Wall -Wextra -O3 $(DIFFSEL_FLAGS)
+LDFLAGS = $(DIFFSEL_FLAGS) --std=gnu++11
 
 SRCS= BranchSitePath.cpp Chrono.cpp CodonSequenceAlignment.cpp CodonStateSpace.cpp CodonSubMatrix.cpp GTRSubMatrix.cpp MSCodonSubMatrix.cpp PhyloProcess.cpp Random.cpp SequenceAlignment.cpp StateSpace.cpp SubMatrix.cpp TaxonSet.cpp Tree.cpp linalg.cpp linalg2.cpp Chain.cpp Sample.cpp
 OBJS=$(patsubst %.cpp,%.o,$(SRCS))
@@ -51,7 +51,7 @@ format:
 	clang-format -i $(ALL_SRCS)
 
 test: ../flatdiffsel_bin
-	cd .. ; ./flatdiffsel_bin -d data/samhd1.ali -t data/samhd1.tree -x 1 1 test
+	cd .. ; ./flatdiffsel_bin -d data/samhd1.ali -t data/samhd1.tree -x 1 0 test
 
 clean:
 	-rm -f *.o *.d *.d.*
