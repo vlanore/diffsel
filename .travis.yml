@@ -27,7 +27,15 @@ matrix:
             - clang-3.6
       env: COMPILER=clang++-3.6
 
+before_install:
+  - pip install --user cpp-coveralls
+
 script:
   - export CXX=$COMPILER
   - $CXX -v
+  - if [ "$CXX" == "g++-5" ]; then export TINYCOMPO_FLAGS="-fprofile-arcs -ftest-coverage -g"; fi
   - cd src && make && make test
+
+after_success:
+  - if [ "$CXX" == "g++-5" ]; then coveralls -t 606Y1GaVUZbRm9agVjYbT2pns38InKSFR ; fi
+
