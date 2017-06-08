@@ -182,8 +182,8 @@ int main(int argc, char* argv[]) {
         } catch (...) {
             cerr << "error in command\n"
                  << "usage is:\n"
-                 << "\tflatdiffsel_bin name -d datafile -t treefile [-ncond i] [-nlevel 1|2] "
-                    "[-fixvar|-freevar] [-ms|-sr] [-x every until]\n";
+                 << "\tflatdiffsel_bin -d datafile -t treefile [-ncond i] [-nlevel 1|2] "
+                    "[-fixvar|-freevar] [-ms|-sr] [-x every until] name\n";
             exit(1);
         }
         DiffSelChain* chain = new DiffSelChain(datafile, treefile, ncond, nlevel, every, until,
