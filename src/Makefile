@@ -17,11 +17,14 @@ CC=g++
 SYSLIB=
 INCLUDES=
 #CPPFLAGS= $(USE_GSL) $(INCLUDES)
-CPPFLAGS= -std=c++11 -g -Wall -O3 $(USE_GSL) $(INCLUDES)
+CPPFLAGS= -std=c++11 -g -Wall -Wextra -Wpedantic -O3 $(USE_GSL) $(INCLUDES)
 LDFLAGS=$(STATIC)
 INSTALL_DIR=
 INSTALL_LIB=
 SRCS= BranchSitePath.cpp Chrono.cpp CodonSequenceAlignment.cpp CodonStateSpace.cpp CodonSubMatrix.cpp GTRSubMatrix.cpp MSCodonSubMatrix.cpp PhyloProcess.cpp Random.cpp SequenceAlignment.cpp StateSpace.cpp SubMatrix.cpp TaxonSet.cpp Tree.cpp linalg.cpp linalg2.cpp Chain.cpp Sample.cpp
+
+ALL_SRC = $(shell find . -name "*.hpp") $(shell find . -name "*.cpp")
+
 
 OBJS=$(patsubst %.cpp,%.o,$(SRCS))
 ALL_SRCS=$(wildcard *.cpp)
@@ -77,6 +80,9 @@ $(PROGSDIR)/flatdiffsel$(EXEEXT): DiffSel.o $(OBJS)
 readflatdiffsel$(EXEEXT): $(PROGSDIR)/readflatdiffsel$(EXEEXT)
 $(PROGSDIR)/readflatdiffsel$(EXEEXT): ReadDiffSel.o $(OBJS)
 	$(CC) ReadDiffSel.o $(OBJS) $(LDFLAGS) $(LIBS) -o $@
+
+format:
+	clang-format -i $(ALL_SRC)
 
 clean:
 	-rm -f *.o *.d *.d.*

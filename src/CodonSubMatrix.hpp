@@ -16,7 +16,9 @@ class CodonSubMatrix : public virtual SubMatrix {
     const CodonStateSpace *GetCodonStateSpace() const { return statespace; }
 
     bool Synonymous(int codon1, int codon2) const { return statespace->Synonymous(codon1, codon2); }
-    int GetCodonPosition(int pos, int codon) const { return statespace->GetCodonPosition(pos, codon); }
+    int GetCodonPosition(int pos, int codon) const {
+        return statespace->GetCodonPosition(pos, codon);
+    }
     int GetDifferingPosition(int codon1, int codon2) const {
         return statespace->GetDifferingPosition(codon1, codon2);
     }
@@ -32,7 +34,8 @@ class CodonSubMatrix : public virtual SubMatrix {
 // this is still an abstract class
 class NucCodonSubMatrix : public virtual CodonSubMatrix {
   public:
-    NucCodonSubMatrix(const CodonStateSpace *instatespace, const SubMatrix *inNucMatrix, bool innormalise)
+    NucCodonSubMatrix(const CodonStateSpace *instatespace, const SubMatrix *inNucMatrix,
+                      bool innormalise)
         : SubMatrix(instatespace->GetNstate(), innormalise),
           CodonSubMatrix(instatespace, innormalise) {
         SetNucMatrix(inNucMatrix);
@@ -65,7 +68,7 @@ class MGCodonSubMatrix : public NucCodonSubMatrix {
         : SubMatrix(instatespace->GetNstate(), innormalise),
           CodonSubMatrix(instatespace, innormalise),
           NucCodonSubMatrix(instatespace, inNucMatrix, innormalise) {
-	/*
+        /*
         synnucarray = new double *[Nnuc];
         nonsynnucarray = new double *[Nnuc];
         for (int i = 0; i < Nnuc; i++) {
@@ -77,16 +80,16 @@ class MGCodonSubMatrix : public NucCodonSubMatrix {
             }
         }
         nucflag = false;
-	*/
+        */
     }
 
     ~MGCodonSubMatrix() override {
-	/*
+        /*
         for (int i = 0; i < Nnuc; i++) {
             delete[] synnucarray[i];
             delete[] nonsynnucarray[i];
         }
-	*/
+        */
     }
 
     /*
@@ -142,8 +145,8 @@ class MGCodonSubMatrix : public NucCodonSubMatrix {
 // CodonSubMatrix.cpp
 class MGOmegaCodonSubMatrix : public MGCodonSubMatrix {
   public:
-    MGOmegaCodonSubMatrix(const CodonStateSpace *instatespace, const SubMatrix *inNucMatrix, double inomega,
-                          bool innormalise = false)
+    MGOmegaCodonSubMatrix(const CodonStateSpace *instatespace, const SubMatrix *inNucMatrix,
+                          double inomega, bool innormalise = false)
         : SubMatrix(instatespace->GetNstate(), innormalise),
           CodonSubMatrix(instatespace, innormalise),
           MGCodonSubMatrix(instatespace, inNucMatrix, innormalise),
@@ -151,7 +154,10 @@ class MGOmegaCodonSubMatrix : public MGCodonSubMatrix {
 
     double GetOmega() const { return omega + omegamin; }
 
-    void SetOmega(double inomega) { omega = inomega; CorruptMatrix();}
+    void SetOmega(double inomega) {
+        omega = inomega;
+        CorruptMatrix();
+    }
 
   protected:
     // look at how ComputeArray and ComputeStationary are implemented in

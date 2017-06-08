@@ -3,21 +3,18 @@
 #include "SingleOmegaModel.hpp"
 using namespace std;
 
-int main(int argc, char* argv[])	{
+int main(int argc, char* argv[]) {
+    string datafile = argv[1];
+    string treefile = argv[2];
+    string name = argv[3];
 
-	string datafile = argv[1];
-	string treefile = argv[2];
-	string name = argv[3];
-
-	SingleOmegaModel* model = new SingleOmegaModel(datafile,treefile);
-	ofstream os((name + ".trace").c_str());
-	model->TraceHeader(os);
-	os.flush();
-	while(1)	{
-		model->Move();
-		model->Trace(os);
-		os.flush();
-	}
+    SingleOmegaModel* model = new SingleOmegaModel(datafile, treefile);
+    ofstream os((name + ".trace").c_str());
+    model->TraceHeader(os);
+    os.flush();
+    while (1) {
+        model->Move();
+        model->Trace(os);
+        os.flush();
+    }
 }
-
-

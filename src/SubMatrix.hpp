@@ -33,12 +33,11 @@
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
-#include "Random.hpp"
 #include "PathSuffStat.hpp"
+#include "Random.hpp"
 
 
 class SubMatrix {
-
   protected:
     // these 2 pure virtual functions are the most essential component of the
     // SubMatrix class
@@ -58,8 +57,8 @@ class SubMatrix {
 
   public:
     static const int UniSubNmax = 500;
-	static int		nunisubcount;
-	static int		GetUniSubCount() {return nunisubcount;}
+    static int nunisubcount;
+    static int GetUniSubCount() { return nunisubcount; }
 
     static int nuni;
     static int nunimax;
@@ -115,21 +114,21 @@ class SubMatrix {
     static double maxz;
     static double nz;
 
-	// uniformization resampling methods
-	// CPU level 1
-	void GetFiniteTimeTransitionProb(int state, double* down, double efflength) const;
-	double 			GetFiniteTimeTransitionProb(int stateup, int statedown, double efflength) const;
-	int 			DrawUniformizedTransition(int state, int statedown, int n) const;
-	int 			DrawUniformizedSubstitutionNumber(int stateup, int statedown, double efflength) const;
-	//
+    // uniformization resampling methods
+    // CPU level 1
+    void GetFiniteTimeTransitionProb(int state, double *down, double efflength) const;
+    double GetFiniteTimeTransitionProb(int stateup, int statedown, double efflength) const;
+    int DrawUniformizedTransition(int state, int statedown, int n) const;
+    int DrawUniformizedSubstitutionNumber(int stateup, int statedown, double efflength) const;
+    //
 
-	// used by accept-reject resampling method
-	// CPU level 1
-	int 			DrawOneStep(int state) const;
-	double			DrawWaitingTime(int state) const;
-	int 			DrawFromStationary() const;
+    // used by accept-reject resampling method
+    // CPU level 1
+    int DrawOneStep(int state) const;
+    double DrawWaitingTime(int state) const;
+    int DrawFromStationary() const;
 
-	double SuffStatLogProb(PathSuffStat* suffstat);
+    double SuffStatLogProb(PathSuffStat *suffstat);
 
   protected:
     void UpdateRow(int state) const;
@@ -357,144 +356,140 @@ inline void SubMatrix::ForwardPropagate(const double *down, double *up, double l
     delete[] aux;
 }
 
-inline double SubMatrix::GetFiniteTimeTransitionProb(int stateup, int statedown, double efflength)	const {
-	double** invp = GetInvEigenVect();
-	double** p = GetEigenVect();
-	double* l = GetEigenVal();
-	double tot = 0;
-	for (int i=0; i<GetNstate(); i++)	{
-		tot += p[stateup][i] * exp(efflength * l[i]) * invp[i][statedown];
-	}
-	return tot;
+inline double SubMatrix::GetFiniteTimeTransitionProb(int stateup, int statedown,
+                                                     double efflength) const {
+    double **invp = GetInvEigenVect();
+    double **p = GetEigenVect();
+    double *l = GetEigenVal();
+    double tot = 0;
+    for (int i = 0; i < GetNstate(); i++) {
+        tot += p[stateup][i] * exp(efflength * l[i]) * invp[i][statedown];
+    }
+    return tot;
 }
 
-inline void SubMatrix::GetFiniteTimeTransitionProb(int state, double* p, double efflength)	const {
-
-	double* p1 = new double[GetNstate()];
-	for (int k=0; k<GetNstate(); k++)	{
-		p1[k] = 0;
-	}
-	p1[state] = 1;
-	ForwardPropagate(p1,p,efflength);
-	double tot = 0;
-	for (int k=0; k<GetNstate(); k++)	{
-		tot += p[k];
-	}
-	if (fabs(1 - tot) > 1e-5)	{
-		std::cerr << "error in forward propagate: normalization : " << tot << '\t' << fabs(1 - tot) << '\n';
-		std::cerr << "eff length : " << efflength << '\n';
-		ToStream(std::cerr);
-		exit(1);
-	}
-	delete[] p1;
+inline void SubMatrix::GetFiniteTimeTransitionProb(int state, double *p, double efflength) const {
+    double *p1 = new double[GetNstate()];
+    for (int k = 0; k < GetNstate(); k++) {
+        p1[k] = 0;
+    }
+    p1[state] = 1;
+    ForwardPropagate(p1, p, efflength);
+    double tot = 0;
+    for (int k = 0; k < GetNstate(); k++) {
+        tot += p[k];
+    }
+    if (fabs(1 - tot) > 1e-5) {
+        std::cerr << "error in forward propagate: normalization : " << tot << '\t' << fabs(1 - tot)
+                  << '\n';
+        std::cerr << "eff length : " << efflength << '\n';
+        ToStream(std::cerr);
+        exit(1);
+    }
+    delete[] p1;
 }
 
-inline int SubMatrix::DrawUniformizedTransition(int state, int statedown, int n)	const {
+inline int SubMatrix::DrawUniformizedTransition(int state, int statedown, int n) const {
+    double *p = new double[GetNstate()];
+    double tot = 0;
+    for (int l = 0; l < GetNstate(); l++) {
+        tot += Power(1, state, l) * Power(n, l, statedown);
+        p[l] = tot;
+    }
 
-	double* p = new double[GetNstate()];
-	double tot = 0;
-	for (int l=0; l<GetNstate(); l++)	{
-		tot += Power(1,state,l) * Power(n,l,statedown);
-		p[l] = tot;
-	}
-
-	double s = tot * Random::Uniform();
-	int k = 0;
-	while ((k<GetNstate()) && (s > p[k]))	{
-		k++;
-	}
-	if (k == GetNstate())	{
-		std::cerr << "error in DrawUniformizedTransition: overflow\n";
-		throw;
-	}
-	delete[] p;
-	return k;
+    double s = tot * Random::Uniform();
+    int k = 0;
+    while ((k < GetNstate()) && (s > p[k])) {
+        k++;
+    }
+    if (k == GetNstate()) {
+        std::cerr << "error in DrawUniformizedTransition: overflow\n";
+        throw;
+    }
+    delete[] p;
+    return k;
 }
 
 
-inline int SubMatrix::DrawUniformizedSubstitutionNumber(int stateup, int statedown, double efflength)	const {
+inline int SubMatrix::DrawUniformizedSubstitutionNumber(int stateup, int statedown,
+                                                        double efflength) const {
+    double mu = GetUniformizationMu();
+    double fact = exp(-efflength * mu);
+    int m = 0;
+    double total = (stateup == statedown) * fact;
+    double Z = GetFiniteTimeTransitionProb(stateup, statedown, efflength);
+    double q = Random::Uniform() * Z;
 
-	double mu = GetUniformizationMu();
-	double fact = exp(- efflength * mu);
-	int m = 0;
-	double total = (stateup==statedown) * fact;
-	double Z = GetFiniteTimeTransitionProb(stateup,statedown,efflength);
-	double q = Random::Uniform() * Z;
-	
-	while ((m<UniSubNmax) && (total < q)) 	{
-		m++;
-		fact *= mu * efflength / m;
-		total += Power(m,stateup,statedown) * fact;
-		if ((total-Z)>1e-12)	{
-			std::cerr << "error in DrawUniformizedSubstitutionNumber: normalising constant\n";
-			std::cerr << total << '\t' << Z << '\n';
-			std::cerr << mu << '\n';
-			std::cerr << m << '\n';
-			std::cerr << stateup << '\t' << statedown << '\n';
+    while ((m < UniSubNmax) && (total < q)) {
+        m++;
+        fact *= mu * efflength / m;
+        total += Power(m, stateup, statedown) * fact;
+        if ((total - Z) > 1e-12) {
+            std::cerr << "error in DrawUniformizedSubstitutionNumber: normalising constant\n";
+            std::cerr << total << '\t' << Z << '\n';
+            std::cerr << mu << '\n';
+            std::cerr << m << '\n';
+            std::cerr << stateup << '\t' << statedown << '\n';
 
-			ToStream(std::cerr);
-			CheckReversibility();
-			throw;
-		}
-	}
-	if (m == UniSubNmax)	{
-		nunisubcount++;
-	}
-	return m;
+            ToStream(std::cerr);
+            CheckReversibility();
+            throw;
+        }
+    }
+    if (m == UniSubNmax) {
+        nunisubcount++;
+    }
+    return m;
 }
 
-inline double SubMatrix::DrawWaitingTime(int state)	const {
-
-	const double* row = GetRow(state);
-	double t = Random::sExpo() / (-row[state]);
-	return t;
+inline double SubMatrix::DrawWaitingTime(int state) const {
+    const double *row = GetRow(state);
+    double t = Random::sExpo() / (-row[state]);
+    return t;
 }
 
-inline int SubMatrix::DrawOneStep(int state)	const {
-
-	const double* row = GetRow(state);
-	double p = -row[state] * Random::Uniform();
-	int k = -1;
-	double tot = 0;
-	do	{
-		k++;
-		if (k != state)	{
-			tot += row[k];
-		}
-	}
-	while ((k<GetNstate()) && (tot < p));
-	if (k == GetNstate())	{
-		std::cerr << "error in DrawOneStep\n";
-		std::cerr << GetNstate() << '\n';
-		for (int k=0; k<GetNstate(); k++)	{
-			std::cerr << row[k] << '\n';
-		}
-		exit(1);
-	}
-	return k;
+inline int SubMatrix::DrawOneStep(int state) const {
+    const double *row = GetRow(state);
+    double p = -row[state] * Random::Uniform();
+    int k = -1;
+    double tot = 0;
+    do {
+        k++;
+        if (k != state) {
+            tot += row[k];
+        }
+    } while ((k < GetNstate()) && (tot < p));
+    if (k == GetNstate()) {
+        std::cerr << "error in DrawOneStep\n";
+        std::cerr << GetNstate() << '\n';
+        for (int k = 0; k < GetNstate(); k++) {
+            std::cerr << row[k] << '\n';
+        }
+        exit(1);
+    }
+    return k;
 }
 
-inline int SubMatrix::DrawFromStationary()	const {
-
-	double p = Random::Uniform();
-	int k = 0;
-	double tot = mStationary[k];
-	while ((k<GetNstate()) && (tot < p))	{
-		k++;
-		if (k == GetNstate())	{
-			std::cerr << "error in DrawFromStationary\n";
-			double tot = 0;
-			for (int l=0; l<GetNstate(); l++)	{
-				std::cerr << mStationary[l] << '\t';
-				tot += mStationary[l];
-			}
-			std::cerr << '\n';
-			std::cerr << "total : " << tot << '\t' << 1-tot << '\n';
-			exit(1);
-		}
-		tot += mStationary[k];
-	}
-	return k;
+inline int SubMatrix::DrawFromStationary() const {
+    double p = Random::Uniform();
+    int k = 0;
+    double tot = mStationary[k];
+    while ((k < GetNstate()) && (tot < p)) {
+        k++;
+        if (k == GetNstate()) {
+            std::cerr << "error in DrawFromStationary\n";
+            double tot = 0;
+            for (int l = 0; l < GetNstate(); l++) {
+                std::cerr << mStationary[l] << '\t';
+                tot += mStationary[l];
+            }
+            std::cerr << '\n';
+            std::cerr << "total : " << tot << '\t' << 1 - tot << '\n';
+            exit(1);
+        }
+        tot += mStationary[k];
+    }
+    return k;
 }
 
 #endif  // SUBMATRIX_H

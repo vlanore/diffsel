@@ -33,8 +33,8 @@ class Random {
 
     static double logMultivariateGamma(double a, int p);
 
-    static double ProfileProposeMove(double* profile, int dim, double tuning, int n);
-    static double RealVectorProposeMove(double* x, int dim, double tuning, int n);
+    static double ProfileProposeMove(double *profile, int dim, double tuning, int n);
+    static double RealVectorProposeMove(double *x, int dim, double tuning, int n);
 
   private:
     static int Seed;

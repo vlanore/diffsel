@@ -141,37 +141,37 @@ int SubMatrix::Diagonalise() const {
         UpdateMatrix();
     }
 
-	// copy Q into aux
-	for (int i=0; i<Nstate; i++)	{
-		for (int j=0; j<Nstate; j++)	{
-			aux[i][j] = Q[i][j];
-		}
-	}
+        // copy Q into aux
+        for (int i=0; i<Nstate; i++)	{
+                for (int j=0; j<Nstate; j++)	{
+                        aux[i][j] = Q[i][j];
+                }
+        }
 
-	double * w = new double[Nstate];
-	int* iw = new int[Nstate];
+        double * w = new double[Nstate];
+        int* iw = new int[Nstate];
 
-	// diagonalise a into v and u
+        // diagonalise a into v and u
     cerr << "diag\n";
-	int success = EigenRealGeneral(Nstate, aux, v, vi, u, iw, w);
+        int success = EigenRealGeneral(Nstate, aux, v, vi, u, iw, w);
     cerr << "diag ok\n";
     cerr << success << '\n';
 
-	// copy u into aux
-	for (int i=0; i<Nstate; i++)	{
-		for (int j=0; j<Nstate; j++)	{
-			aux[i][j] = u[i][j];
-		}
-	}
+        // copy u into aux
+        for (int i=0; i<Nstate; i++)	{
+                for (int j=0; j<Nstate; j++)	{
+                        aux[i][j] = u[i][j];
+                }
+        }
 
-	// invert a into invu
-	InvertMatrix(aux, Nstate, w, iw, invu);
+        // invert a into invu
+        InvertMatrix(aux, Nstate, w, iw, invu);
 
-	// CheckDiag();
+        // CheckDiag();
 
-	delete[] w;
-	delete[] iw;
-	return success;
+        delete[] w;
+        delete[] iw;
+        return success;
 }
 */
 
@@ -554,18 +554,20 @@ void SubMatrix::PowerOf2(double **y, int z) const {
     PowerOf2(y, z / 2);
 }
 
-double SubMatrix::SuffStatLogProb(PathSuffStat* suffstat)	{
-
-	double total = 0;
-	const double* stat = GetStationary();
-	for (map<int,int>::iterator i = suffstat->rootcount.begin(); i!= suffstat->rootcount.end(); i++)	{
-		total += i->second * log(stat[i->first]);
-	}
-	for (map<int,double>::iterator i = suffstat->waitingtime.begin(); i!= suffstat->waitingtime.end(); i++)	{
-		total += i->second * (*this)(i->first,i->first);
-	}
-	for (map<pair<int,int>, int>::iterator i = suffstat->paircount.begin(); i!= suffstat->paircount.end(); i++)	{
-		total += i->second * log((*this)(i->first.first, i->first.second));
-	}
-	return total;
+double SubMatrix::SuffStatLogProb(PathSuffStat *suffstat) {
+    double total = 0;
+    const double *stat = GetStationary();
+    for (map<int, int>::iterator i = suffstat->rootcount.begin(); i != suffstat->rootcount.end();
+         i++) {
+        total += i->second * log(stat[i->first]);
+    }
+    for (map<int, double>::iterator i = suffstat->waitingtime.begin();
+         i != suffstat->waitingtime.end(); i++) {
+        total += i->second * (*this)(i->first, i->first);
+    }
+    for (map<pair<int, int>, int>::iterator i = suffstat->paircount.begin();
+         i != suffstat->paircount.end(); i++) {
+        total += i->second * log((*this)(i->first.first, i->first.second));
+    }
+    return total;
 }

@@ -1,8 +1,10 @@
-#include <algorithm>
 #include "PhyloProcess.hpp"
+#include <algorithm>
 using namespace std;
 
-PhyloProcess::PhyloProcess(Tree* intree, SequenceAlignment* indata, double* inbranchlength, double* insiterate, SubMatrix*** insubmatrix, double** inrootfreq, SubMatrix** inrootsubmatrix)	{
+PhyloProcess::PhyloProcess(Tree *intree, SequenceAlignment *indata, double *inbranchlength,
+                           double *insiterate, SubMatrix ***insubmatrix, double **inrootfreq,
+                           SubMatrix **inrootsubmatrix) {
     tree = intree;
     data = indata;
     Nstate = data->GetNstate();
@@ -19,7 +21,6 @@ PhyloProcess::~PhyloProcess() { Cleanup(); }
 void PhyloProcess::SetData(SequenceAlignment *indata) { data = indata; }
 
 void PhyloProcess::Unfold() {
-
     sitearray = new int[GetNsite()];
     sitelnL = new double[GetNsite()];
     for (int i = 0; i < GetNsite(); i++) {
@@ -67,14 +68,13 @@ bool PhyloProcess::FillMissingMap(const Link *from, int i) {
 }
 
 void PhyloProcess::RecursiveCreate(const Link *from) {
-
     auto state = new int[GetNsite()];
     statemap[from->GetNode()] = state;
 
     auto array = new BranchSitePath *[GetNsite()];
-    for (int i=0; i<GetNsite(); i++)	{
+    for (int i = 0; i < GetNsite(); i++) {
         array[i] = 0;
-    }	
+    }
     pathmap[from->GetNode()] = array;
 
     for (const Link *link = from->Next(); link != from; link = link->Next()) {
@@ -118,7 +118,7 @@ double PhyloProcess::SiteLogLikelihood(int site) {
     double ret = 0;
     double *t = GetCondLikelihood(GetRoot());
     const double *stat = GetRootFreq(site);
-	
+
     for (int k = 0; k < GetNstate(); k++) {
         ret += t[k] * stat[k];
     }
@@ -179,8 +179,8 @@ double PhyloProcess::GetLogProb() {
 }
 
 double PhyloProcess::GetPathLogProb() {
-	cerr << "implement Get Path Get Log Prob in phyloprocess\n";
-	exit(1);
+    cerr << "implement Get Path Get Log Prob in phyloprocess\n";
+    exit(1);
     double total = 0;
     for (int i = 0; i < GetNsite(); i++) {
         if (!isMissing(GetRoot()->GetNode(), i)) {
@@ -191,14 +191,13 @@ double PhyloProcess::GetPathLogProb() {
 }
 
 double PhyloProcess::GetPathLogProb(const Link *from, int site) {
-
     double total = 0;
-    if (from->isRoot())	{
-	const double* stat = GetRootFreq(site);
-	total += log(stat[GetState(from->GetNode(),site)]);
-    }
-    else	{
-	// total += GetPath(from->GetNode(),site)->GetLogProb(GetBranchLength(from->GetBranch()),GetSiteRate(site),GetSubMatrix(from->GetBranch(),site));
+    if (from->isRoot()) {
+        const double *stat = GetRootFreq(site);
+        total += log(stat[GetState(from->GetNode(), site)]);
+    } else {
+        // total +=
+        // GetPath(from->GetNode(),site)->GetLogProb(GetBranchLength(from->GetBranch()),GetSiteRate(site),GetSubMatrix(from->GetBranch(),site));
     }
 
     for (const Link *link = from->Next(); link != from; link = link->Next()) {
@@ -211,70 +210,69 @@ double PhyloProcess::GetPathLogProb(const Link *from, int site) {
 
 void PhyloProcess::Pruning(const Link *from, int site) {
     double *t = GetCondLikelihood(from);
-        if (from->isLeaf()) {
-            int totcomp = 0;
-            for (int k = 0; k < GetNstate(); k++) {
-                if (isDataCompatible(from->GetNode()->GetIndex(), site, k)) {
-                    t[k] = 1;
-                    totcomp++;
-                } else {
-                    t[k] = 0;
-                }
+    if (from->isLeaf()) {
+        int totcomp = 0;
+        for (int k = 0; k < GetNstate(); k++) {
+            if (isDataCompatible(from->GetNode()->GetIndex(), site, k)) {
+                t[k] = 1;
+                totcomp++;
+            } else {
+                t[k] = 0;
             }
-            if (totcomp == 0) {
-                cerr << "error : no compatibility\n";
-                cerr << GetData(from->GetNode()->GetIndex(), site) << '\n';
-                exit(1);
-            }
-
-            t[GetNstate()] = 0;
-        } else {
-            for (int k = 0; k < GetNstate(); k++) {
-                t[k] = 1.0;
-            }
-            t[GetNstate()] = 0;
-            for (const Link *link = from->Next(); link != from; link = link->Next()) {
-                if (!isMissing(link->Out(), site)) {
-                    double *tbl = GetCondLikelihood(link);
-                    Pruning(link->Out(), site);
-                    GetSubMatrix(link->GetBranch(), site)
-                        ->BackwardPropagate(GetCondLikelihood(link->Out()),
-                                            GetCondLikelihood(link),
-					    GetBranchLength(link->GetBranch()) * GetSiteRate(site));
-                    for (int k = 0; k < GetNstate(); k++) {
-                        t[k] *= tbl[k];
-                    }
-                    t[GetNstate()] += tbl[GetNstate()];
-                }
-            }
-            double max = 0;
-            for (int k = 0; k < GetNstate(); k++) {
-                if (t[k] < 0) {
-                    /*
-                      cerr << "error in pruning: negative prob : " << t[k] << "\n";
-                      exit(1);
-                    */
-                    t[k] = 0;
-                }
-                if (max < t[k]) {
-                    max = t[k];
-                }
-            }
-            if (max == 0) {
-                cerr << "max = 0\n";
-                cerr << "error in pruning: null likelihood\n";
-                if (from->isRoot()) {
-                    cerr << "is root\n";
-                }
-                cerr << '\n';
-                exit(1);
-                max = 1e-20;
-            }
-            for (int k = 0; k < GetNstate(); k++) {
-                t[k] /= max;
-            }
-            t[GetNstate()] += log(max);
         }
+        if (totcomp == 0) {
+            cerr << "error : no compatibility\n";
+            cerr << GetData(from->GetNode()->GetIndex(), site) << '\n';
+            exit(1);
+        }
+
+        t[GetNstate()] = 0;
+    } else {
+        for (int k = 0; k < GetNstate(); k++) {
+            t[k] = 1.0;
+        }
+        t[GetNstate()] = 0;
+        for (const Link *link = from->Next(); link != from; link = link->Next()) {
+            if (!isMissing(link->Out(), site)) {
+                double *tbl = GetCondLikelihood(link);
+                Pruning(link->Out(), site);
+                GetSubMatrix(link->GetBranch(), site)
+                    ->BackwardPropagate(GetCondLikelihood(link->Out()), GetCondLikelihood(link),
+                                        GetBranchLength(link->GetBranch()) * GetSiteRate(site));
+                for (int k = 0; k < GetNstate(); k++) {
+                    t[k] *= tbl[k];
+                }
+                t[GetNstate()] += tbl[GetNstate()];
+            }
+        }
+        double max = 0;
+        for (int k = 0; k < GetNstate(); k++) {
+            if (t[k] < 0) {
+                /*
+                  cerr << "error in pruning: negative prob : " << t[k] << "\n";
+                  exit(1);
+                */
+                t[k] = 0;
+            }
+            if (max < t[k]) {
+                max = t[k];
+            }
+        }
+        if (max == 0) {
+            cerr << "max = 0\n";
+            cerr << "error in pruning: null likelihood\n";
+            if (from->isRoot()) {
+                cerr << "is root\n";
+            }
+            cerr << '\n';
+            exit(1);
+            max = 1e-20;
+        }
+        for (int k = 0; k < GetNstate(); k++) {
+            t[k] /= max;
+        }
+        t[GetNstate()] += log(max);
+    }
 }
 
 void PhyloProcess::PruningAncestral(const Link *from, int site) {
@@ -320,7 +318,9 @@ void PhyloProcess::PruningAncestral(const Link *from, int site) {
                 for (int k = 0; k < GetNstate(); k++) {
                     aux[k] = 1;
                 }
-                GetSubMatrix(link->GetBranch(), site)->GetFiniteTimeTransitionProb(state, aux, GetBranchLength(link->GetBranch()) * GetSiteRate(site));
+                GetSubMatrix(link->GetBranch(), site)
+                    ->GetFiniteTimeTransitionProb(
+                        state, aux, GetBranchLength(link->GetBranch()) * GetSiteRate(site));
                 double *tbl = GetCondLikelihood(link->Out());
                 for (int k = 0; k < GetNstate(); k++) {
                     aux[k] *= tbl[k];
@@ -337,7 +337,7 @@ void PhyloProcess::PruningAncestral(const Link *from, int site) {
                     }
                 }
                 if (max == 0) {
-	  	    const double* stat = GetSubMatrix(link->GetBranch(),site)->GetStationary();
+                    const double *stat = GetSubMatrix(link->GetBranch(), site)->GetStationary();
                     for (int k = 0; k < GetNstate(); k++) {
                         aux[k] = stat[k];
                     }
@@ -378,12 +378,11 @@ void PhyloProcess::PruningAncestral(const Link *from, int site) {
 void PhyloProcess::RootPosteriorDraw(int site) {
     auto aux = new double[GetNstate()];
     double *tbl = GetCondLikelihood(GetRoot());
-    const double* stat = GetRootFreq(site);
+    const double *stat = GetRootFreq(site);
     for (int k = 0; k < GetNstate(); k++) {
         aux[k] = stat[k] * tbl[k];
     }
-    GetState(GetRoot()->GetNode(), site) =
-        Random::DrawFromDiscreteDistribution(aux, GetNstate());
+    GetState(GetRoot()->GetNode(), site) = Random::DrawFromDiscreteDistribution(aux, GetNstate());
     delete[] aux;
 }
 
@@ -391,14 +390,15 @@ void PhyloProcess::PriorSample(const Link *from, int site, bool rootprior) {
     int &state = GetState(from->GetNode(), site);
     if (from->isRoot()) {
         if (rootprior) {
-	    state = Random::DrawFromDiscreteDistribution(GetRootFreq(site),GetNstate());
+            state = Random::DrawFromDiscreteDistribution(GetRootFreq(site), GetNstate());
         } else {
             RootPosteriorDraw(site);
         }
     }
     for (const Link *link = from->Next(); link != from; link = link->Next()) {
         if (!isMissing(link->Out(), site)) {
-            GetState(link->Out()->GetNode(), site) = GetSubMatrix(link->GetBranch(), site)->DrawWaitingTime(state);
+            GetState(link->Out()->GetNode(), site) =
+                GetSubMatrix(link->GetBranch(), site)->DrawWaitingTime(state);
             PriorSample(link->Out(), site, rootprior);
         }
     }
@@ -418,20 +418,19 @@ void PhyloProcess::ResampleState(int site) {
     }
 }
 
-double PhyloProcess::Move(double fraction)	{
+double PhyloProcess::Move(double fraction) {
     DrawSites(fraction);
     ResampleSub();
     return 1.0;
 }
 
-void PhyloProcess::DrawSites(double fraction)	{
-	for (int i=0; i<GetNsite(); i++)	{
-		sitearray[i] = (Random::Uniform() < fraction);
-	}
+void PhyloProcess::DrawSites(double fraction) {
+    for (int i = 0; i < GetNsite(); i++) {
+        sitearray[i] = (Random::Uniform() < fraction);
+    }
 }
 
 void PhyloProcess::ResampleSub() {
-
     pruningchrono.Start();
 #if DEBUG > 1
     MeasureTime timer;
@@ -468,22 +467,25 @@ void PhyloProcess::ResampleSub(int site) {
 }
 
 
-
 void PhyloProcess::ResampleSub(const Link *from, int site) {
     if (from->isRoot()) {
         delete pathmap[from->GetNode()][site];
         pathmap[from->GetNode()][site] = SampleRootPath(GetState(from->GetNode(), site));
-    }
-    else    {
-	    delete pathmap[from->GetNode()][site];
-        pathmap[from->GetNode()][site] = SamplePath(GetState(from->Out()->GetNode(), site), GetState(from->GetNode(), site),GetBranchLength(from->GetBranch()), GetSiteRate(site), GetSubMatrix(from->GetBranch(),site));
+    } else {
+        delete pathmap[from->GetNode()][site];
+        pathmap[from->GetNode()][site] =
+            SamplePath(GetState(from->Out()->GetNode(), site), GetState(from->GetNode(), site),
+                       GetBranchLength(from->GetBranch()), GetSiteRate(site),
+                       GetSubMatrix(from->GetBranch(), site));
     }
 
     for (const Link *link = from->Next(); link != from; link = link->Next()) {
         if (!isMissing(link->Out(), site)) {
             /*
             delete pathmap[link->GetNode()][site];
-            pathmap[link->GetNode()][site] = SamplePath(GetState(link->GetNode(), site), GetState(link->Out()->GetNode(), site),GetBranchLength(link->GetBranch()), GetSiteRate(site), GetSubMatrix(link->GetBranch(),site));
+            pathmap[link->GetNode()][site] = SamplePath(GetState(link->GetNode(), site),
+            GetState(link->Out()->GetNode(), site),GetBranchLength(link->GetBranch()),
+            GetSiteRate(site), GetSubMatrix(link->GetBranch(),site));
             */
             ResampleSub(link->Out(), site);
         }
@@ -523,149 +525,147 @@ void PhyloProcess::RecursiveGetLeafData(const Link *from, SequenceAlignment *dat
     }
 }
 
-BranchSitePath* PhyloProcess::SampleRootPath(int rootstate)	{
-
-	BranchSitePath* path = new BranchSitePath(rootstate);
-	return path;
+BranchSitePath *PhyloProcess::SampleRootPath(int rootstate) {
+    BranchSitePath *path = new BranchSitePath(rootstate);
+    return path;
 }
 
-BranchSitePath* PhyloProcess::SamplePath(int stateup, int statedown, double time, double rate, SubMatrix* matrix)	{
-
-	BranchSitePath* path = ResampleAcceptReject(1000,stateup,statedown,rate,time,matrix);
-	if (! path)	{
-		path = ResampleUniformized(stateup,statedown,rate,time,matrix);
-	}
-	return path;
+BranchSitePath *PhyloProcess::SamplePath(int stateup, int statedown, double time, double rate,
+                                         SubMatrix *matrix) {
+    BranchSitePath *path = ResampleAcceptReject(1000, stateup, statedown, rate, time, matrix);
+    if (!path) {
+        path = ResampleUniformized(stateup, statedown, rate, time, matrix);
+    }
+    return path;
 }
 
-BranchSitePath* PhyloProcess::ResampleAcceptReject(int maxtrial, int stateup, int statedown, double rate, double totaltime, SubMatrix* matrix)	{
+BranchSitePath *PhyloProcess::ResampleAcceptReject(int maxtrial, int stateup, int statedown,
+                                                   double rate, double totaltime,
+                                                   SubMatrix *matrix) {
+    int ntrial = 0;
+    BranchSitePath *path = 0;
 
-	int ntrial = 0;
-	BranchSitePath* path = 0;
+    if (rate * totaltime < 1e-10) {
+        // if (rate * totaltime == 0)	{
+        if (stateup != statedown) {
+            cerr << "error in MatrixSubstitutionProcess::ResampleAcceptReject: stateup != "
+                    "statedown, efflength == 0\n";
+            exit(1);
+        }
+        delete path;
+        path = new BranchSitePath();
+        ntrial++;
+        path->Reset(stateup);
+    } else {
+        do {
+            delete path;
+            path = new BranchSitePath();
+            ntrial++;
+            path->Reset(stateup);
+            double t = 0;
+            int state = stateup;
 
-	if (rate * totaltime < 1e-10)	{
-	// if (rate * totaltime == 0)	{
-		if (stateup != statedown)	{
-			cerr << "error in MatrixSubstitutionProcess::ResampleAcceptReject: stateup != statedown, efflength == 0\n";
-			exit(1);
-		}
-		delete path;
-		path = new BranchSitePath();
-		ntrial++;
-		path->Reset(stateup);
-	}
-	else	{
-	do	{
-		delete path;
-		path = new BranchSitePath();
-		ntrial++;
-		path->Reset(stateup);
-		double t = 0;
-		int state = stateup;
+            if (state != statedown) {
+                // draw waiting time conditional on at least one substitution
+                double q = -rate * (*matrix)(state, state);
+                double u = -log(1 - Random::Uniform() * (1 - exp(-q * totaltime))) / q;
 
-		if (state != statedown)	{
+                t += u;
+                int newstate = matrix->DrawOneStep(state);
+                path->Append(newstate, u / totaltime);
+                state = newstate;
+            }
+            while (t < totaltime) {
+                // draw waiting time
+                double q = -rate * (*matrix)(state, state);
+                double u = -log(1 - Random::Uniform()) / q;
+                if (std::isnan(u)) {
+                    cerr << "in MatrixSubstitutionProcess:: drawing exponential number: nan\n";
+                    cerr << rate << '\t' << q << '\n';
+                    exit(1);
+                }
 
-			// draw waiting time conditional on at least one substitution
-			double q = - rate * (*matrix)(state,state);
-			double u = -log(1 - Random::Uniform() * (1 - exp(-q * totaltime))) / q;
+                if (std::isinf(u)) {
+                    cerr << "in MatrixSubstitutionProcess:: drawing exponential number: inf\n";
+                    cerr << rate << '\t' << q << '\n';
+                    cerr << totaltime << '\n';
+                    cerr << state << '\t' << stateup << '\n';
+                    exit(1);
+                }
 
-			t += u;
-			int newstate = matrix->DrawOneStep(state);
-			path->Append(newstate,u/totaltime);
-			state = newstate;
-		}
-		while (t < totaltime)	{
 
-			// draw waiting time
-			double q = - rate * (*matrix)(state,state);
-			double u = -log (1 - Random::Uniform()) / q;
-			if (std::isnan(u))	{
-				cerr << "in MatrixSubstitutionProcess:: drawing exponential number: nan\n";
-				cerr << rate << '\t' << q << '\n';
-				exit(1);
-			}
-		
-			if (std::isinf(u))	{
-				cerr << "in MatrixSubstitutionProcess:: drawing exponential number: inf\n";
-				cerr << rate << '\t' << q << '\n';
-				cerr << totaltime << '\n';
-				cerr << state << '\t' << stateup << '\n';
-				exit(1);
-			}
-		
+                t += u;
+                if (t < totaltime) {
+                    int newstate = matrix->DrawOneStep(state);
+                    path->Append(newstate, u / totaltime);
+                    state = newstate;
+                } else {
+                    t -= u;
+                    u = totaltime - t;
+                    path->Last()->SetRelativeTime(u / totaltime);
+                    t = totaltime;
+                }
+            }
+        } while ((ntrial < maxtrial) && (path->Last()->GetState() != statedown));
+    }
 
-			t += u;
-			if (t < totaltime)	{
-				int newstate = matrix->DrawOneStep(state);
-				path->Append(newstate,u/totaltime);
-				state = newstate;
-			}
-			else	{
-				t -= u;
-				u = totaltime - t;
-				path->Last()->SetRelativeTime(u/totaltime);
-				t = totaltime;
-			}
-		}
-	} while ((ntrial < maxtrial) && (path->Last()->GetState() != statedown));
-	}
+    // if endstate does not match state at the corresponding end of the branch
+    // just force it to match
+    // however, this is really dirty !
+    // normally, in that case, one should give up with accept-reject
+    // and use a uniformized method instead (but not yet adapted to the present code, see below)
+    if (path->Last()->GetState() != statedown) {
+        // fossil
+        // path->Last()->SetState(statedown);
+        delete path;
+        path = 0;
+    }
 
-	// if endstate does not match state at the corresponding end of the branch
-	// just force it to match
-	// however, this is really dirty !
-	// normally, in that case, one should give up with accept-reject
-	// and use a uniformized method instead (but not yet adapted to the present code, see below)
-	if (path->Last()->GetState() != statedown)	{
-		// fossil
-		// path->Last()->SetState(statedown);
-		delete path;
-		path = 0;
-	}
-
-	return path;
+    return path;
 }
 
-BranchSitePath* PhyloProcess::ResampleUniformized(int stateup, int statedown, double rate, double totaltime, SubMatrix* matrix)	{
+BranchSitePath *PhyloProcess::ResampleUniformized(int stateup, int statedown, double rate,
+                                                  double totaltime, SubMatrix *matrix) {
+    double length = rate * totaltime;
+    int m = matrix->DrawUniformizedSubstitutionNumber(stateup, statedown, length);
 
-	double length = rate * totaltime;
-	int m = matrix->DrawUniformizedSubstitutionNumber(stateup, statedown, length);
+    vector<double> y(m + 1);
+    for (int r = 0; r < m; r++) {
+        y[r] = Random::Uniform();
+    }
+    y[m] = 1;
+    sort(y.begin(), y.end());
 
-	vector<double> y(m+1);
-	for (int r=0; r<m; r++)	{
-		y[r] = Random::Uniform();
-	}
-	y[m] = 1;
-	sort(y.begin(),y.end());
+    int state = stateup;
 
-	int state = stateup;
+    BranchSitePath *path = new BranchSitePath();
+    path->Reset(stateup);
 
-	BranchSitePath* path = new BranchSitePath();
-	path->Reset(stateup);
-
-	double t = y[0];
-	for (int r=0; r<m; r++)	{
-		int k = (r== m-1) ? statedown : matrix->DrawUniformizedTransition(state,statedown,m-r-1);
-		if (k != state)	{
-			path->Append(k,t);
-			t = 0;
-		}
-		state = k;
-		t += y[r+1] - y[r];
-	}
-	path->Last()->SetRelativeTime(t);
-	return path;
-
+    double t = y[0];
+    for (int r = 0; r < m; r++) {
+        int k = (r == m - 1) ? statedown
+                             : matrix->DrawUniformizedTransition(state, statedown, m - r - 1);
+        if (k != state) {
+            path->Append(k, t);
+            t = 0;
+        }
+        state = k;
+        t += y[r + 1] - y[r];
+    }
+    path->Last()->SetRelativeTime(t);
+    return path;
 }
 
-void PhyloProcess::AddRootSuffStat(int site, PathSuffStat& suffstat)	{
-	suffstat.rootcount[GetState(GetRoot()->GetNode(),site)]++;
+void PhyloProcess::AddRootSuffStat(int site, PathSuffStat &suffstat) {
+    suffstat.rootcount[GetState(GetRoot()->GetNode(), site)]++;
 }
 
-void PhyloProcess::AddSuffStat(int site, const Link* link, PathSuffStat& suffstat)	{
-	pathmap[link->GetNode()][site]->AddSuffStat(suffstat,GetBranchLength(link->GetBranch()) * GetSiteRate(site));
+void PhyloProcess::AddSuffStat(int site, const Link *link, PathSuffStat &suffstat) {
+    pathmap[link->GetNode()][site]->AddSuffStat(
+        suffstat, GetBranchLength(link->GetBranch()) * GetSiteRate(site));
 }
 
-void PhyloProcess::AddLengthSuffStat(int site, const Link* link, int& count, double& beta)	{
-	pathmap[link->GetNode()][site]->AddLengthSuffStat(count,beta,GetSiteRate(site),GetSubMatrix(link->GetBranch(),site));
+void PhyloProcess::AddLengthSuffStat(int site, const Link *link, int &count, double &beta) {
+    pathmap[link->GetNode()][site]->AddLengthSuffStat(count, beta, GetSiteRate(site),
+                                                      GetSubMatrix(link->GetBranch(), site));
 }
-

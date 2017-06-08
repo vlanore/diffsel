@@ -5,24 +5,21 @@
 #include <map>
 using namespace std;
 
-class PathSuffStat	{
+class PathSuffStat {
+  public:
+    PathSuffStat() {}
+    ~PathSuffStat() {}
 
-	public:
+    void Clear() {
+        rootcount.clear();
+        paircount.clear();
+        waitingtime.clear();
+    }
 
-	PathSuffStat() {}
-	~PathSuffStat() {}
-
-	void Clear()	{
-		rootcount.clear();
-		paircount.clear();
-		waitingtime.clear();
-	}
-
-	map<int,int> rootcount;
-	map<pair<int,int>,int> paircount;
-	map<int,double> waitingtime;
+    map<int, int> rootcount;
+    map<pair<int, int>, int> paircount;
+    map<int, double> waitingtime;
 };
 
 
 #endif
-

@@ -79,7 +79,9 @@ class CodonStateSpace : public StateSpace {
     int Translation(int codon) const { return CodonCode[codon]; }
 
     // stops excluded
-    bool Synonymous(int codon1, int codon2) const { return (CodonCode[codon1] == CodonCode[codon2]); }
+    bool Synonymous(int codon1, int codon2) const {
+        return (CodonCode[codon1] == CodonCode[codon2]);
+    }
 
     // returns -1 if stop codon
     // otherwise returns integer in [0,19] standing for an amino-acid (one letter

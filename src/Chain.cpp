@@ -1,8 +1,8 @@
 #include "Chain.hpp"
 #include <fstream>
 #include <iostream>
-#include "ProbModel.hpp"
 #include "Chrono.hpp"
+#include "ProbModel.hpp"
 using namespace std;
 
 Chain::Chain() {

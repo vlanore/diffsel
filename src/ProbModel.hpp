@@ -32,7 +32,7 @@ class ProbModel {
 
     virtual void MakeScheduler() {}
 
-    virtual double Move() {return 1;}
+    virtual double Move() { return 1; }
     virtual void Update() {}
 
     // save model configuration to stream

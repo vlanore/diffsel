@@ -15,14 +15,14 @@ BranchSitePath::BranchSitePath() {
     nsub = 0;
 }
 
-BranchSitePath::BranchSitePath(int state)	{
+BranchSitePath::BranchSitePath(int state) {
     init = last = new Plink;
     bkinit = bklast = new Plink;
     nsub = 0;
     init->SetState(state);
     init->SetRelativeTime(0);
 }
-   
+
 
 BranchSitePath::~BranchSitePath() {
     Reset(0);
@@ -99,28 +99,28 @@ string BranchSitePath::ToString(bool redundant) {
 }
 */
 
-void BranchSitePath::AddSuffStat(PathSuffStat& suffstat, double factor)	{
-	Plink* link = Init();
-	while (link)	{
-		int state = link->GetState();
-		suffstat.waitingtime[state] += GetRelativeTime(link) * factor;
-		if (link != last)	{
-			suffstat.paircount[pair<int,int>(state,link->Next()->GetState())]++;
-		}
-		link = link->Next();
-	}
+void BranchSitePath::AddSuffStat(PathSuffStat &suffstat, double factor) {
+    Plink *link = Init();
+    while (link) {
+        int state = link->GetState();
+        suffstat.waitingtime[state] += GetRelativeTime(link) * factor;
+        if (link != last) {
+            suffstat.paircount[pair<int, int>(state, link->Next()->GetState())]++;
+        }
+        link = link->Next();
+    }
 }
 
-void BranchSitePath::AddLengthSuffStat(int& count, double& beta, double factor, SubMatrix* mat)	{
-	Plink* link = Init();
-	while (link)	{
-		int state = link->GetState();
-		beta -= GetRelativeTime(link) * factor * (*mat)(state,state);
-		if (link != last)	{
-			count ++;
-		}
-		link = link->Next();
-	}
+void BranchSitePath::AddLengthSuffStat(int &count, double &beta, double factor, SubMatrix *mat) {
+    Plink *link = Init();
+    while (link) {
+        int state = link->GetState();
+        beta -= GetRelativeTime(link) * factor * (*mat)(state, state);
+        if (link != last) {
+            count++;
+        }
+        link = link->Next();
+    }
 }
 
 void BranchSitePath::AddCounts(int **paircounts, int *statecounts) {

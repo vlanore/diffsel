@@ -7,9 +7,9 @@
 // square root
 class MGSRFitnessCodonUsageSubMatrix : public MGCodonSubMatrix {
   public:
-    MGSRFitnessCodonUsageSubMatrix(const CodonStateSpace *instatespace, const SubMatrix *inNucMatrix,
-                                   const double *infitness, const double *incodonusageselection,
-                                   bool innormalise = false)
+    MGSRFitnessCodonUsageSubMatrix(const CodonStateSpace *instatespace,
+                                   const SubMatrix *inNucMatrix, const double *infitness,
+                                   const double *incodonusageselection, bool innormalise = false)
         : SubMatrix(instatespace->GetNstate(), innormalise),
           CodonSubMatrix(instatespace, innormalise),
           MGCodonSubMatrix(instatespace, inNucMatrix, innormalise),
@@ -34,9 +34,9 @@ class MGSRFitnessCodonUsageSubMatrix : public MGCodonSubMatrix {
 // mutation selection
 class MGMSFitnessCodonUsageSubMatrix : public MGCodonSubMatrix {
   public:
-    MGMSFitnessCodonUsageSubMatrix(const CodonStateSpace *instatespace, const SubMatrix *inNucMatrix,
-                                   const double *infitness, const double *incodonusageselection,
-                                   bool innormalise = false)
+    MGMSFitnessCodonUsageSubMatrix(const CodonStateSpace *instatespace,
+                                   const SubMatrix *inNucMatrix, const double *infitness,
+                                   const double *incodonusageselection, bool innormalise = false)
         : SubMatrix(instatespace->GetNstate(), innormalise),
           CodonSubMatrix(instatespace, innormalise),
           MGCodonSubMatrix(instatespace, inNucMatrix, innormalise),

@@ -1,27 +1,24 @@
 #include <cmath>
 #include <fstream>
-#include "DiffSelModel.hpp"
 #include "Chain.hpp"
+#include "DiffSelModel.hpp"
 using namespace std;
 
 
-class DiffSelChain: public Chain {
+class DiffSelChain : public Chain {
   private:
     // Chain parameters
     string modeltype, datafile, treefile;
-    int codonmodel, category, level, fixglob, fixvar; 
+    int codonmodel, category, level, fixglob, fixvar;
 
   public:
-    DiffSelModel* GetModel() {
-        return static_cast<DiffSelModel*>(model);
-    }
+    DiffSelModel* GetModel() { return static_cast<DiffSelModel*>(model); }
 
     string GetModelType() override { return modeltype; }
 
-    DiffSelChain(string indata, string intree, int incategory,
-                                              int inlevel, int inevery, int inuntil, int infixglob,
-                                              int infixvar, int incodonmodel, 
-                                              string inname, int force)
+    DiffSelChain(string indata, string intree, int incategory, int inlevel, int inevery,
+                 int inuntil, int infixglob, int infixvar, int incodonmodel, string inname,
+                 int force)
         : modeltype("DIFFSEL"),
           datafile(indata),
           treefile(intree),
@@ -43,11 +40,12 @@ class DiffSelChain: public Chain {
     }
 
     void New(int force) override {
-        model = new DiffSelModel(datafile, treefile, category, level, fixglob, fixvar, codonmodel, true);
+        model = new DiffSelModel(datafile, treefile, category, level, fixglob, fixvar, codonmodel,
+                                 true);
         cerr << "-- Reset" << endl;
         Reset(force);
         cerr << "-- New ok\n";
-	model->Trace(cerr);
+        model->Trace(cerr);
     }
 
     void Open() override {
@@ -68,8 +66,8 @@ class DiffSelChain: public Chain {
         is >> every >> until >> size;
 
         if (modeltype == "DIFFSEL") {
-            model = new DiffSelModel(
-                datafile, treefile, category, level, fixglob, fixvar, codonmodel, false);
+            model = new DiffSelModel(datafile, treefile, category, level, fixglob, fixvar,
+                                     codonmodel, false);
         } else {
             cerr << "-- Error when opening file " << name
                  << " : does not recognise model type : " << modeltype << '\n';
@@ -79,7 +77,7 @@ class DiffSelChain: public Chain {
 
         model->Update();
         cerr << size << "-- Points saved\n";
-	model->Trace(cerr);
+        model->Trace(cerr);
     }
 
     void Save() override {
@@ -107,7 +105,6 @@ class DiffSelChain: public Chain {
 
 
 int main(int argc, char* argv[]) {
-
     cerr << "-- Parsing command line arguments\n";
 
     // this is an already existing chain on the disk; reopen and restart
@@ -122,7 +119,6 @@ int main(int argc, char* argv[]) {
 
     // this is a new chain
     else {
-
         string datafile = "";
         string treefile = "";
         int ncond = 2;
@@ -135,70 +131,60 @@ int main(int argc, char* argv[]) {
         int every = 1;
         int until = -1;
 
-        try	{
-
-            if (argc == 1)	{
+        try {
+            if (argc == 1) {
                 throw(0);
             }
 
             int i = 1;
-            while (i < argc)	{
+            while (i < argc) {
                 string s = argv[i];
 
-                if (s == "-d")	{
+                if (s == "-d") {
                     i++;
                     datafile = argv[i];
-                }
-                else if ((s == "-t") || (s == "-T"))	{
+                } else if ((s == "-t") || (s == "-T")) {
                     i++;
                     treefile = argv[i];
-                }
-                else if (s == "-ncond")	{
+                } else if (s == "-ncond") {
                     i++;
                     ncond = atoi(argv[i]);
-                }
-                else if (s == "-nlevel")    {
+                } else if (s == "-nlevel") {
                     i++;
                     nlevel = atoi(argv[2]);
                     if ((nlevel != 1) && (nlevel != 2)) {
                         cerr << "error: nlevel should be 1 or 2\n";
                         exit(1);
                     }
-                }
-                else if (s == "-fixvar")    {
+                } else if (s == "-fixvar") {
                     fixvar = 1;
-                }
-                else if (s == "-freevar")   {
+                } else if (s == "-freevar") {
                     fixvar = 0;
-                }
-                else if (s == "-ms")    {
+                } else if (s == "-ms") {
                     codonmodel = 1;
-                }
-                else if (s == "-sr")    {
+                } else if (s == "-sr") {
                     codonmodel = 0;
-                }
-                else if ( (s == "-x") || (s == "-extract") )	{
+                } else if ((s == "-x") || (s == "-extract")) {
                     i++;
                     if (i == argc) throw(0);
                     every = atoi(argv[i]);
                     i++;
                     if (i == argc) throw(0);
                     until = atoi(argv[i]);
-                }
-                else	{
-                    if (i != (argc -1))	{
+                } else {
+                    if (i != (argc - 1)) {
                         throw(0);
                     }
                     name = argv[i];
                 }
                 i++;
             }
-        }
-        catch(...)	{
+        } catch (...) {
             cerr << "error in command\n";
             exit(1);
         }
-        DiffSelChain* chain = new DiffSelChain(datafile,treefile,ncond,nlevel,every,until,fixglob,fixvar,codonmodel,name,true);
+        DiffSelChain* chain = new DiffSelChain(datafile, treefile, ncond, nlevel, every, until,
+                                               fixglob, fixvar, codonmodel, name, true);
         cerr << "start\n";
         chain->Start();
         cerr << "chain stopped\n";

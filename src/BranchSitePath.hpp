@@ -1,9 +1,9 @@
 #ifndef SITEPATH_H
 #define SITEPATH_H
 
+#include <map>
 #include <string>
 #include "StateSpace.hpp"
-#include <map>
 using namespace std;
 
 #include "PathSuffStat.hpp"
@@ -41,7 +41,6 @@ class Plink {
 };
 
 class BranchSitePath {
-
   public:
     BranchSitePath();
     BranchSitePath(int state);
@@ -68,8 +67,8 @@ class BranchSitePath {
 
     void AddCounts(int **paircounts, int *statecounts);
 
-    void AddLengthSuffStat(int& count, double& beta, double factor, SubMatrix* mat);
-    void AddSuffStat(PathSuffStat& suffstat, double factor);
+    void AddLengthSuffStat(int &count, double &beta, double factor, SubMatrix *mat);
+    void AddSuffStat(PathSuffStat &suffstat, double factor);
 
     /*
     void SetTimesRelativeToAbsolute();

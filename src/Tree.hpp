@@ -2,8 +2,8 @@
 #define TREE_H
 
 #include <iostream>
-#include <string>
 #include <map>
+#include <string>
 #include "Random.hpp"
 #include "StringStreamUtils.hpp"
 using namespace std;
@@ -55,7 +55,6 @@ class Link {
     int index;
 
   public:
-
     Link() {
         next = out = this;
         branch = nullptr;
@@ -73,16 +72,12 @@ class Link {
     Branch *GetBranch() const { return branch; }
     Node *GetNode() const { return node; }
 
-    void SetBranch(Branch *inbranch) {
-        branch = inbranch;
-    }
-    void SetNode(Node *innode) {
-        node = innode;
-    }
+    void SetBranch(Branch *inbranch) { branch = inbranch; }
+    void SetNode(Node *innode) { node = innode; }
 
-	void SetIndex(int i) {index = i;}
+    void SetIndex(int i) { index = i; }
 
-	int GetIndex() const {return index;}
+    int GetIndex() const { return index; }
 
     void SetOut(Link *inout) { out = inout; }
 
@@ -455,124 +450,109 @@ class Tree : public NewickTree {
     }
 
     int CountInternalNodes(const Link *from) const;
-    const Link *ChooseInternalNode(const Link *from, const Link *&fromup, int &n) const ;
+    const Link *ChooseInternalNode(const Link *from, const Link *&fromup, int &n) const;
     int CountNodes(const Link *from) const;
     const Link *ChooseNode(const Link *from, const Link *&fromup, int &n) const;
 
-	// index links, nodes and branches through a recursive traversal of the tree
-	// nodes: tip nodes are assumed already numbered between 0 and Ntaxa-1 based on their correspondance with data
-	// branches: start at 0
-	// alternative (currently inactivated): branches: start at 1 (there is a null branch (null pointer) behind the root, of index 0)
-	void SetIndices()	{
-		Nlink = 0;
-		Nnode = GetSize();
-		Nbranch = 0;
-		linkmap.clear();
-		nodemap.clear();
-		branchmap.clear();
-		SetIndices(GetRoot(),Nlink,Nnode,Nbranch);
-	}
+    // index links, nodes and branches through a recursive traversal of the tree
+    // nodes: tip nodes are assumed already numbered between 0 and Ntaxa-1 based on their
+    // correspondance with data
+    // branches: start at 0
+    // alternative (currently inactivated): branches: start at 1 (there is a null branch (null
+    // pointer) behind the root, of index 0)
+    void SetIndices() {
+        Nlink = 0;
+        Nnode = GetSize();
+        Nbranch = 0;
+        linkmap.clear();
+        nodemap.clear();
+        branchmap.clear();
+        SetIndices(GetRoot(), Nlink, Nnode, Nbranch);
+    }
 
-	int GetNlink() const {
-		return Nlink;
-	}
+    int GetNlink() const { return Nlink; }
 
-	int GetNbranch() const {
-		return Nbranch;
-	}
+    int GetNbranch() const { return Nbranch; }
 
-	int GetNnode()	const {
-		return Nnode;
-	}
+    int GetNnode() const { return Nnode; }
 
-	const Node* GetNode(int index) const {
-		return nodemap[index];
-	}
-	const Branch* GetBranch(int index) const  {
-		return branchmap[index];
-	}
+    const Node *GetNode(int index) const { return nodemap[index]; }
+    const Branch *GetBranch(int index) const { return branchmap[index]; }
 
-	Link* GetLink(int index) const {
-		return linkmap[index];
-	}
+    Link *GetLink(int index) const { return linkmap[index]; }
 
-	protected:
+  protected:
+    mutable map<int, const Node *> nodemap;
+    mutable map<int, const Branch *> branchmap;
+    mutable map<int, Link *> linkmap;
 
-	mutable map<int,const Node*> nodemap;
-	mutable map<int,const Branch*> branchmap;
-	mutable map<int,Link*> linkmap;
+    void CheckIndices(Link *from) const {
+        if (!from->isRoot()) {
+            if (from->GetBranch() != branchmap[from->GetBranch()->GetIndex()]) {
+                cerr << "branch index : " << from->GetBranch()->GetIndex() << '\n';
+                exit(1);
+            }
+        } else {
+            if (branchmap[0] != 0) {
+                cerr << "root branch index\n";
+                exit(1);
+            }
+        }
 
-	void CheckIndices(Link* from) const {
+        if (from->GetNode() != nodemap[from->GetNode()->GetIndex()]) {
+            cerr << "node index: " << from->GetNode()->GetIndex() << '\n';
+            exit(1);
+        }
 
-		if (! from->isRoot())	{
-			if (from->GetBranch() != branchmap[from->GetBranch()->GetIndex()])	{
-				cerr << "branch index : " << from->GetBranch()->GetIndex() << '\n';
-				exit(1);
-			}
-		}
-		else	{
-			if (branchmap[0] != 0)	{
-				cerr << "root branch index\n";
-				exit(1);
-			}
-		}
-
-		if (from->GetNode() != nodemap[from->GetNode()->GetIndex()])	{
-			cerr << "node index: " << from->GetNode()->GetIndex() << '\n';
-			exit(1);
-		}
-
-		if (! from->isRoot())	{
-			if (from->Out() != linkmap[from->Out()->GetIndex()])	{
-				cerr << "link index : " << from->Out()->GetIndex() << '\n';
-			}
-		}
-		if (from != linkmap[from->GetIndex()])	{
-			cerr << "link index : " << from->GetIndex() << '\n';
-		}
+        if (!from->isRoot()) {
+            if (from->Out() != linkmap[from->Out()->GetIndex()]) {
+                cerr << "link index : " << from->Out()->GetIndex() << '\n';
+            }
+        }
+        if (from != linkmap[from->GetIndex()]) {
+            cerr << "link index : " << from->GetIndex() << '\n';
+        }
 
 
-		for (const Link* link=from->Next(); link!=from; link=link->Next())	{
-			CheckIndices(link->Out());
-		}
-	}
+        for (const Link *link = from->Next(); link != from; link = link->Next()) {
+            CheckIndices(link->Out());
+        }
+    }
 
-	void SetIndices(Link* from, int& linkindex, int& nodeindex, int& branchindex) {
+    void SetIndices(Link *from, int &linkindex, int &nodeindex, int &branchindex) {
+        if (!from->isRoot()) {
+            from->GetBranch()->SetIndex(branchindex);
+            branchmap[branchindex] = from->GetBranch();
+            branchindex++;
+        }
 
-		if (! from->isRoot())	{
-			from->GetBranch()->SetIndex(branchindex);
-			branchmap[branchindex] = from->GetBranch();
-			branchindex++;
-		}
+        if (!from->isLeaf()) {
+            from->GetNode()->SetIndex(nodeindex);
+            nodemap[nodeindex] = from->GetNode();
+            nodeindex++;
+        } else {
+            nodemap[from->GetNode()->GetIndex()] = from->GetNode();
+        }
 
-		if (! from->isLeaf())	{
-			from->GetNode()->SetIndex(nodeindex);
-			nodemap[nodeindex] = from->GetNode();
-			nodeindex++;
-		}
-		else	{
-			nodemap[from->GetNode()->GetIndex()] = from->GetNode();
-		}
+        if (!from->isRoot()) {
+            from->Out()->SetIndex(linkindex);
+            linkmap[linkindex] = from->Out();
+            linkindex++;
+        }
+        from->SetIndex(linkindex);
+        linkmap[linkindex] = from;
+        linkindex++;
 
-		if (! from->isRoot())	{
-			from->Out()->SetIndex(linkindex);
-			linkmap[linkindex] = from->Out();
-			linkindex++;
-		}
-		from->SetIndex(linkindex);
-		linkmap[linkindex] = from;
-		linkindex++;
-
-		for (const Link* link=from->Next(); link!=from; link=link->Next())	{
-			SetIndices(link->Out(),linkindex,nodeindex,branchindex);
-		}
-	}
+        for (const Link *link = from->Next(); link != from; link = link->Next()) {
+            SetIndices(link->Out(), linkindex, nodeindex, branchindex);
+        }
+    }
 
   protected:
     // returns 0 if not found
     // returns link if found (then found1 and found2 must
     const Link *RecursiveGetLCA(const Link *from, std::string tax1, std::string tax2, bool &found1,
-                                bool &found2)  const {
+                                bool &found2) const {
         const Link *ret = nullptr;
         if (from->isLeaf()) {
             // found1 |= (from->GetNode()->GetName() == tax1);
@@ -692,9 +672,9 @@ class Tree : public NewickTree {
     // just 2 pointers, to the root and to a list of taxa
     Link *root;
     const TaxonSet *taxset;
-	mutable int Nlink;
-	mutable int Nbranch;
-	mutable int Nnode;
+    mutable int Nlink;
+    mutable int Nbranch;
+    mutable int Nnode;
 };
 
 #endif  // TREE_H
