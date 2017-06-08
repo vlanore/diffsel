@@ -43,7 +43,7 @@ class ProbModel {
     // monitoring the run
     virtual void Trace(std::ostream & /*unused*/) {}
     virtual void TraceHeader(std::ostream & /*unused*/) {}
-    virtual void Monitor(std::ostream &os) {}
+    virtual void Monitor(std::ostream &) {}
     // MCScheduler scheduler;
 };
 

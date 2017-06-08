@@ -3,7 +3,7 @@
 #include "MultiGeneSingleOmegaModel.hpp"
 using namespace std;
 
-int main(int argc, char* argv[]) {
+int main(int, char* argv[]) {
     string genelistfile = argv[1];
     string treefile = argv[2];
     string name = argv[3];

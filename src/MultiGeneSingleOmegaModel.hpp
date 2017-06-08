@@ -522,8 +522,8 @@ class MultiGeneSingleOmegaModel : public ProbModel {
         os << alpha << '\t' << beta << '\n';
     }
 
-    void Monitor(ostream& os) {}
+    void Monitor(ostream&) {}
 
-    void FromStream(istream& is) {}
-    void ToStream(ostream& os) {}
+    void FromStream(istream&) {}
+    void ToStream(ostream&) {}
 };

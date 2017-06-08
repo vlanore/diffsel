@@ -113,7 +113,7 @@ class DiffSelModel : public ProbModel {
     PhyloProcess* phyloprocess;
 
   public:
-    DiffSelModel(std::string datafile, std::string treefile, int inNcond, int inNlevel,
+    DiffSelModel(const std::string &datafile, const std::string &treefile, int inNcond, int inNlevel,
                  int infixglob, int infixvar, int incodonmodel, bool sample) {
         fixglob = infixglob;
         if (!fixglob) {
@@ -593,7 +593,7 @@ class DiffSelModel : public ProbModel {
         */
     }
 
-    double SiteGlobalProfileLogProb(int i) { return 0; }
+    double SiteGlobalProfileLogProb(int) { return 0; }
 
     double ProfileLogProb() {
         double total = 0;
@@ -1054,7 +1054,7 @@ class DiffSelModel : public ProbModel {
         os << GetEntropy(nucrelrate, Nrr) << '\n';
     }
 
-    void Monitor(ostream& os) {}
+    void Monitor(ostream&) {}
 
     void FromStream(istream& is) {
         is >> lambda;

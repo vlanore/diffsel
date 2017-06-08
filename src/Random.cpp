@@ -453,7 +453,7 @@ double Random::ProfileProposeMove(
 
     double ret = 0;
     if (n == 0) {  // dirichlet
-        double oldprofile[dim];
+        auto oldprofile = new double[dim];
         for (int i = 0; i < dim; i++) {
             oldprofile[i] = profile[i];
         }
