@@ -791,7 +791,7 @@ class DiffSelModel : public ProbModel {
 
 		double nacc = 0;
 		double ntot = 0;
-		double* bk = new double[Naa];
+		double bk[Naa];
 		for (int rep=0; rep<nrep; rep++)	{
 			for (int i=0; i<Nsite; i++)	{
 
