@@ -16,9 +16,9 @@ class DiffSelChain : public Chain {
 
     string GetModelType() override { return modeltype; }
 
-    DiffSelChain(string indata, string intree, int incategory, int inlevel, int inevery,
-                 int inuntil, int infixglob, int infixvar, int incodonmodel, string inname,
-                 int force)
+    DiffSelChain(const string& indata, const string& intree, int incategory, int inlevel,
+                 int inevery, int inuntil, int infixglob, int infixvar, int incodonmodel,
+                 string inname, int force)
         : modeltype("DIFFSEL"),
           datafile(indata),
           treefile(intree),
@@ -33,7 +33,7 @@ class DiffSelChain : public Chain {
         New(force);
     }
 
-    DiffSelChain(string filename) {
+    explicit DiffSelChain(string filename) {
         name = filename;
         Open();
         Save();
@@ -180,7 +180,10 @@ int main(int argc, char* argv[]) {
                 i++;
             }
         } catch (...) {
-            cerr << "error in command\n";
+            cerr << "error in command\n"
+                 << "usage is:\n"
+                 << "\tflatdiffsel_bin name -d datafile -t treefile [-ncond i] [-nlevel 1|2] "
+                    "[-fixvar|-freevar] [-ms|-sr] [-x every until]\n";
             exit(1);
         }
         DiffSelChain* chain = new DiffSelChain(datafile, treefile, ncond, nlevel, every, until,
