@@ -717,42 +717,49 @@ class DiffSelModel : public ProbModel {
     // move cycle schedule
     // does not yet implement any monitoring (success rates, time spent, etc)
     double Move() override {
+
         phyloprocess->ResampleSub();
 
-        int nrep = 30;
+	int nrep0 = 3;
+        int nrep = 20;
 
-        for (int rep = 0; rep < nrep; rep++) {
-            CollectLengthSuffStat();
+        for (int rep0 = 0; rep0 < nrep0; rep0++) {
 
-            MoveBranchLength();
-            MoveLambda(1.0, 10);
-            MoveLambda(0.3, 10);
+		CollectLengthSuffStat();
 
-            CollectSuffStat();
+		MoveBranchLength();
+		MoveLambda(1.0, 10);
+		MoveLambda(0.3, 10);
 
-            UpdateAll();
+		CollectSuffStat();
 
-            MoveBaseline(1, 2, 10);
-            MoveBaseline(0.3, 5, 10);
-            MoveBaseline(0.1, 10, 10);
+		for (int rep = 0; rep < nrep; rep++) {
 
-            for (int k = 1; k < Ncond; k++) {
-                MoveDelta(k, 5, 1, 10);
-            }
+		    UpdateAll();
 
-            if (!fixvar) {
-                MoveVarSel(1.0, 10);
-                MoveVarSel(0.3, 10);
-            }
+		    MoveBaseline(0.15, 10, 1);
 
-            MoveRR(0.1, 1, 3);
-            MoveRR(0.03, 3, 3);
-            MoveRR(0.01, 3, 3);
+		    for (int k = 1; k < Ncond; k++) {
+			MoveDelta(k, 5, 1, 10);
+			MoveDelta(k, 3, 5, 10);
+			MoveDelta(k, 1, 10, 10);
+			MoveDelta(k, 1, 20, 10);
+		    }
 
-            MoveNucStat(0.1, 1, 3);
-            MoveNucStat(0.01, 1, 3);
+		    if (!fixvar) {
+			MoveVarSel(1.0, 10);
+			MoveVarSel(0.3, 10);
+		    }
 
-            UpdateAll();
+		    MoveRR(0.1, 1, 1);
+		    MoveRR(0.03, 3, 1);
+		    MoveRR(0.01, 3, 1);
+
+		    MoveNucStat(0.1, 1, 1);
+		    MoveNucStat(0.01, 1, 1);
+		}
+
+		UpdateAll();
         }
 
         return 1.0;
@@ -813,8 +820,8 @@ class DiffSelModel : public ProbModel {
                 double loghastings = Random::RealVectorProposeMove(delta[k][i], Naa, tuning, n);
                 deltalogprob += loghastings;
 
-                UpdateSite(i);
-                // UpdateSiteFlagged(i,k);
+                // UpdateSite(i);
+                UpdateSiteFlagged(i,k);
 
                 deltalogprob += SiteCondProfileLogProb(i, k) + GetSiteSuffStatLogProb(i);
 
