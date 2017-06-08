@@ -11,7 +11,7 @@ ALL= flatdiffsel readflatdiffsel flatglobom flatgeneglobom
 EXEEXT=_bin
 PROGS=$(addsuffix $(EXEEXT), $(addprefix $(PROGSDIR)/, $(ALL)))
 
-.PHONY: all clean format
+.PHONY: all clean format test
 all: $(PROGS)
 
 # Rules to generate the dependencies automatically
@@ -48,6 +48,9 @@ $(PROGSDIR)/readflatdiffsel$(EXEEXT): ReadDiffSel.o $(OBJS)
 
 format:
 	clang-format -i $(ALL_SRCS)
+
+test: ../flatdiffsel_bin
+	cd .. ; time ./flatdiffsel_bin -d data/samhd1.ali -t data/samhd1.tree -x 1 1 test
 
 clean:
 	-rm -f *.o *.d *.d.*

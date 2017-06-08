@@ -30,4 +30,4 @@ matrix:
 script:
   - export CXX=$COMPILER
   - $CXX -v
-  - cd src ; make
+  - cd src && make && make test
