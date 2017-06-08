@@ -149,9 +149,6 @@ class DiffSelModel : public ProbModel {
             // stochastic mapping of substitution histories
             std::cerr << "-- mapping substitutions\n";
             phyloprocess->ResampleSub();
-
-            std::cerr << "-- collect suffstat\n";
-            CollectSuffStat();
         }
     }
 
@@ -718,8 +715,6 @@ class DiffSelModel : public ProbModel {
     // does not yet implement any monitoring (success rates, time spent, etc)
     double Move() override {
 
-        phyloprocess->ResampleSub();
-
 	int nrep0 = 3;
         int nrep = 20;
 
@@ -733,9 +728,9 @@ class DiffSelModel : public ProbModel {
 
 		CollectSuffStat();
 
-		for (int rep = 0; rep < nrep; rep++) {
+	        UpdateAll();
 
-		    UpdateAll();
+		for (int rep = 0; rep < nrep; rep++) {
 
 		    MoveBaseline(0.15, 10, 1);
 
@@ -751,16 +746,18 @@ class DiffSelModel : public ProbModel {
 			MoveVarSel(0.3, 10);
 		    }
 
-		    MoveRR(0.1, 1, 1);
-		    MoveRR(0.03, 3, 1);
-		    MoveRR(0.01, 3, 1);
-
-		    MoveNucStat(0.1, 1, 1);
-		    MoveNucStat(0.01, 1, 1);
 		}
 
-		UpdateAll();
+		MoveRR(0.1, 1, 10);
+		MoveRR(0.03, 3, 10);
+		MoveRR(0.01, 3, 10);
+
+		MoveNucStat(0.1, 1, 10);
+		MoveNucStat(0.01, 1, 10);
         }
+
+	UpdateAll();
+        phyloprocess->ResampleSub();
 
         return 1.0;
     }
@@ -1037,7 +1034,7 @@ class DiffSelModel : public ProbModel {
         return total;
     }
 
-    double GetLogLikelihood() { return phyloprocess->GetLogProb(); }
+    double GetLogLikelihood() { return phyloprocess->GetFastLogProb(); }
 
     void TraceHeader(std::ostream& os) override  {
         os << "#logprior\tlnL\tlength\t";

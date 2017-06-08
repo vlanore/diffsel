@@ -155,11 +155,11 @@ double PhyloProcess::FastSiteLogLikelihood(int site) {
 
 double PhyloProcess::GetFastLogProb() {
     double total = 0;
-    MeasureTime timer;
+    // MeasureTime timer;
     for (int i = 0; i < GetNsite(); i++) {
         total += sitelnL[i];
     }
-    timer.print<2>("GetFastLogProb. ");
+    // timer.print<2>("GetFastLogProb. ");
     return total;
 }
 
@@ -413,7 +413,7 @@ void PhyloProcess::ResampleState() {
 void PhyloProcess::ResampleState(int site) {
     if (!isMissing(GetRoot()->GetNode(), site)) {
         Pruning(GetRoot(), site);
-        // FastSiteLogLikelihood(site);
+        FastSiteLogLikelihood(site);
         PruningAncestral(GetRoot(), site);
     }
 }
