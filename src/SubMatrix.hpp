@@ -55,13 +55,18 @@ class SubMatrix {
     // of the substitution process
     virtual void ComputeStationary() const = 0;
 
-  public:
     static const int UniSubNmax = 500;
     static int nunisubcount;
-    static int GetUniSubCount() { return nunisubcount; }
-
     static int nuni;
     static int nunimax;
+    static int diagcount;
+
+  public:
+
+    static int GetDiagCount() {return diagcount;}
+    static void ResetDiagCount() {diagcount = 0;}
+
+    static int GetUniSubCount() { return nunisubcount; }
 
     static double GetMeanUni() { return ((double)nunimax) / nuni; }
 

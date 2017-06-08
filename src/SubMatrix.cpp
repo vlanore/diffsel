@@ -10,6 +10,7 @@ using namespace std;
 int SubMatrix::nuni = 0;
 int SubMatrix::nunimax = 0;
 int SubMatrix::nunisubcount = 0;
+int SubMatrix::diagcount = 0;
 
 double SubMatrix::nz = 0;
 double SubMatrix::meanz = 0;
@@ -119,6 +120,8 @@ int SubMatrix::Diagonalise() const {
     if (!ArrayUpdated()) {
         UpdateMatrix();
     }
+
+    diagcount++;
 
     int nmax = 1000;
     double epsilon = 1e-20;
