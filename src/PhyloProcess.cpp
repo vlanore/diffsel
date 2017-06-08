@@ -532,7 +532,7 @@ BranchSitePath *PhyloProcess::SampleRootPath(int rootstate) {
 
 BranchSitePath *PhyloProcess::SamplePath(int stateup, int statedown, double time, double rate,
                                          SubMatrix *matrix) {
-    BranchSitePath *path = ResampleAcceptReject(1000, stateup, statedown, rate, time, matrix);
+    BranchSitePath *path = ResampleAcceptReject(100, stateup, statedown, rate, time, matrix);
     if (!path) {
         path = ResampleUniformized(stateup, statedown, rate, time, matrix);
     }
