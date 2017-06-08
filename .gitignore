@@ -2,3 +2,9 @@ src/*.o
 src/*.d
 cscope*
 *_bin
+*.trace
+*.details
+*.monitor
+*.param
+*.run
+*.chain
