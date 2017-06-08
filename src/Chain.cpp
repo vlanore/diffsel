@@ -18,9 +18,9 @@ void Chain::MakeFiles(int force) {
         cerr << "already existing chain, cannot override (unless in forcing mode)\n";
         exit(1);
     }
-    ofstream param_os((name + ".param").c_str());
-    ofstream chain_os((name + ".chain").c_str());
-    ofstream mon_os((name + ".monitor").c_str());
+    // ofstream param_os((name + ".param").c_str());
+    // ofstream chain_os((name + ".chain").c_str());
+    // ofstream mon_os((name + ".monitor").c_str());
     ofstream trace_os((name + ".trace").c_str());
     model->TraceHeader(trace_os);
 }
@@ -29,7 +29,7 @@ void Chain::Monitor() {
     ofstream trace_os((name + ".trace").c_str(), ios_base::app);
     model->Trace(trace_os);
     ofstream mon_os((name + ".monitor").c_str());
-    ofstream mon_det_os((name + ".details").c_str());
+    // ofstream mon_det_os((name + ".details").c_str());
     model->Monitor(mon_os);
 }
 
@@ -69,6 +69,7 @@ int Chain::GetRunningStatus() {
 }
 
 void Chain::Run() {
+#define DEBUG 2
 #if DEBUG > 0
     int i = 0;
     MeasureTime timer;
