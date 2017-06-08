@@ -51,7 +51,7 @@ format:
 	clang-format -i $(ALL_SRCS)
 
 test: ../flatdiffsel_bin
-	cd .. ; ./flatdiffsel_bin -d data/samhd1.ali -t data/samhd1.tree -x 1 1 test
+	cd .. ; ./flatdiffsel_bin -d data/samhd1.ali -t data/samhd1.tree -x 1 0 test
 
 clean:
 	-rm -f *.o *.d *.d.*

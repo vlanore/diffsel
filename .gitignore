@@ -8,3 +8,4 @@ cscope*
 *.param
 *.run
 *.chain
+*.gcno
