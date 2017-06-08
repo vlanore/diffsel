@@ -33,7 +33,7 @@ before_install:
 script:
   - export CXX=$COMPILER
   - $CXX -v
-  - if [ "$CXX" == "g++-5" ]; then export TINYCOMPO_FLAGS="-fprofile-arcs -ftest-coverage -g"; fi
+  - if [ "$CXX" == "g++-5" ]; then export DIFFSEL_FLAGS="-fprofile-arcs -ftest-coverage -g"; fi
   - cd src && make && make test
 
 after_success:
