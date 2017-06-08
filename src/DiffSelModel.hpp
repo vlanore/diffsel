@@ -716,7 +716,7 @@ class DiffSelModel : public ProbModel {
 
     // move cycle schedule
     // does not yet implement any monitoring (success rates, time spent, etc)
-    double Move() {
+    double Move() override {
         phyloprocess->ResampleSub();
 
         int nrep = 30;
@@ -1032,7 +1032,7 @@ class DiffSelModel : public ProbModel {
 
     double GetLogLikelihood() { return phyloprocess->GetLogProb(); }
 
-    void TraceHeader(std::ostream& os) {
+    void TraceHeader(std::ostream& os) override  {
         os << "#logprior\tlnL\tlength\t";
         os << "globent\t";
         for (int k = 1; k < Ncond; k++) {
@@ -1042,7 +1042,7 @@ class DiffSelModel : public ProbModel {
         os << "rrent\n";
     }
 
-    void Trace(ostream& os) {
+    void Trace(ostream& os) override {
         os << GetLogPrior() << '\t';
         os << GetLogLikelihood() << '\t';
         os << GetTotalLength() << '\t';
@@ -1054,9 +1054,9 @@ class DiffSelModel : public ProbModel {
         os << GetEntropy(nucrelrate, Nrr) << '\n';
     }
 
-    void Monitor(ostream&) {}
+    void Monitor(ostream&) override {}
 
-    void FromStream(istream& is) {
+    void FromStream(istream& is) override {
         is >> lambda;
         for (int i = 0; i < Nbranch; i++) {
             is >> branchlength[i];
@@ -1084,7 +1084,7 @@ class DiffSelModel : public ProbModel {
         }
     }
 
-    void ToStream(ostream& os) {
+    void ToStream(ostream& os) override {
         os << lambda << '\n';
         for (int i = 0; i < Nbranch; i++) {
             os << branchlength[i] << '\t';
