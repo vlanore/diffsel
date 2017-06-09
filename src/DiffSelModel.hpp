@@ -62,9 +62,6 @@ class DiffSelModel : public ProbModel {
     double* nucstat;
     GTRSubMatrix* nucmatrix;
 
-    // codon usage factors (uniform in the current version)
-    double* codonusage;
-
     // baseline (global) fitness profiles across sites
     // Nsite * Naa
     double** baseline;
@@ -230,11 +227,6 @@ class DiffSelModel : public ProbModel {
         // normalized (true) GTR nucleotide substitution matrix
         nucmatrix = new GTRSubMatrix(Nnuc, nucrelrate, nucstat, true);
 
-        codonusage = new double[Ncodon];
-        for (int k = 0; k < Ncodon; k++) {
-            codonusage[k] = 1.0;
-        }
-
         // baseline (global) profile
         // uniform Dirichlet distributed
         baseline = new double*[Nsite];
@@ -291,13 +283,13 @@ class DiffSelModel : public ProbModel {
             condsubmatrixarray[k] = new CodonSubMatrix*[Nsite];
             for (int i = 0; i < Nsite; i++) {
                 if (codonmodel == 0) {
-                    condsubmatrixarray[k][i] = new MGSRFitnessCodonUsageSubMatrix(
+                    condsubmatrixarray[k][i] = new MGSRFitnessSubMatrix(
                         (CodonStateSpace*)codondata->GetStateSpace(), nucmatrix,
-                        fitnessprofile[k][i], codonusage, false);
+                        fitnessprofile[k][i], false);
                 } else {
-                    condsubmatrixarray[k][i] = new MGMSFitnessCodonUsageSubMatrix(
+                    condsubmatrixarray[k][i] = new MGMSFitnessSubMatrix(
                         (CodonStateSpace*)codondata->GetStateSpace(), nucmatrix,
-                        fitnessprofile[k][i], codonusage, false);
+                        fitnessprofile[k][i], false);
                 }
             }
         }
