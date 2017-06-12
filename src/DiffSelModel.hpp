@@ -110,8 +110,8 @@ class DiffSelModel : public ProbModel {
     PhyloProcess* phyloprocess;
 
   public:
-    DiffSelModel(const std::string &datafile, const std::string &treefile, int inNcond, int inNlevel,
-                 int infixglob, int infixvar, int incodonmodel, bool sample) {
+    DiffSelModel(const std::string& datafile, const std::string& treefile, int inNcond,
+                 int inNlevel, int infixglob, int infixvar, int incodonmodel, bool sample) {
         fixglob = infixglob;
         if (!fixglob) {
             cerr << "error: free hyperparameters for baseline (global profile) not yet "
@@ -283,13 +283,13 @@ class DiffSelModel : public ProbModel {
             condsubmatrixarray[k] = new CodonSubMatrix*[Nsite];
             for (int i = 0; i < Nsite; i++) {
                 if (codonmodel == 0) {
-                    condsubmatrixarray[k][i] = new MGSRFitnessSubMatrix(
-                        (CodonStateSpace*)codondata->GetStateSpace(), nucmatrix,
-                        fitnessprofile[k][i], false);
+                    condsubmatrixarray[k][i] =
+                        new MGSRFitnessSubMatrix((CodonStateSpace*)codondata->GetStateSpace(),
+                                                 nucmatrix, fitnessprofile[k][i], false);
                 } else {
-                    condsubmatrixarray[k][i] = new MGMSFitnessSubMatrix(
-                        (CodonStateSpace*)codondata->GetStateSpace(), nucmatrix,
-                        fitnessprofile[k][i], false);
+                    condsubmatrixarray[k][i] =
+                        new MGMSFitnessSubMatrix((CodonStateSpace*)codondata->GetStateSpace(),
+                                                 nucmatrix, fitnessprofile[k][i], false);
                 }
             }
         }
@@ -706,51 +706,47 @@ class DiffSelModel : public ProbModel {
     // move cycle schedule
     // does not yet implement any monitoring (success rates, time spent, etc)
     double Move() override {
+        SubMatrix::ResetDiagCount();
 
-	SubMatrix::ResetDiagCount();
-
-	int nrep0 = 3;
+        int nrep0 = 3;
         int nrep = 20;
 
         for (int rep0 = 0; rep0 < nrep0; rep0++) {
+            CollectLengthSuffStat();
 
-		CollectLengthSuffStat();
+            MoveBranchLength();
+            MoveLambda(1.0, 10);
+            MoveLambda(0.3, 10);
 
-		MoveBranchLength();
-		MoveLambda(1.0, 10);
-		MoveLambda(0.3, 10);
+            CollectSuffStat();
 
-		CollectSuffStat();
+            UpdateAll();
 
-	        UpdateAll();
+            for (int rep = 0; rep < nrep; rep++) {
+                MoveBaseline(0.15, 10, 1);
 
-		for (int rep = 0; rep < nrep; rep++) {
+                for (int k = 1; k < Ncond; k++) {
+                    MoveDelta(k, 5, 1, 10);
+                    MoveDelta(k, 3, 5, 10);
+                    MoveDelta(k, 1, 10, 10);
+                    MoveDelta(k, 1, 20, 10);
+                }
 
-		    MoveBaseline(0.15, 10, 1);
+                if (!fixvar) {
+                    MoveVarSel(1.0, 10);
+                    MoveVarSel(0.3, 10);
+                }
+            }
 
-		    for (int k = 1; k < Ncond; k++) {
-			MoveDelta(k, 5, 1, 10);
-			MoveDelta(k, 3, 5, 10);
-			MoveDelta(k, 1, 10, 10);
-			MoveDelta(k, 1, 20, 10);
-		    }
+            MoveRR(0.1, 1, 10);
+            MoveRR(0.03, 3, 10);
+            MoveRR(0.01, 3, 10);
 
-		    if (!fixvar) {
-			MoveVarSel(1.0, 10);
-			MoveVarSel(0.3, 10);
-		    }
-
-		}
-
-		MoveRR(0.1, 1, 10);
-		MoveRR(0.03, 3, 10);
-		MoveRR(0.01, 3, 10);
-
-		MoveNucStat(0.1, 1, 10);
-		MoveNucStat(0.01, 1, 10);
+            MoveNucStat(0.1, 1, 10);
+            MoveNucStat(0.01, 1, 10);
         }
 
-	UpdateAll();
+        UpdateAll();
         phyloprocess->ResampleSub();
 
         return 1.0;
@@ -812,7 +808,7 @@ class DiffSelModel : public ProbModel {
                 deltalogprob += loghastings;
 
                 // UpdateSite(i);
-                UpdateSiteFlagged(i,k);
+                UpdateSiteFlagged(i, k);
 
                 deltalogprob += SiteCondProfileLogProb(i, k) + GetSiteSuffStatLogProb(i);
 
@@ -1030,7 +1026,7 @@ class DiffSelModel : public ProbModel {
 
     double GetLogLikelihood() { return phyloprocess->GetFastLogProb(); }
 
-    void TraceHeader(std::ostream& os) override  {
+    void TraceHeader(std::ostream& os) override {
         os << "#logprior\tlnL\tlength\t";
         os << "globent\t";
         for (int k = 1; k < Ncond; k++) {
@@ -1038,7 +1034,7 @@ class DiffSelModel : public ProbModel {
         }
         os << "statent\t";
         os << "rrent\t";
-	os << "diag\n";
+        os << "diag\n";
     }
 
     void Trace(ostream& os) override {
@@ -1051,7 +1047,7 @@ class DiffSelModel : public ProbModel {
         }
         os << GetEntropy(nucstat, Nnuc) << '\t';
         os << GetEntropy(nucrelrate, Nrr) << '\t';
-	os << SubMatrix::GetDiagCount() << '\n';
+        os << SubMatrix::GetDiagCount() << '\n';
     }
 
     void Monitor(ostream&) override {}

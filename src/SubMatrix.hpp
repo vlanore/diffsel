@@ -62,9 +62,8 @@ class SubMatrix {
     static int diagcount;
 
   public:
-
-    static int GetDiagCount() {return diagcount;}
-    static void ResetDiagCount() {diagcount = 0;}
+    static int GetDiagCount() { return diagcount; }
+    static void ResetDiagCount() { diagcount = 0; }
 
     static int GetUniSubCount() { return nunisubcount; }
 

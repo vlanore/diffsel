@@ -22,12 +22,11 @@ void MGSRFitnessSubMatrix::ComputeArray(int i) const {
     double total = 0;
     for (int j = 0; j < GetNstate(); j++) {
         if (i != j) {
-
             // grep the position (0, 1 or 2) at which the two codons differ
-            // if the codons differ at more than one position then pos = -1 or 3 (and the rate should be 0)
+            // if the codons differ at more than one position then pos = -1 or 3 (and the rate
+            // should be 0)
             int pos = GetDifferingPosition(i, j);
             if ((pos != -1) && (pos != 3)) {
-
                 // get the initial and final nucleotides
                 int a = GetCodonPosition(pos, i);
                 int b = GetCodonPosition(pos, j);
@@ -39,7 +38,6 @@ void MGSRFitnessSubMatrix::ComputeArray(int i) const {
                                      (GetFitness(GetCodonStateSpace()->Translation(i)))));
                 }
             } else {
-
                 // non-nearest neighbor coodns: rate is 0
                 Q[i][j] = 0;
             }
@@ -76,12 +74,11 @@ void MGMSFitnessSubMatrix::ComputeArray(int i) const {
     double total = 0;
     for (int j = 0; j < GetNstate(); j++) {
         if (i != j) {
-
             // grep the position (0, 1 or 2) at which the two codons differ
-            // if the codons differ at more than one position then pos = -1 or 3 (and the rate should be 0)
+            // if the codons differ at more than one position then pos = -1 or 3 (and the rate
+            // should be 0)
             int pos = GetDifferingPosition(i, j);
             if ((pos != -1) && (pos != 3)) {
-
                 // get the initial and final nucleotides
                 int a = GetCodonPosition(pos, i);
                 int b = GetCodonPosition(pos, j);
@@ -91,13 +88,14 @@ void MGMSFitnessSubMatrix::ComputeArray(int i) const {
                 // calculate the scaled selection coefficient
                 double S = 0;
                 if (!Synonymous(i, j)) {
-                    S = (log(GetFitness(GetCodonStateSpace()->Translation(j))) - log(GetFitness(GetCodonStateSpace()->Translation(i))));
+                    S = (log(GetFitness(GetCodonStateSpace()->Translation(j))) -
+                         log(GetFitness(GetCodonStateSpace()->Translation(i))));
                 }
 
                 // first order development when S << 1
                 if ((fabs(S)) < 1e-30) {
                     Q[i][j] *= 1 + S / 2;
-                } 
+                }
                 // asymptotic value for very large S
                 else if (S > 50) {
                     Q[i][j] *= S;
@@ -107,12 +105,11 @@ void MGMSFitnessSubMatrix::ComputeArray(int i) const {
                     Q[i][j] = 0;
                 }
                 // otherwise, standard formula for fixation probability as a function of S
-                else    {
+                else {
                     Q[i][j] *= S / (1.0 - exp(-S));
                 }
 
             } else {
-
                 // non-nearest neighbor coodns: rate is 0
                 Q[i][j] = 0;
             }
@@ -137,4 +134,3 @@ void MGMSFitnessSubMatrix::ComputeArray(int i) const {
         exit(1);
     }
 }
-
