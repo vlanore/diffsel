@@ -176,8 +176,8 @@ class DiffSelModel : public ProbModel {
         tree->SetIndices();
         Nbranch = tree->GetNbranch();
 
-        std::cerr << "number of taxa : " << Ntaxa << '\n';
-        std::cerr << "number of branches : " << Nbranch << '\n';
+        std::cerr << "-- Number of taxa : " << Ntaxa << '\n';
+        std::cerr << "-- Number of branches : " << Nbranch << '\n';
 
         std::cerr << "-- Tree and data fit together\n";
     }
