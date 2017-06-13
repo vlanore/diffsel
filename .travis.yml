@@ -35,3 +35,6 @@ script:
   - $CXX -v
   - if [ "$CXX" == "g++-5" ]; then export DIFFSEL_FLAGS="-fprofile-arcs -ftest-coverage -g"; fi
   - cd src && make && make test && cd ..
+
+after_success:
+  - if [ "$CXX" == "g++-5" ]; then bash <(curl -s https://codecov.io/bash); fi
