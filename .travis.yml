@@ -37,4 +37,4 @@ script:
   - cd src && make && make test && cd ..
 
 after_success:
-  - if [ "$CXX" == "g++-5" ]; then bash <(curl -s https://codecov.io/bash); fi
+  - if [ "$CXX" == "g++-5" ]; then gcov src/* && bash <(curl -s https://codecov.io/bash); fi
