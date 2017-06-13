@@ -4,9 +4,11 @@ sudo: false
 
 matrix:
   include:
+
     - os: osx
       compiler: clang
       env: COMPILER=clang++
+
     - os: linux
       dist: trusty
       addons:
@@ -16,6 +18,7 @@ matrix:
           packages:
             - g++-5
       env: COMPILER=g++-5
+
     - os: linux
       dist: trusty
       addons:
@@ -27,15 +30,8 @@ matrix:
             - clang-3.6
       env: COMPILER=clang++-3.6
 
-before_install:
-  - pip install --user cpp-coveralls
-
 script:
   - export CXX=$COMPILER
   - $CXX -v
   - if [ "$CXX" == "g++-5" ]; then export DIFFSEL_FLAGS="-fprofile-arcs -ftest-coverage -g"; fi
   - cd src && make && make test && cd ..
-
-after_success:
-  - if [ "$CXX" == "g++-5" ]; then coveralls -t 606Y1GaVUZbRm9agVjYbT2pns38InKSFR ; fi
-
