@@ -11,3 +11,6 @@ cscope*
 *.gcno
 *.gcov
 *.gcda
+*.meandiffsel
+*.signdiffsel
+*.contdiff
