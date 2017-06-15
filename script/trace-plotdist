@@ -1,6 +1,7 @@
 #!/usr/bin/python3.5
 
 import sys
+from functools import reduce
 
 def strip(str):
     if str[0]=='#':
@@ -48,13 +49,13 @@ print(step("Parsing command line arguments"))
 
 from argparse import ArgumentParser, FileType
 parser = ArgumentParser(description='A small script that takes a coevol trace file and displays a distribution plot for one column.')
-parser.add_argument('inputFile', metavar="input", type=FileType('r'), nargs=1, help='the trace file')
 parser.add_argument('column', metavar="col", nargs=1, help='the column to plot')
+parser.add_argument('inputFile', metavar="input", type=FileType('r'), nargs='+', help='the trace file')
 parser.add_argument('-b', '--burnin', type=float, default=20, help="the burn-in percentage (a float between 0 and 100); default is 20")
 args = parser.parse_args()
 
-traceFile = args.inputFile[0]
-print("-- Trace file is "+param(traceFile.name))
+traceFiles = args.inputFile
+print("-- Trace files are "+", ".join([param(f.name) for f in args.inputFile]))
 
 burnin = args.burnin
 print("-- Burn-in is "+param(burnin)+param("%"))
@@ -64,27 +65,22 @@ print("-- Column to plot is "+param(col))
 
 #===================================================================================================
 print(step("Starting trace analysis!"))
-categories = list(map(strip,traceFile.readline().split('\t')))
+
+categories = [[strip(cat) for cat in f.readline().split('\t')] for f in traceFiles]
 pos = -1
-if (col in categories):
-    pos = categories.index(col)
+if all([col in cat for cat in categories]):
+    pos = categories[0].index(col)
     print("-- Column exists in trace at position "+str(pos))
 else:
-    print("-- "+error("Error")+": Column "+param(col)+" does not exist in trace!")
-    print("\tExisting columns are: ", end='')
-    for cat in categories:
-        print(cat, end='')
-        if cat != categories[-1]:
-            print(", ",end='')
-        else:
-            print("")
+    print("-- "+error("Error")+": column "+param(col)+" does not exist in all traces!")
+    print("\tColumns that exist in all traces are: "+", ".join(reduce(set.intersection, [set(c) for c in categories])))
     exit(1)
 
 
 print("-- Extracting column data")
-coldata = [float(l.split('\t')[pos]) for  l in traceFile]
+coldata = [[float(l.split('\t')[pos]) for l in f] for f in traceFiles]
 
-print("-- Trace contains "+str(len(coldata))+" lines")
+print("-- Traces contain "+", ".join([str(len(c)) for c in coldata])+" lines respectively")
 
 #===================================================================================================
 print(step("Plotting data!"))
