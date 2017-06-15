@@ -84,9 +84,14 @@ else:
     print("\tColumns that exist in all traces are: "+", ".join([data(s) for s in reduce(set.intersection, [set(c) for c in categories])]))
     exit(1)
 
-
 print("-- Extracting column data")
 coldata = [[float(l.split('\t')[pos[i]]) for l in traceFiles[i]] for i in range(len(traceFiles))]
+
+burnins = [int(len(c)*float(burnin)/100.0) for c in coldata]
+print("-- Burn-in ends at point "+", ".join([data(b) for b in burnins])+" respectively")
+
+print("-- Applying burn-in")
+coldata = [coldata[i][burnins[i]:] for i in range(len(coldata))]
 
 print("-- Traces contain "+", ".join([data(len(c)) for c in coldata])+" lines respectively")
 
