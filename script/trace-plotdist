@@ -55,6 +55,7 @@ parser = ArgumentParser(description='A small script that takes a coevol trace fi
 parser.add_argument('column', metavar="col", nargs=1, help='the column to plot')
 parser.add_argument('inputFile', metavar="input", type=FileType('r'), nargs='+', help='the trace file')
 parser.add_argument('-b', '--burnin', type=float, default=20, help="the burn-in percentage (a float between 0 and 100); default is 20")
+parser.add_argument('-n', '--nbin', type=int, default=50, help="the number of bins in the plotted histogram; default is 50")
 args = parser.parse_args()
 
 traceFiles = args.inputFile
@@ -65,6 +66,10 @@ print("-- Burn-in is "+param(burnin)+param("%"))
 
 col = args.column[0]
 print("-- Column to plot is "+param(col))
+
+nbin = args.nbin
+print("-- Number of histogram bins is "+param(nbin))
+
 
 #===================================================================================================
 print(step("Starting trace analysis!"))
@@ -89,7 +94,7 @@ print("-- Traces contain "+", ".join([data(len(c)) for c in coldata])+" lines re
 print(step("Plotting data!"))
 
 import matplotlib.pyplot as plt
-plt.hist(coldata, 50, label=[f.name for f in args.inputFile])
+plt.hist(coldata, nbin, label=[f.name for f in args.inputFile])
 plt.title("Distribution of "+col)
 plt.tight_layout()
 plt.legend()
