@@ -1,5 +1,7 @@
 #!/usr/bin/python3.5
 
+import sys
+
 def strip(str):
     if str[0]=='#':
         return str[1:]
@@ -8,21 +10,42 @@ def strip(str):
     else:
         return str
 
-class bcolors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
+if sys.stdout.isatty():
+    class bcolors:
+        HEADER = '\033[95m'
+        OKBLUE = '\033[34m'
+        OKGREEN = '\033[92m'
+        WARNING = '\033[93m'
+        CYAN = '\033[96m'
+        FAIL = '\033[91m'
+        ENDC = '\033[0m'
+        BOLD = '\033[1m'
+        UNDERLINE = '\033[4m'
+else:
+    class bcolors:
+        HEADER = ''
+        OKBLUE = ''
+        OKGREEN = ''
+        WARNING = ''
+        CYAN = ''
+        FAIL = ''
+        ENDC = ''
+        BOLD = ''
+        UNDERLINE = ''
+
 
 def error(string):
     return bcolors.FAIL+bcolors.BOLD+string+bcolors.ENDC
 
+def param(myparam):
+    return bcolors.OKBLUE+str(myparam)+bcolors.ENDC
 
-print("-- Parsing command line arguments")
+def step(string):
+    return bcolors.BOLD+bcolors.HEADER+string+bcolors.ENDC
+
+#===================================================================================================
+print(step("Parsing command line arguments"))
+
 from argparse import ArgumentParser, FileType
 parser = ArgumentParser(description='A small script that takes a coevol trace file and displays a distribution plot for one column.')
 parser.add_argument('inputFile', metavar="input", type=FileType('r'), nargs=1, help='the trace file')
@@ -31,18 +54,24 @@ parser.add_argument('-b', '--burnin', type=float, default=20, help="the burn-in 
 args = parser.parse_args()
 
 traceFile = args.inputFile[0]
-print("-- Trace file is "+traceFile.name)
+print("-- Trace file is "+param(traceFile.name))
 
 burnin = args.burnin
-print("-- Burn-in is "+str(burnin)+"%")
+print("-- Burn-in is "+param(burnin)+param("%"))
 
 col = args.column[0]
-print("-- Column to plot is "+col)
+print("-- Column to plot is "+param(col))
+
+#===================================================================================================
+print(step("Starting trace analysis!"))
 categories = list(map(strip,traceFile.readline().split('\t')))
+pos = -1
 if (col in categories):
-    print("-- Column exists in trace")
+    pos = categories.index(col)
+    print("-- Column exists in trace at position "+str(pos))
 else:
-    print("-- "+error("Error")+": Column "+col+" does not exist in trace!\n\tExisting columns are: ", end='')
+    print("-- "+error("Error")+": Column "+param(col)+" does not exist in trace!")
+    print("\tExisting columns are: ", end='')
     for cat in categories:
         print(cat, end='')
         if cat != categories[-1]:
@@ -52,5 +81,15 @@ else:
     exit(1)
 
 
-print("-- Starting trace analysis!")
+print("-- Extracting column data")
+coldata = [float(l.split('\t')[pos]) for  l in traceFile]
 
+print("-- Trace contains "+str(len(coldata))+" lines")
+
+#===================================================================================================
+print(step("Plotting data!"))
+import matplotlib.pyplot as plt
+plt.hist(coldata, 50)
+plt.title("Distribution of "+col)
+plt.tight_layout()
+plt.show()
