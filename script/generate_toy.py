@@ -39,4 +39,4 @@ else:
 
     a,b = tree(n, 0, "")
     treefile.write(a)
-    alifile.write(align(1))
+    alifile.write(align(3))

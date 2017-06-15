@@ -1,0 +1,56 @@
+#!/usr/bin/python3.5
+
+def strip(str):
+    if str[0]=='#':
+        return str[1:]
+    elif str[-1:]=='\n':
+        return str[:-1]
+    else:
+        return str
+
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+def error(string):
+    return bcolors.FAIL+bcolors.BOLD+string+bcolors.ENDC
+
+
+print("-- Parsing command line arguments")
+from argparse import ArgumentParser, FileType
+parser = ArgumentParser(description='A small script that takes a coevol trace file and displays a distribution plot for one column.')
+parser.add_argument('inputFile', metavar="input", type=FileType('r'), nargs=1, help='the trace file')
+parser.add_argument('column', metavar="col", nargs=1, help='the column to plot')
+parser.add_argument('-b', '--burnin', type=float, default=20, help="the burn-in percentage (a float between 0 and 100); default is 20")
+args = parser.parse_args()
+
+traceFile = args.inputFile[0]
+print("-- Trace file is "+traceFile.name)
+
+burnin = args.burnin
+print("-- Burn-in is "+str(burnin)+"%")
+
+col = args.column[0]
+print("-- Column to plot is "+col)
+categories = list(map(strip,traceFile.readline().split('\t')))
+if (col in categories):
+    print("-- Column exists in trace")
+else:
+    print("-- "+error("Error")+": Column "+col+" does not exist in trace!\n\tExisting columns are: ", end='')
+    for cat in categories:
+        print(cat, end='')
+        if cat != categories[-1]:
+            print(", ",end='')
+        else:
+            print("")
+    exit(1)
+
+
+print("-- Starting trace analysis!")
+
