@@ -15,7 +15,7 @@ if sys.stdout.isatty():
     class bcolors:
         HEADER = '\033[95m'
         OKBLUE = '\033[34m'
-        OKGREEN = '\033[92m'
+        OKGREEN = '\033[32m'
         WARNING = '\033[93m'
         CYAN = '\033[96m'
         FAIL = '\033[91m'
@@ -40,6 +40,9 @@ def error(string):
 
 def param(myparam):
     return bcolors.OKBLUE+str(myparam)+bcolors.ENDC
+
+def data(myparam):
+    return bcolors.OKGREEN+str(myparam)+bcolors.ENDC
 
 def step(string):
     return bcolors.BOLD+bcolors.HEADER+string+bcolors.ENDC
@@ -67,20 +70,20 @@ print("-- Column to plot is "+param(col))
 print(step("Starting trace analysis!"))
 
 categories = [[strip(cat) for cat in f.readline().split('\t')] for f in traceFiles]
-pos = -1
+pos = []
 if all([col in cat for cat in categories]):
-    pos = categories[0].index(col)
-    print("-- Column exists in trace at position "+str(pos))
+    pos = [c.index(col) for c in categories]
+    print("-- Column exists in traces at positions "+", ".join([data(p) for p in pos])+" respectively")
 else:
     print("-- "+error("Error")+": column "+param(col)+" does not exist in all traces!")
-    print("\tColumns that exist in all traces are: "+", ".join(reduce(set.intersection, [set(c) for c in categories])))
+    print("\tColumns that exist in all traces are: "+", ".join([data(s) for s in reduce(set.intersection, [set(c) for c in categories])]))
     exit(1)
 
 
 print("-- Extracting column data")
-coldata = [[float(l.split('\t')[pos]) for l in f] for f in traceFiles]
+coldata = [[float(l.split('\t')[pos[i]]) for l in traceFiles[i]] for i in range(len(traceFiles))]
 
-print("-- Traces contain "+", ".join([str(len(c)) for c in coldata])+" lines respectively")
+print("-- Traces contain "+", ".join([data(len(c)) for c in coldata])+" lines respectively")
 
 #===================================================================================================
 print(step("Plotting data!"))
