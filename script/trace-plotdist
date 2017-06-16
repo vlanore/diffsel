@@ -55,7 +55,7 @@ parser = ArgumentParser(description='A small script that takes a coevol trace fi
 parser.add_argument('column', metavar="col", nargs=1, help='the column to plot')
 parser.add_argument('inputFile', metavar="input", type=FileType('r'), nargs='+', help='the trace file')
 parser.add_argument('-b', '--burnin', type=float, default=20, help="the burn-in percentage (a float between 0 and 100); default is 20")
-parser.add_argument('-n', '--nbin', type=int, default=50, help="the number of bins in the plotted histogram; default is 50")
+parser.add_argument('-n', '--nbin', type=int, default=30, help="the number of bins in the plotted histogram; default is 50")
 args = parser.parse_args()
 
 traceFiles = args.inputFile
