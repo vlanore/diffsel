@@ -12,24 +12,30 @@ else:
             c, d = tree(k-1, b, "("+a+",")
             return c+"):0", d
 
+    bases = ["A", "C", "G", "T"]
+
     def rand_codon():
-        bases = ["A", "C", "G", "T"]
         return random.choice(bases)+random.choice(bases)+random.choice(bases)
 
     def selected_codon():
         aa1 = ["AAT", "AAC"]
         return random.choice(aa1)
 
+    def mutate(codon):
+        result = list(codon)
+        result[random.randint(0,2)] = random.choice(bases)
+        return "".join(result)
+
     def align(length):
         mystr = ""
         mystr += str(2**n)+" "+str(length)+'\n'
-        for i in range(2**n):
-            codon = ""
-            if i%2==0:
-                codon = rand_codon()
-            else:
-                codon = selected_codon()
-            mystr+="S"+str(i)+"\t"+codon+'\n'
+        lastcodon = ""
+        for i in range(2**(n-1)):
+            codon = selected_codon()
+            # codon2 = mutate(codon)
+            codon2 = rand_codon()
+            mystr+="S"+str(2*i)+"\t"+codon2+'\n'
+            mystr+="S"+str(2*i+1)+"\t"+codon+'\n'
         return mystr
 
     n = int(sys.argv[1])-1
