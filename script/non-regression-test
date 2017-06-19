@@ -1,0 +1,110 @@
+#!/usr/bin/python3.5
+
+import sys
+
+if sys.stdout.isatty():
+    class bcolors:
+        HEADER = '\033[95m'
+        OKBLUE = '\033[34m'
+        OKGREEN = '\033[32m'
+        WARNING = '\033[93m'
+        CYAN = '\033[96m'
+        FAIL = '\033[91m'
+        ENDC = '\033[0m'
+        BOLD = '\033[1m'
+        UNDERLINE = '\033[4m'
+else:
+    class bcolors:
+        HEADER = ''
+        OKBLUE = ''
+        OKGREEN = ''
+        WARNING = ''
+        CYAN = ''
+        FAIL = ''
+        ENDC = ''
+        BOLD = ''
+        UNDERLINE = ''
+
+
+def error(string):
+    return bcolors.FAIL+bcolors.BOLD+string+bcolors.ENDC
+
+def param(myparam):
+    return bcolors.OKBLUE+str(myparam)+bcolors.ENDC
+
+def data(myparam):
+    return bcolors.OKGREEN+str(myparam)+bcolors.ENDC
+
+def step(string):
+    return bcolors.BOLD+bcolors.HEADER+string+bcolors.ENDC
+
+#===================================================================================================
+print(step("Parsing command line arguments"))
+
+from argparse import ArgumentParser, FileType
+parser = ArgumentParser(description='A non-regression test for diffsel that generates a toy alignment+tree, runs two diffsel chains and analyzes the results.')
+parser.add_argument('-n', '--name', default="tmp_nonreg", help="the name of the run (used to name output files); default is 'tmp_nonreg'")
+parser.add_argument('-u', '--until', type=int, default=10000, help="number of iterations to run diffsel for; default is 10k")
+parser.add_argument('-d', '--depth', type=int, default=7, help="depth of the phylogenetic tree (which is binary and balanced); default is 7")
+parser.add_argument('-a', '--analysis-only', dest="analysis", action='store_true', help="depth of the phylogenetic tree (which is binary and balanced); default is 7")
+args = parser.parse_args()
+
+chainname = args.name
+print("-- Chain name is "+param(chainname));
+iterations = args.until
+print("-- Number of iterations is "+param(iterations))
+depth = args.depth
+print("-- Depth of the tree is "+param(depth))
+analysis = args.analysis
+print("-- Analysis only: "+param(analysis))
+
+from subprocess import Popen, PIPE, call
+if not analysis:
+    #===================================================================================================
+    print(step("Creating tree and alignment files"))
+
+    print("-- Generating tree and alignment... ", end='')
+    p = call(["python script/generate-toy.py "+str(depth)+" "+chainname], stdout=PIPE, shell=True)
+    print("done")
+
+    # print(p.stdout.readline())
+
+    #===================================================================================================
+    print(step("Launching diffsel chains"))
+
+    print("-- Launching first chain")
+    p2 = Popen(["time ./flatdiffsel_bin -d "+chainname+".ali -t "+chainname+".tree -ncond 2 -x 1 "+str(iterations)+" "+chainname], stderr=PIPE, stdout=PIPE, shell=True)
+
+    print("-- Launching second chain")
+    p3 = Popen(["time ./flatdiffsel_bin -d "+chainname+".ali -t "+chainname+".tree -ncond 2 -x 1 "+str(iterations)+" "+chainname+"2"], stderr=PIPE, stdout=PIPE, shell=True)
+
+    print("-- Launching done; starting chain monitoring:")
+    import progressbar
+    bar = progressbar.ProgressBar()
+    for i in bar(range(iterations)):
+        # print ("Iteration "+str(i))
+        p2.stdout.readline()
+        p3.stdout.readline()
+
+    r2 = p2.wait()
+    r3 = p3.wait()
+    if r2 == 0 and r3 == 0:
+        print("-- Diffsel chains have ended succesfully!")
+    else:
+        print("-- "+error("Error")+": There was an error while running diffsel!")
+        [print(l) for l in p2.communicate()] # FIXME: output is pretty bad
+        exit(1)
+
+#===================================================================================================
+print(step("Started analysis"))
+
+import os.path
+if os.path.isfile(chainname+".trace") and os.path.isfile(chainname+"2.trace"):
+    print("-- Found trace files: "+data(chainname+".trace")+" and "+data(chainname+"2.trace"))
+else:
+    print("-- "+error("Error")+": trace files do not exist! Expected files "+data(chainname+".trace")+" and "+data(chainname+"2.trace"))
+    exit(1)
+
+burnin = int(iterations/5)
+print("-- Running tracecomp with burnin : "+data(burnin))
+p4 = call(["tracecomp -x "+str(burnin)+" "+chainname+" "+chainname+"2"], shell=True, stdout=PIPE, stderr=PIPE)
