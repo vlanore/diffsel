@@ -12,7 +12,7 @@ class DiffSelChain : public Chain {
     int codonmodel, category, level, fixglob, fixvar;
 
   public:
-    DiffSelModel* GetModel() { return static_cast<DiffSelModel*>(model); }
+    DiffSelModel* GetModel() { return static_cast<DiffSelModel*>(model.get()); }
 
     string GetModelType() override { return modeltype; }
 
@@ -40,8 +40,8 @@ class DiffSelChain : public Chain {
     }
 
     void New(int force) override {
-        model = new DiffSelModel(datafile, treefile, category, level, fixglob, fixvar, codonmodel,
-                                 true);
+        model = std::unique_ptr<DiffSelModel>(new DiffSelModel(datafile, treefile, category, level,
+                                                               fixglob, fixvar, codonmodel, true));
         cerr << "-- Reset" << endl;
         Reset(force);
         cerr << "-- New ok\n";
@@ -66,8 +66,8 @@ class DiffSelChain : public Chain {
         is >> every >> until >> size;
 
         if (modeltype == "DIFFSEL") {
-            model = new DiffSelModel(datafile, treefile, category, level, fixglob, fixvar,
-                                     codonmodel, false);
+            model = std::unique_ptr<DiffSelModel>(new DiffSelModel(
+                datafile, treefile, category, level, fixglob, fixvar, codonmodel, false));
         } else {
             cerr << "-- Error when opening file " << name
                  << " : does not recognise model type : " << modeltype << '\n';
@@ -191,5 +191,7 @@ int main(int argc, char* argv[]) {
         cerr << "start\n";
         chain->Start();
         cerr << "chain stopped\n";
+
+        delete chain;
     }
 }

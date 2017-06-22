@@ -149,6 +149,32 @@ class DiffSelModel : public ProbModel {
         }
     }
 
+    DiffSelModel(const DiffSelModel&) = delete;
+
+    ~DiffSelModel() {
+        std::cerr << "DESTRUCTOR CALLED\n";
+        // delete tree;
+        delete[] branchlength;
+        delete[] branchlengthcount;
+        delete[] branchlengthbeta;
+        delete[] branchalloc;
+        delete[] nucrelrate;
+        delete[] nucstat;
+        delete nucmatrix;
+        delete[] baseline;
+        delete[] delta;
+        delete[] varsel;
+        delete[] fitnessprofile;
+        delete[] condsubmatrixarray;
+        delete[] phylosubmatrix;
+        delete[] rootsubmatrix;
+        delete[] suffstatarray;
+        delete[] sitecondsuffstatlogprob;
+        delete[] bksitecondsuffstatlogprob;
+        delete[] condalloc;
+        delete phyloprocess;
+    }
+
     void ReadFiles(string datafile, string treefile) {
         // nucleotide sequence alignment
         data = new FileSequenceAlignment(datafile);
@@ -358,6 +384,7 @@ class DiffSelModel : public ProbModel {
     }
 
     void MakeBranchAllocations() {
+        delete[] branchalloc;
         branchalloc = new int[Nbranch];
 
         // default pre-initialization

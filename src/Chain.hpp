@@ -1,6 +1,7 @@
 #ifndef CHAIN_H
 #define CHAIN_H
 
+#include <memory>
 #include <string>
 #include "ProbModel.hpp"
 
@@ -73,16 +74,16 @@ class Chain {
     void SetUntil(int inuntil) { until = inuntil; }
     void SetName(std::string inname) { name = inname; }
 
-    ProbModel *GetModel() { return model; }
+    ProbModel *GetModel() { return model.get(); }
     int GetSize() { return size; }
 
   protected:
-    int every;         // saving frequency
-    int until;         // intended size of the run (number of saved points)
-    int size;          // current size
-    ProbModel *model;  // the model
-    std::string name;  // the name of the chain in the filesystem
-                       // all files for this chain will be of the form : <name>.<ext>
+    int every;                         // saving frequency
+    int until;                         // intended size of the run (number of saved points)
+    int size;                          // current size
+    std::unique_ptr<ProbModel> model;  // the model
+    std::string name;                  // the name of the chain in the filesystem
+    // all files for this chain will be of the form : <name>.<ext>
 };
 
 #endif  // CHAIN_H

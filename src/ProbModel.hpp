@@ -21,8 +21,8 @@
 
 class ProbModel {
   public:
-    ProbModel() {}
-    ~ProbModel() {}
+    ProbModel() = default;
+    virtual ~ProbModel() = default;
 
     /// obtain the set ("state") of all the nodes of the DAG by a recursive
     /// traversal from the root

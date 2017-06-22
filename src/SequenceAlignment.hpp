@@ -568,7 +568,7 @@ class SequenceAlignment {
 
 class FileSequenceAlignment : public SequenceAlignment {
   public:
-    FileSequenceAlignment(std::istream &is);
+    explicit FileSequenceAlignment(std::istream &is);
     FileSequenceAlignment(std::string filename, int fullline = 0);
 
   private:
@@ -580,7 +580,7 @@ class FileSequenceAlignment : public SequenceAlignment {
     int TestPhylip(std::string filespec, int repeattaxa);
     void ReadPhylip(std::string filespec, int repeattaxa);
 
-    std::string *SpeciesNames;
+    std::vector<std::string> SpeciesNames;
 };
 
 #endif  // SEQUENCEALIGNMENT_H

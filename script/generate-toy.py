@@ -32,8 +32,8 @@ else:
         lastcodon = ""
         for i in range(2**(n-1)):
             codon = selected_codon()
-            # codon2 = mutate(codon)
-            codon2 = rand_codon()
+            codon2 = mutate(codon)
+            # codon2 = rand_codon()
             mystr+="S"+str(2*i)+"\t"+codon2+'\n'
             mystr+="S"+str(2*i+1)+"\t"+codon+'\n'
         return mystr

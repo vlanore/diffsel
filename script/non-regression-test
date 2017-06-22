@@ -2,13 +2,19 @@
 
 import sys
 
+def strip(str):
+    if str[0]=='#':
+        return str[1:]
+    else:
+        return str.strip()
+
 if sys.stdout.isatty():
     class bcolors:
         HEADER = '\033[95m'
         OKBLUE = '\033[34m'
         OKGREEN = '\033[32m'
         WARNING = '\033[93m'
-        CYAN = '\033[96m'
+        CYAN = '\033[33m'
         FAIL = '\033[91m'
         ENDC = '\033[0m'
         BOLD = '\033[1m'
@@ -25,7 +31,6 @@ else:
         BOLD = ''
         UNDERLINE = ''
 
-
 def error(string):
     return bcolors.FAIL+bcolors.BOLD+string+bcolors.ENDC
 
@@ -33,10 +38,13 @@ def param(myparam):
     return bcolors.OKBLUE+str(myparam)+bcolors.ENDC
 
 def data(myparam):
-    return bcolors.OKGREEN+str(myparam)+bcolors.ENDC
+    return bcolors.CYAN+str(myparam)+bcolors.ENDC
 
 def step(string):
     return bcolors.BOLD+bcolors.HEADER+string+bcolors.ENDC
+
+def success(string):
+    return bcolors.BOLD+bcolors.OKGREEN+string+bcolors.ENDC
 
 #===================================================================================================
 print(step("Parsing command line arguments"))
@@ -46,7 +54,9 @@ parser = ArgumentParser(description='A non-regression test for diffsel that gene
 parser.add_argument('-n', '--name', default="tmp_nonreg", help="the name of the run (used to name output files); default is 'tmp_nonreg'")
 parser.add_argument('-u', '--until', type=int, default=10000, help="number of iterations to run diffsel for; default is 10k")
 parser.add_argument('-d', '--depth', type=int, default=7, help="depth of the phylogenetic tree (which is binary and balanced); default is 7")
-parser.add_argument('-a', '--analysis-only', dest="analysis", action='store_true', help="depth of the phylogenetic tree (which is binary and balanced); default is 7")
+parser.add_argument('-b', '--burnin', type=float, default=0.2, help="burnin (as a float between 0 and 1); default is 0.2")
+parser.add_argument('-a', '--analysis-only', dest="analysis", action='store_true', help="set this flag to run only the analysis part of the test\
+ (you need to have diffsel traces already)")
 args = parser.parse_args()
 
 chainname = args.name
@@ -55,6 +65,8 @@ iterations = args.until
 print("-- Number of iterations is "+param(iterations))
 depth = args.depth
 print("-- Depth of the tree is "+param(depth))
+burninin = args.burnin
+print("-- Burn-in is "+param(burninin * 100)+"%")
 analysis = args.analysis
 print("-- Analysis only: "+param(analysis))
 
@@ -91,12 +103,12 @@ if not analysis:
     if r2 == 0 and r3 == 0:
         print("-- Diffsel chains have ended succesfully!")
     else:
-        print("-- "+error("Error")+": There was an error while running diffsel!")
-        [print(l) for l in p2.communicate()] # FIXME: output is pretty bad
+        print("-- "+error("Error")+": There was an error while running diffsel!\n-- Output of the first chain was:\n")
+        print(p2.communicate()[1].decode("ascii"))
         exit(1)
 
 #===================================================================================================
-print(step("Started analysis"))
+print(step("Chain convergence analysis"))
 
 import os.path
 if os.path.isfile(chainname+".trace") and os.path.isfile(chainname+"2.trace"):
@@ -105,6 +117,57 @@ else:
     print("-- "+error("Error")+": trace files do not exist! Expected files "+data(chainname+".trace")+" and "+data(chainname+"2.trace"))
     exit(1)
 
-burnin = int(iterations/5)
+burnin = int(iterations * burninin)
 print("-- Running tracecomp with burnin : "+data(burnin))
-p4 = call(["tracecomp -x "+str(burnin)+" "+chainname+" "+chainname+"2"], shell=True, stdout=PIPE, stderr=PIPE)
+p4 = Popen(["tracecomp -x "+str(burnin)+" -o "+chainname+" "+chainname+" "+chainname+"2"], shell=True, stdout=PIPE, stderr=PIPE)
+r4 = p4.wait()
+
+if r4 == 0 and os.path.isfile(chainname+".contdiff"):
+    print("-- Tracecomp executed; results stored in "+data(chainname+".contdiff"))
+else:
+    print("-- "+error("Error")+" Something went wrong with tracecomp!\n-- Output of command was:\n")
+    print(p4.communicate()[1].decode("ascii"))
+    exit(1)
+
+tcout = p4.communicate()[0].decode("ascii")
+tcout = [l.split() for l in tcout.split("\n")[2:-1]] #assumes first two lines and last line are not data (FIXME: fragile code)
+print("-- Trace lines are : "+", ".join([data(strip(l[0])) for l in tcout]))
+mineff = min([int(l[1]) for l in tcout])
+maxrel = max([float(l[2]) for l in tcout])
+print("-- Minimum effsize is "+data(mineff)+" and maximum rel_diff is "+data(maxrel))
+if mineff < 50 or maxrel > 0.3:
+    print(error("The chains do not seem to have converged!"))
+else:
+    print(success("The chains seem to have converged!"))
+
+#===================================================================================================
+print(step("Convergent site analysis"))
+
+print("-- Running readdiffsel")
+
+def rdrun(no):
+    p5 = Popen(["./readflatdiffsel_bin -x "+str(burnin)+" 1 "+str(iterations)+" "+chainname+no], shell=True, stdout=PIPE, stderr=PIPE)
+    r5 = p5.wait()
+
+    meanname = chainname+no+"_1.meandiffsel"
+    signname = chainname+no+"_1.signdiffsel"
+
+    if r5 == 0 and os.path.isfile(meanname) and os.path.isfile(signname):
+        print("-- Readdiffsel executed; results stored in "+data(meanname)+" and "+data(signname))
+    else:
+        print(error("ERROR")) # TODO
+        print(p5.communicate()[1].decode("ascii"))
+        exit(1)
+
+    rdoutfile = open(signname, 'r')
+    rdout = [l.split() for l in rdoutfile.readlines()]
+    aas = [int(l[1]) for l in rdout]
+    print("-- Convergence detected for aminoacids "+", ".join([data(aa) for aa in aas]))
+    return aas
+
+if rdrun("") == [11] and rdrun("2") == [11]:
+    print(success("The chain detected the correct aminoacids!"))
+else:
+    print(error("The chains detected the wrong aminoacids!"))
+
+

@@ -12,7 +12,7 @@ using namespace std;
 // ---------------------------------------------------------------------------
 // ---------------------------------------------------------------------------
 
-TaxonSet::TaxonSet(const string *names, int ntaxa) {
+TaxonSet::TaxonSet(const vector<string> &names, int ntaxa) {
     Ntaxa = ntaxa;
     taxlist = new string[ntaxa];
     for (int i = 0; i < ntaxa; i++) {

@@ -4,13 +4,14 @@
 #include <iostream>
 #include <map>
 #include <string>
+#include <vector>
 
 class Tree;
 class Link;
 
 class TaxonSet {
   public:
-    TaxonSet(const std::string *names, int ntaxa);
+    TaxonSet(const std::vector<std::string> &names, int ntaxa);
     TaxonSet(const Tree *tree, const Link *subgroup = nullptr);
     ~TaxonSet();
 

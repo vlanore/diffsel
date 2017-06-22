@@ -27,6 +27,7 @@ BranchSitePath::BranchSitePath(int state) {
 BranchSitePath::~BranchSitePath() {
     Reset(0);
     delete init;
+    delete bkinit;
 }
 
 void BranchSitePath::Reset(int state) {

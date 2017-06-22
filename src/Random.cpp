@@ -2,6 +2,7 @@
 #include <sys/time.h>
 #include <cmath>
 #include <iostream>
+#include <vector>
 
 /* =======================================================
    (VL) Magical constants, to be used only in this file.
@@ -189,7 +190,7 @@ int Random::DrawFromDiscreteDistribution(const double *prob, int nstate) {
 // ---------------------------------------------------------------------------------
 //		¥ DrawFromUrn()
 // ---------------------------------------------------------------------------------
-void Random::DrawFromUrn(int *tab, int n, int N) {  // draw n out of N
+void Random::DrawFromUrn(std::vector<int> &tab, int n, int N) {  // draw n out of N
     // assumes that tab is an Int16[n]
     for (int i = 0; i < n; i++) {
         tab[i] = 0;
@@ -479,7 +480,8 @@ double Random::ProfileProposeMove(
     if (2 * n > dim) {
         n = dim / 2;
     }
-    auto indices = new int[2 * n];
+    // auto indices = new int[2 * n];
+    std::vector<int> indices(2 * n, 0);
     Random::DrawFromUrn(indices, 2 * n, dim);
     for (int i = 0; i < n; i++) {
         int i1 = indices[2 * i];
@@ -500,13 +502,14 @@ double Random::ProfileProposeMove(
         profile[i1] = x;
         profile[i2] = tot - x;
     }
-    delete[] indices;
+    // delete[] indices;
 
     return ret;
 }
 
 double Random::RealVectorProposeMove(double *x, int dim, double tuning, int n) {
-    auto indices = new int[n];
+    // auto indices = new int[n];
+    std::vector<int> indices(n, 0);
     Random::DrawFromUrn(indices, n, dim);
     for (int i = 0; i < n; i++) {
         double u = tuning * (Random::Uniform() - 0.5);

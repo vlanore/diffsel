@@ -1,6 +1,8 @@
 #ifndef RANDOM_H
 #define RANDOM_H
 
+#include <vector>
+
 #define MT_LEN 624  // (VL) required for magic
 
 static const double Pi = 3.1415926535897932384626;
@@ -26,7 +28,7 @@ class Random {
 
     static int Choose(int);
     static int FiniteDiscrete(int n, const double *probarray);
-    static void DrawFromUrn(int *, int n, int N);
+    static void DrawFromUrn(std::vector<int> &, int n, int N);
     static int DrawFromDiscreteDistribution(const double *prob, int nstate);
 
     static double logGamma(double alpha);

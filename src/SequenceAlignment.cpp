@@ -172,11 +172,12 @@ void SequenceAlignment::ToStreamTriplet(ostream &os) const {
 FileSequenceAlignment::FileSequenceAlignment(string filename,
                                              int /*unused*/) {  // FIXME unused parameter
 
-    SpeciesNames = nullptr;
+    // SpeciesNames = nullptr; // (VL) wat
+    SpeciesNames.clear();
     // cerr << "read data from file : " << filename << "\n";
     ReadDataFromFile(filename, 0);
     taxset = new TaxonSet(SpeciesNames, Ntaxa);
-    delete[] SpeciesNames;
+
     /*
       cerr << "number of taxa  : " << GetNtaxa() << '\n';
       cerr << "number of sites : " << GetNsite() << '\n';
@@ -268,7 +269,7 @@ int FileSequenceAlignment::ReadNexus(string filespec) {
             Data[i] = new int[Nsite];
         }
 
-        SpeciesNames = new string[Ntaxa];
+        SpeciesNames = std::vector<std::string>(Ntaxa, "");
 
         GoPastNextWord(theStream, "Matrix");
 
@@ -404,8 +405,8 @@ int FileSequenceAlignment::ReadSpecial(string filename) {
             Data[i] = new int[Nsite];
         }
 
-        delete[] SpeciesNames;
-        SpeciesNames = new string[Ntaxa];
+
+        SpeciesNames = std::vector<std::string>(Ntaxa, "");
 
         int ntaxa = 0;
         string temp;
@@ -493,8 +494,8 @@ int FileSequenceAlignment::TestPhylipSequential(string filespec) {
         }
         Nsite = atoi(temp.c_str());
 
-        delete[] SpeciesNames;
-        SpeciesNames = new string[Ntaxa];
+
+        SpeciesNames = std::vector<std::string>(Ntaxa, "");
 
         int AAcomp = 1;
         int DNAcomp = 1;
@@ -610,7 +611,7 @@ void FileSequenceAlignment::ReadPhylipSequential(string filespec) {
         for (int i = 0; i < Ntaxa; i++) {
             Data[i] = new int[Nsite];
         }
-        SpeciesNames = new string[Ntaxa];
+        SpeciesNames = std::vector<std::string>(Ntaxa, "");
 
         int ntaxa = 0;
         while ((!theStream.eof()) && (ntaxa < Ntaxa)) {
@@ -677,8 +678,7 @@ int FileSequenceAlignment::TestPhylip(string filespec, int repeattaxa) {
         }
         Nsite = Int(temp);
 
-        delete[] SpeciesNames;
-        SpeciesNames = new string[Ntaxa];
+        SpeciesNames = std::vector<std::string>(Ntaxa, "");
 
         int AAcomp = 1;
         int DNAcomp = 1;
@@ -841,7 +841,7 @@ void FileSequenceAlignment::ReadPhylip(string filespec, int repeattaxa) {
         for (int i = 0; i < Ntaxa; i++) {
             Data[i] = new int[Nsite];
         }
-        SpeciesNames = new string[Ntaxa];
+        SpeciesNames = std::vector<std::string>(Ntaxa, "");
 
         int l = 0;
         int block = 0;
