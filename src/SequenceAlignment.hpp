@@ -11,7 +11,7 @@ class SequenceAlignment {
   public:
     SequenceAlignment() : Data(nullptr) {}
 
-    SequenceAlignment(const SequenceAlignment&) = delete;
+    SequenceAlignment(const SequenceAlignment &) = delete;
 
     virtual ~SequenceAlignment() = default;
 

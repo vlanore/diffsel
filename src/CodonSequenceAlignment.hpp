@@ -7,7 +7,8 @@
 
 class CodonSequenceAlignment : public SequenceAlignment {
   public:
-    CodonSequenceAlignment(SequenceAlignment *from, bool force_stops = false, GeneticCodeType type = Universal);
+    CodonSequenceAlignment(SequenceAlignment *from, bool force_stops = false,
+                           GeneticCodeType type = Universal);
     ~CodonSequenceAlignment() override = default;
 
     CodonStateSpace *GetCodonStateSpace() {

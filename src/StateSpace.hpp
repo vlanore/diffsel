@@ -4,8 +4,6 @@
 #include <string>
 #include "BiologicalSequences.hpp"  //FIXME only here because constant unknown
 
-// pure interface
-//
 class StateSpace {
   public:
     virtual ~StateSpace() = default;
@@ -22,7 +20,6 @@ class StateSpace {
 
 // simple state space: assumes that states are referred to using a one-letter
 // code
-//
 class SimpleStateSpace : public StateSpace {
   public:
     virtual ~SimpleStateSpace() {}

@@ -40,12 +40,6 @@ class CodonStateSpace : public StateSpace {
     // if stop exits with error message...
     int GetCodonFromDNA(int pos1, int pos2, int pos3) const;
 
-    /*
-      string TranslateDNASequenceWithStops(string s);
-      string GetStateWithStops(int state);
-      int isCodingSequence(string s);
-    */
-
     // 2 codons excluding stops are compared
     // method returns -1 if identical
     // returns 3 is codons differ at more than one position
@@ -90,17 +84,6 @@ class CodonStateSpace : public StateSpace {
     int TranslationWithStops(int codon) const { return CodonCodeWithStops[codon]; }
 
     bool CheckStop(int pos1, int pos2, int pos3) const;
-
-    /*
-      cannot exist: indexing system excludes stop codons anyway...
-      bool isStop(int codon)	{
-      int n = 0;
-      while ((n < Nstop) && (codon != StopCodons[n]))	{
-      n++;
-      }
-      return (n != Nstop);
-      }
-    */
 
     int GetDegeneracy(int codon) const;
 

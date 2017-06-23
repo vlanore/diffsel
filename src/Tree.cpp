@@ -117,26 +117,6 @@ void Tree::RecursiveDelete(Link *from) {
     delete link;
 }
 
-/*
-  void Tree::RecursiveCreateTBL(Link* from, int Nstate)	{
-  for(Link* link=from->Next(); link!=from; link=link->Next())	{
-  delete[] link->tbl;
-  link->tbl = new double[Nstate+1];
-  RecursiveCreateTBL(link->Out(), Nstate);
-  }
-  delete[] from->tbl;
-  from->tbl = new double[Nstate+1];
-  }
-
-  void Tree::RecursiveDeleteTBL(Link* from)	{
-  for(Link* link=from->Next(); link!=from; link=link->Next())	{
-  RecursiveDeleteTBL(link->Out());
-  delete[] link->tbl;
-  }
-  delete[] from->tbl;
-  }
-*/
-
 Tree::~Tree() {
     if (root != nullptr) {
         RecursiveDelete(root);
@@ -499,30 +479,3 @@ const Link *Tree::ChooseNode(const Link *from, const Link *&fromup, int &n) cons
     }
     return ret;
 }
-/*
-  void Tree::Print(ostream& os, const Link* from)	const {
-
-  if (!from->isLeaf())	{
-  os << '(';
-  for (const Link* link=from->Next(); link!=from; link=link->Next())	{
-  Print(os,link->Out());
-  if (link->Next() != from)	{
-  os << ',';
-  }
-  }
-  os << ')';
-  }
-  os << GetNodeName(from);
-  if (!from->isRoot())	{
-  string brval = GetBranchName(from);
-  if (brval != "")	{
-  os << ':' << brval;
-  }
-  }
-  }
-
-  void Tree::Print(ostream& os)	const {
-  Print(os,GetRoot());
-  os << ";\n";
-  }
-*/

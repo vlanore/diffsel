@@ -74,32 +74,6 @@ void SequenceAlignment::ToFasta(ostream &os) const {
         os << '\n';
     }
 }
-/*
-  void SequenceAlignment::ToStream(ostream& os)	{
-
-  os << Ntaxa << '\t' << Nsite << '\n';
-  int max = 0;
-  for (int i=0; i<Ntaxa; i++)	{
-  int l = taxset->GetTaxon(i).length();
-  if (max < l)	{
-  max = l;
-  }
-  }
-
-  for (int i=0; i<Ntaxa; i++)	{
-  os << taxset->GetTaxon(i);
-  for (unsigned int j=0; j< 5 + max - taxset->GetTaxon(i).length(); j++)
-  {
-  os << ' ';
-  }
-  for (int j=0; j<Nsite; j++)	{
-  os << statespace->GetState(GetState(i,j));
-  }
-  os << '\n';
-  }
-  os << '\n';
-  }
-*/
 
 void SequenceAlignment::ToStream(ostream &os) const {
     // os << Ntaxa << '\t' << 876<< '\n';
@@ -171,19 +145,11 @@ void SequenceAlignment::ToStreamTriplet(ostream &os) const {
 
 FileSequenceAlignment::FileSequenceAlignment(string filename,
                                              int /*unused*/) {  // FIXME unused parameter
-
     // SpeciesNames = nullptr; // (VL) wat
     SpeciesNames.clear();
     // cerr << "read data from file : " << filename << "\n";
     ReadDataFromFile(filename, 0);
     taxset = new TaxonSet(SpeciesNames, Ntaxa);
-
-    /*
-      cerr << "number of taxa  : " << GetNtaxa() << '\n';
-      cerr << "number of sites : " << GetNsite() << '\n';
-      cerr << "number of states: " << GetNstate() << '\n';
-      cerr << "after delete\n";
-    */
 }
 
 int FileSequenceAlignment::ReadDataFromFile(string filespec, int forceinterleaved) {
@@ -227,7 +193,6 @@ int FileSequenceAlignment::ReadDataFromFile(string filespec, int forceinterleave
         }
     } catch (...) {
         exit(1);
-        return 0;
     }
     return 1;
 }
@@ -361,7 +326,6 @@ int FileSequenceAlignment::ReadNexus(string filespec) {
 // ---------------------------------------------------------------------------
 //     ReadSpecial()
 // ---------------------------------------------------------------------------
-
 int FileSequenceAlignment::ReadSpecial(string filename) {
     int returnvalue = 0;
     try {
@@ -464,7 +428,6 @@ int FileSequenceAlignment::ReadSpecial(string filename) {
 // ---------------------------------------------------------------------------
 //     ReadPhylip()
 // ---------------------------------------------------------------------------
-
 int FileSequenceAlignment::TestPhylipSequential(string filespec) {
     ifstream theStream((Path + filespec).c_str());
     try {
