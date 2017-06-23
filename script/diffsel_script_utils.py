@@ -1,11 +1,14 @@
 import sys
+import random
 
+# String handling functions
 def strip(str):
     if str[0]=='#':
         return str[1:]
     else:
         return str.strip()
 
+# Color-related functions
 if sys.stdout.isatty():
     class bcolors:
         HEADER = '\033[95m'
@@ -44,3 +47,17 @@ def step(string):
 def success(string):
     return bcolors.BOLD+bcolors.OKGREEN+string+bcolors.ENDC
 
+# Codon functions
+bases = ["A", "C", "G", "T"]
+
+def rand_codon():
+    return random.choice(bases)+random.choice(bases)+random.choice(bases)
+
+def selected_codon():
+    aa1 = ["AAT", "AAC"]
+    return random.choice(aa1)
+
+def mutate(codon):
+    result = list(codon)
+    result[random.randint(0,2)] = random.choice(bases)
+    return "".join(result)
