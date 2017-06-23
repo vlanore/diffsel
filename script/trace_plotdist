@@ -1,51 +1,7 @@
 #!/usr/bin/python3.5
 
-import sys
 from functools import reduce
-
-def strip(str):
-    if str[0]=='#':
-        return str[1:]
-    elif str[-1:]=='\n':
-        return str[:-1]
-    else:
-        return str
-
-if sys.stdout.isatty():
-    class bcolors:
-        HEADER = '\033[95m'
-        OKBLUE = '\033[34m'
-        OKGREEN = '\033[32m'
-        WARNING = '\033[93m'
-        CYAN = '\033[96m'
-        FAIL = '\033[91m'
-        ENDC = '\033[0m'
-        BOLD = '\033[1m'
-        UNDERLINE = '\033[4m'
-else:
-    class bcolors:
-        HEADER = ''
-        OKBLUE = ''
-        OKGREEN = ''
-        WARNING = ''
-        CYAN = ''
-        FAIL = ''
-        ENDC = ''
-        BOLD = ''
-        UNDERLINE = ''
-
-
-def error(string):
-    return bcolors.FAIL+bcolors.BOLD+string+bcolors.ENDC
-
-def param(myparam):
-    return bcolors.OKBLUE+str(myparam)+bcolors.ENDC
-
-def data(myparam):
-    return bcolors.OKGREEN+str(myparam)+bcolors.ENDC
-
-def step(string):
-    return bcolors.BOLD+bcolors.HEADER+string+bcolors.ENDC
+from diffsel_script_utils import *
 
 #===================================================================================================
 print(step("Parsing command line arguments"))
@@ -61,16 +17,12 @@ args = parser.parse_args()
 
 traceFiles = args.inputFile
 print("-- Trace files are "+", ".join([param(f.name) for f in args.inputFile]))
-
 burnin = args.burnin
 print("-- Burn-in is "+param(burnin)+param("%"))
-
 col = args.column[0]
 print("-- Column to plot is "+param(col))
-
 nbin = args.nbin
 print("-- Number of histogram bins is "+param(nbin))
-
 imax = args.max
 if imax != -1:
     print("-- Maximum iterations is "+param(imax))

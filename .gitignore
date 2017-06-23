@@ -14,3 +14,4 @@ cscope*
 *.meandiffsel
 *.signdiffsel
 *.contdiff
+tmp*

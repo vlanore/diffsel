@@ -181,13 +181,13 @@ double PhyloProcess::GetLogProb() {
 double PhyloProcess::GetPathLogProb() {
     cerr << "implement Get Path Get Log Prob in phyloprocess\n";
     exit(1);
-    double total = 0;
-    for (int i = 0; i < GetNsite(); i++) {
-        if (!isMissing(GetRoot()->GetNode(), i)) {
-            total += GetPathLogProb(GetRoot(), i);
-        }
-    }
-    return total;
+    // double total = 0;
+    // for (int i = 0; i < GetNsite(); i++) {
+    //     if (!isMissing(GetRoot()->GetNode(), i)) {
+    //         total += GetPathLogProb(GetRoot(), i);
+    //     }
+    // }
+    // return total;
 }
 
 double PhyloProcess::GetPathLogProb(const Link *from, int site) {

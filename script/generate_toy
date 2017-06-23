@@ -1,8 +1,10 @@
+#!/usr/bin/python2.7
+
 import sys
 import random
 
 if len(sys.argv)<3 or int(sys.argv[1])<=0:
-    print "usage:\n\n\tpython generate_toy.py <n: stricly positive integer> <fn: filename>\n\nThis will generate a tree with 2^n leaves and a corresponding alignment. Alignment and tree will be written to fn.ali and fn.tree respectively"
+    print "usage:\n\n\generate_toy <n: stricly positive integer> <fn: filename>\n\nThis will generate a tree with 2^n leaves and a corresponding alignment. Alignment and tree will be written to fn.ali and fn.tree respectively"
 else:
     def tree(k, i, mystr):
         if k == 0:
