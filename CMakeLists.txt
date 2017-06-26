@@ -10,12 +10,7 @@ endif()
 set(CXX_FEATURES cxx_auto_type cxx_nullptr cxx_final cxx_override cxx_range_for)
 include_directories("src")
 
-
-########################
-#     STATIC LIBS      #
-########################
-
-# Phylogeny
+# static lib
 set(DIFFSEL_LIB
   src/BranchSitePath.cpp
   src/Chain.cpp
@@ -38,11 +33,6 @@ set(DIFFSEL_LIB
   )
 add_library (diffsel_lib STATIC ${DIFFSEL_LIB})
 target_compile_features(diffsel_lib PUBLIC ${CXX_FEATURES})
-
-
-########################
-#     EXECUTABLES      #
-########################
 
 # Diffsel
 add_executable(diffsel "src/DiffSel.cpp")
