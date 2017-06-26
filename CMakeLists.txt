@@ -3,6 +3,10 @@ project(diffsel CXX)
 
 # Compilation options
 set(CMAKE_CXX_FLAGS "-O3 -Wall -Wextra -Wpedantic") # normal mode
+if (CMAKE_BUILD_TYPE MATCHES COVERAGE)
+  message(STATUS "Compiling in coverage measurement mode")
+  set(CMAKE_CXX_FLAGS "-O0 -fprofile-arcs -ftest-coverage")
+endif()
 set(CXX_FEATURES cxx_auto_type cxx_nullptr cxx_final cxx_override cxx_range_for)
 include_directories("src")
 
@@ -55,10 +59,7 @@ add_executable(singleomega "src/SingleOmega.cpp")
 target_link_libraries(singleomega diffsel_lib)
 target_compile_features(singleomega PRIVATE ${CXX_FEATURES})
 
-
 # MultiGeneSingleOmega
 add_executable(multigenesingleomega "src/MultiGeneSingleOmega.cpp")
 target_link_libraries(multigenesingleomega diffsel_lib)
 target_compile_features(multigenesingleomega PRIVATE ${CXX_FEATURES})
-
-
