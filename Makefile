@@ -16,7 +16,7 @@ _build/Makefile: CMakeLists.txt
 	@cd _build ; cmake ..
 
 clean:
-	@rm -rf _build doc/html
+	@rm -rf _build doc/html src/*gcno src/*.gcda
 
 fullclean: clean
 	@rm -f tmp*

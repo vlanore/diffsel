@@ -20,7 +20,11 @@ matrix:
       env:
         - COMPILER=g++-5
         - DIFFSEL_FLAGS="-fprofile-arcs -ftest-coverage -g"
+      before_script:
+        - export CXX=$COMPILER
+        - make build-coverage
       after_success:
+        - make mvcov
         - bash <(curl -s https://codecov.io/bash)
 
     - os: linux
@@ -34,7 +38,9 @@ matrix:
             - clang-3.6
       env: COMPILER=clang++-3.6
 
-script:
+before_script:
   - export CXX=$COMPILER
   - $CXX -v
-  - cd src && make && make test && cd ..
+
+script:
+  - make && make test
