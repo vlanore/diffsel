@@ -21,7 +21,6 @@ set(DIFFSEL_LIB
   src/CodonSubMatrix.cpp
   src/GTRSubMatrix.cpp
   src/MSCodonSubMatrix.cpp
-  src/MultiGeneSingleOmega.cpp
   src/PhyloProcess.cpp
   src/Random.cpp
   src/Sample.cpp
@@ -50,3 +49,16 @@ target_compile_features(diffsel PRIVATE ${CXX_FEATURES})
 add_executable(readdiffsel "src/ReadDiffSel.cpp")
 target_link_libraries(readdiffsel diffsel_lib)
 target_compile_features(readdiffsel PRIVATE ${CXX_FEATURES})
+
+# SingleOmega
+add_executable(singleomega "src/SingleOmega.cpp")
+target_link_libraries(singleomega diffsel_lib)
+target_compile_features(singleomega PRIVATE ${CXX_FEATURES})
+
+
+# MultiGeneSingleOmega
+add_executable(multigenesingleomega "src/MultiGeneSingleOmega.cpp")
+target_link_libraries(multigenesingleomega diffsel_lib)
+target_compile_features(multigenesingleomega PRIVATE ${CXX_FEATURES})
+
+
