@@ -11,10 +11,10 @@ To get diffsel from a machine connected to the internet, type in a terminal:
 git clone https://github.com/vlanore/diffsel.git
 ```
 
-This should create a folder called `diffsel` (the diffsel root folder). This folder contains a `src` subfolder in which you must go before compiling diffsel:
+This should create a folder called `diffsel` (the diffsel root folder). You must go there before compiling diffsel:
 
 ```bash
-cd diffsel/src
+cd diffsel
 ```
 
 Then, to build diffsel simply run:
@@ -23,17 +23,17 @@ Then, to build diffsel simply run:
 make
 ```
 
-To check that everything ran well, you can go back to the diffsel root folder and see if executables were correctly created:
+To check that everything ran well, look into the `_build`  folder to see if executables are present:
+
 ```bash
-cd ..
-ls
+ls _build
 ```
 
 This should display a list of files. If you see the following files, then diffsel was correctly built:
-* `flatdiffsel_bin`
-* `flatgeneglobom_bin`
-* `flatglobom_bin`
-* `readflatdiffsel_bin`
+* `diffsel`
+* `singleomega`
+* `multigenesingleomega`
+* `readdiffsel`
 
 ## How to format your data
 
@@ -66,7 +66,7 @@ The `datà` folder in the diffsel root folder contains examples of data files u
 Basic usage for diffsel is (from the diffsel root folder):
 
 ```
-./flatdiffsel_bin -t <path to tree file> -d <path to alignment file> [options...] <name of run>
+_build/diffsel -t <path to tree file> -d <path to alignment file> [options...] <name of run>
 ```
 The name of the run is a string which is used to create files to store the results of the run. Note that the name of the run must be at the very end of the command.
 
@@ -77,5 +77,5 @@ Useful options include:
 For example, to run a diffsel chain called "myrun" on example data (from the `data` folder), with 3 conditions until 10k points have been written to disc (from the diffsel root folder):
 
 ```bash
-./flatdiffsel_bin -t data/samhd1.tree -d data/samhd1.ali -ncond 3 -x 1 10000 myrun
+_build/diffsel -t data/samhd1.tree -d data/samhd1.ali -ncond 3 -x 1 10000 myrun
 ```
