@@ -19,7 +19,6 @@ matrix:
             - g++-5
       env:
         - COMPILER=g++-5
-        - DIFFSEL_FLAGS="-fprofile-arcs -ftest-coverage -g"
       before_script:
         - export CXX=$COMPILER
         - make build-coverage
