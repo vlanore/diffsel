@@ -79,7 +79,7 @@ else:
 
 burnin = int(iterations * burninin)
 print("-- Running tracecomp with burnin : "+data(burnin))
-p4 = Popen(["tracecomp -x "+str(burnin)+" -o "+chainname+" "+chainname+" "+chainname+"2"], shell=True, stdout=PIPE, stderr=PIPE)
+p4 = Popen(["bin/tracecomp -x "+str(burnin)+" -o "+chainname+" "+chainname+" "+chainname+"2"], shell=True, stdout=PIPE, stderr=PIPE)
 r4 = p4.wait()
 
 if r4 == 0 and os.path.isfile(chainname+".contdiff"):

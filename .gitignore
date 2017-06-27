@@ -16,3 +16,4 @@ cscope*
 *.contdiff
 tmp*
 _build/
+__pycache__/
