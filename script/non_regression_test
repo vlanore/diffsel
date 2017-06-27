@@ -85,21 +85,19 @@ r4 = p4.wait()
 
 if r4 == 0 and os.path.isfile(chainname+".contdiff"):
     print("-- Tracecomp executed; results stored in "+data(chainname+".contdiff"))
+    tcout = p4.communicate()[0].decode("ascii")
+    tcout = [l.split() for l in tcout.split("\n")[2:-1]] #assumes first two lines and last line are not data (FIXME: fragile code)
+    print("-- Trace lines are : "+", ".join([data(strip(l[0])) for l in tcout]))
+    mineff = min([int(l[1]) for l in tcout])
+    maxrel = max([float(l[2]) for l in tcout])
+    print("-- Minimum effsize is "+data(mineff)+" and maximum rel_diff is "+data(maxrel))
+    if mineff < 50 or maxrel > 0.3:
+        print(error("The chains do not seem to have converged!"))
+    else:
+        print(success("The chains seem to have converged!"))
 else:
-    print("-- "+error("Error")+" Something went wrong with tracecomp!\n-- Output of command was:\n")
+    print("-- "+error("Warning")+" Something went wrong with tracecomp!\n-- Output of command was:\n")
     print(p4.communicate()[1].decode("ascii"))
-    exit(1)
-
-tcout = p4.communicate()[0].decode("ascii")
-tcout = [l.split() for l in tcout.split("\n")[2:-1]] #assumes first two lines and last line are not data (FIXME: fragile code)
-print("-- Trace lines are : "+", ".join([data(strip(l[0])) for l in tcout]))
-mineff = min([int(l[1]) for l in tcout])
-maxrel = max([float(l[2]) for l in tcout])
-print("-- Minimum effsize is "+data(mineff)+" and maximum rel_diff is "+data(maxrel))
-if mineff < 50 or maxrel > 0.3:
-    print(error("The chains do not seem to have converged!"))
-else:
-    print(success("The chains seem to have converged!"))
 
 #===================================================================================================
 print(step("Convergent site analysis"))
