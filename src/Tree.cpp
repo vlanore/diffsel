@@ -251,7 +251,6 @@ Link *Tree::ParseList(string input, Node *node) {
 Link *Tree::ParseGroup(string input, Link *from) {
     try {
         // parse input as (body)nodeval:branchval
-
         string body = "";
         unsigned int k = 0;
         if (input[0] == '(') {

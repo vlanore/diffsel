@@ -53,6 +53,7 @@ if not analysis:
         myrange = bar(range(iterations))
     except:
         myrange = range(iterations)
+        print("-- Progressbar is not installed! Cannot display progress. Please wait for a while...")
 
     for i in myrange:
         p2.stdout.readline()

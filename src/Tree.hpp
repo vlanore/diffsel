@@ -97,7 +97,7 @@ class Tree : public NewickTree {
     // but does NOT delete the Nodes and Branches (VL: actually it was not called at all :/)
     ~Tree() = default;
 
-    Tree(const Tree&) = delete; // forbidding copy construction
+    Tree(const Tree &) = delete;  // forbidding copy construction
 
     // Delete the leaf pointing by the next link and set everithing right.
     void DeleteNextLeaf(Link *previous);
@@ -120,7 +120,8 @@ class Tree : public NewickTree {
     // taxon
     void RegisterWith(const TaxonSet *taxset);
 
-    bool RegisterWith(const TaxonSet *taxset, Link *from, int &tot); // recursive function called by RegisterWith
+    bool RegisterWith(const TaxonSet *taxset, Link *from,
+                      int &tot);  // recursive function called by RegisterWith
 
     double GetBranchLength(const Link *link) const { return atof(GetBranchName(link).c_str()); }
 
@@ -175,8 +176,8 @@ class Tree : public NewickTree {
   private:
     // data fields
     // just 2 pointers, to the root and to a list of taxa
-    Link *root {nullptr};
-    const TaxonSet *taxset {nullptr};
+    Link *root{nullptr};
+    const TaxonSet *taxset{nullptr};
     int Nlink;
     int Nbranch;
     int Nnode;
