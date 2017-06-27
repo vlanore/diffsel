@@ -11,33 +11,36 @@ class Link;
 
 class TaxonSet {
   public:
-    TaxonSet(const std::vector<std::string> &names, int ntaxa);
-    TaxonSet(const Tree *tree, const Link *subgroup = nullptr);
-    ~TaxonSet();
+    TaxonSet(const std::vector<std::string> &names, int ntaxa) {
+        Ntaxa = ntaxa;
+        taxlist.resize(Ntaxa);
+        for (int i = 0; i < ntaxa; i++) {
+            if (taxmap[names[i]] != 0) {
+                std::cerr << "found several taxa with same name : " << names[i] << '\n';
+                exit(1);
+            }
+            taxlist[i] = names[i];
+            taxmap[names[i]] = i + 1;
+        }
+    }
 
-    int GetNtaxa() const;
-    std::string GetTaxon(int index) const;
-    int GetTaxonIndex(std::string intaxon) const;
-    int GetTaxonIndexWithIncompleteName(std::string taxname) const;
+    int GetNtaxa() const { return Ntaxa; }
 
-    void ToStream(std::ostream &os) const;
+    std::string GetTaxon(int index) const { return taxlist[index]; }
+
+    int GetTaxonIndex(std::string intaxon) const { return taxmap[intaxon] - 1; }
+
+    void ToStream(std::ostream &os) const {
+        os << Ntaxa << '\n';
+        for (auto e : taxlist) {
+            os << e << '\n';
+        }
+    }
 
   private:
-    void RecursiveGetSubSet(const Link *from, int &i);
-
     int Ntaxa;
     mutable std::map<std::string, int> taxmap;
-    std::string *taxlist;
+    std::vector<std::string> taxlist;
 };
-
-//-------------------------------------------------------------------------
-//-------------------------------------------------------------------------
-//	* Inline definitions
-//-------------------------------------------------------------------------
-//-------------------------------------------------------------------------
-
-inline int TaxonSet::GetNtaxa() const { return Ntaxa; }
-inline std::string TaxonSet::GetTaxon(int index) const { return taxlist[index]; }
-inline int TaxonSet::GetTaxonIndex(std::string intaxon) const { return taxmap[intaxon] - 1; }
 
 #endif  // TAXONSET_H

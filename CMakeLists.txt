@@ -26,7 +26,6 @@ set(DIFFSEL_LIB
   src/SequenceAlignment.cpp
   src/StateSpace.cpp
   src/SubMatrix.cpp
-  src/TaxonSet.cpp
   src/Tree.cpp
   src/Tree.hpp
   src/linalg.cpp
