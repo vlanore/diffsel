@@ -54,7 +54,7 @@ if not analysis:
     except:
         myrange = range(iterations)
 
-    for i in bar(range(iterations)):
+    for i in myrange:
         p2.stdout.readline()
         p3.stdout.readline()
 
