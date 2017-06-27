@@ -8,9 +8,7 @@ matrix:
     - os: osx
       compiler: clang
       env: COMPILER=clang++
-      after_install:
-        - ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-        - brew install python3
+      python: "3.4"
 
     - os: linux
       dist: trusty
