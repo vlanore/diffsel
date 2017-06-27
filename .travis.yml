@@ -40,6 +40,7 @@ matrix:
 before_script:
   - export CXX=$COMPILER
   - $CXX -v
+  - chmod +x script/* bin/*
 
 script:
   - make && make test
