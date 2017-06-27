@@ -79,7 +79,8 @@ Tree::Tree() {
 
 Tree::Tree(const Tree *from) {
     taxset = nullptr;
-    root = new Link(from->root);
+    root = new Link(); // WARNING parameter was ignored (see old implem in Tree.hpp)
+    // root = new Link(from->root);
     root->InsertOut(root);
     RecursiveClone(from->root, root);
 }
@@ -90,10 +91,12 @@ void Tree::RecursiveClone(const Link *from, Link *to) {
     const Link *linkfrom = from->Next();
     Link *linkto = to;
     while (linkfrom != from) {
-        auto newnext = new Link(linkfrom);  // newnext points to same node and branch as linkfrom
+        auto newnext = new Link(); // WARNING parameter was ignored (see old Tree.hpp)
+        // auto newnext = new Link(linkfrom);  // newnext points to same node and branch as linkfrom
         newnext->SetNode(node);
         linkto->Insert(newnext);
-        auto newout = new Link(linkfrom->Out());  // idem, same node and branch as linkfrom->Out()
+        auto newout = new Link(); // WARNING parameter was ignored (see old Tree.hpp)
+        // auto newout = new Link(linkfrom->Out());  // idem, same node and branch as linkfrom->Out()
         newout->InsertOut(newnext);
         auto branch = new Branch(linkfrom->GetBranch());
         newnext->SetBranch(branch);

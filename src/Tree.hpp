@@ -4,83 +4,47 @@
 #include <iostream>
 #include <map>
 #include <string>
-#include "Random.hpp"
-#include "StringStreamUtils.hpp"
-using namespace std;
 
 class TaxonSet;  // forward decl
 
 class Node {
   private:
-    int index;
-    std::string name;
+    int index{0};
+    std::string name{""};
 
   public:
-    Node() : index(0), name("") {}
-    Node(std::string s) : index(0), name(std::move(s)) {}
-    Node(const Node *from) : index(from->index), name(from->name) {}
+    Node() = default;
+    explicit Node(const std::string &s) : name(s) {}
+    explicit Node(const Node *from) : index(from->index), name(from->name) {}
 
-    virtual ~Node() = default;
-
-    virtual std::string GetName() const { return name; }
-    virtual void SetName(std::string inname) { name = inname; }
+    std::string GetName() const { return name; }
+    void SetName(std::string inname) { name = inname; }
     int GetIndex() const { return index; }
     void SetIndex(int i) { index = i; }
 };
 
-class Branch {
-  private:
-    int index;
-    std::string name;
-
-  public:
-    Branch() : index(0), name("") {}
-    Branch(std::string s) : index(0), name(std::move(s)) {}
-    Branch(const Branch *from) : index(from->index), name(from->name) {}
-
-    virtual ~Branch() = default;
-
-    virtual std::string GetName() const { return name; }
-    virtual void SetName(std::string inname) { name = inname; }
-    int GetIndex() const { return index; }
-    void SetIndex(int i) { index = i; }
-};
+using Branch = Node;  // the two classes were completely identical
 
 class Link {
-  private:
     Link *next;
     Link *out;
-    Branch *branch;
-    Node *node;
-    int index;
+    Branch *branch{nullptr};
+    Node *node{nullptr};
+    int index{-1};
 
   public:
-    Link() {
-        next = out = this;
-        branch = nullptr;
-        node = nullptr;
-    }
-
-    Link(const Link * /*unused*/) {
-        next = out = this;
-        node = nullptr;
-        branch = nullptr;
-    }
+    Link() : next(this), out(this) {}
 
     Link *Next() const { return next; }
     Link *Out() const { return out; }
     Branch *GetBranch() const { return branch; }
     Node *GetNode() const { return node; }
+    int GetIndex() const { return index; }
 
     void SetBranch(Branch *inbranch) { branch = inbranch; }
     void SetNode(Node *innode) { node = innode; }
-
-    void SetIndex(int i) { index = i; }
-
-    int GetIndex() const { return index; }
-
     void SetOut(Link *inout) { out = inout; }
-
+    void SetIndex(int i) { index = i; }
     void SetNext(Link *innext) { next = innext; }
 
     void AppendTo(Link *link) {
@@ -100,119 +64,23 @@ class Link {
     }
 
     bool isLeaf() const { return (next == this); }
-
     bool isUnary() const { return (next->Next() == this && !isLeaf()); }
-
     bool isRoot() const { return (out == this); }
-
-    // degree : number of branches connecting to the node associated to this link
-    int GetDegree() const {
-        int d = 1;
-        const Link *link = next;
-        while (link != this) {
-            d++;
-            link = link->next;
-        }
-        return d;
-    }
-
-    const Link *GetUp(int &d) const {
-        std::cerr << "in getup\n";
-        exit(1);
-        d = 1;
-        const Link *link = Out();
-        // const Link* link = link->Out();
-        while (link->GetDegree() == 2) {
-            link = link->Next()->Out();
-            d++;
-        }
-        return link;
-    }
 };
 
 class NewickTree {
   public:
     virtual ~NewickTree() = default;
+
     virtual Link *GetRoot() const = 0;
 
     void ToStream(std::ostream &os) const;
     void ToStream(std::ostream &os, const Link *from) const;
     double ToStreamSimplified(std::ostream &os, const Link *from) const;
 
-    const Link *GetLeftMostLink(const Link *from) const {
-        if (from->isLeaf()) {
-            return from;
-        }
-        return GetLeftMostLink(from->Next()->Out());
-    }
-
-    const Link *GetRightMostLink(const Link *from) const {
-        if (from->isLeaf()) {
-            return from;
-        }
-        const Link *link = from->Next();
-        while (link->Next() != from) {
-            link = link->Next();
-        }
-        return GetRightMostLink(link->Out());
-    }
-
-    std::string GetLeftMost(const Link *from) const {
-        if (from->isLeaf()) {
-            return GetNodeName(from);
-        }
-        return GetLeftMost(from->Next()->Out());
-    }
-
-    std::string GetRightMost(const Link *from) const {
-        if (from->isLeaf()) {
-            return GetNodeName(from);
-        }
-        const Link *link = from->Next();
-        while (link->Next() != from) {
-            link = link->Next();
-        }
-        return GetRightMost(link->Out());
-    }
-
-    static void Simplify() { simplify = true; }
-
-    void PrintTab(std::ostream &os) const { RecursivePrintTab(os, GetRoot()); }
-
-    void RecursivePrintTab(std::ostream &os, const Link *from) const {
-        os << GetLeftMost(from) << '\t' << GetRightMost(from) << '\t' << GetNodeName(from) << '\n';
-        for (const Link *link = from->Next(); link != from; link = link->Next()) {
-            RecursivePrintTab(os, link->Out());
-        }
-    }
-
-    int GetNnode() const { return RecursiveGetNnode(GetRoot()); }
-
-    int GetNinternalNode() const { return RecursiveGetNinternalNode(GetRoot()); }
-
-    int RecursiveGetNinternalNode(const Link *from) const {
-        int n = 0;
-        if (!from->isLeaf()) {
-            n++;
-        }
-        for (const Link *link = from->Next(); link != from; link = link->Next()) {
-            n += RecursiveGetNinternalNode(link->Out());
-        }
-        return n;
-    }
-
-    int RecursiveGetNnode(const Link *from) const {
-        int n = 1;
-        for (const Link *link = from->Next(); link != from; link = link->Next()) {
-            n += RecursiveGetNnode(link->Out());
-        }
-        return n;
-    }
-
   protected:
     virtual std::string GetNodeName(const Link *link) const = 0;
     virtual std::string GetBranchName(const Link *link) const = 0;
-
     virtual std::string GetLeafNodeName(const Link *link) const { return GetNodeName(link); }
 
     static bool simplify;
@@ -223,16 +91,16 @@ class Tree : public NewickTree {
     Tree();
     // default constructor: set member pointers to 0
 
-    Tree(const Tree *from);
+    explicit Tree(const Tree *from);
     // clones the entire Link structure
     // but does NOT clone the Nodes and Branches
     // calls RecursiveClone
 
-    Tree(std::string filename);
+    explicit Tree(std::string filename);
     // create a tree by reading into a file (netwick format expected)
     // calls ReadFromStream
 
-    ~Tree() override;
+    ~Tree();
     // calls RecursiveDelete
     // but does NOT delete the Nodes and Branches
 
@@ -262,88 +130,14 @@ class Tree : public NewickTree {
 
     double GetBranchLength(const Link *link) const { return atof(GetBranchName(link).c_str()); }
 
-    double GetMaxHeight(const Link *from) const {
-        double max = 0;
-        for (const Link *link = from->Next(); link != from; link = link->Next()) {
-            double tmp = GetMaxHeight(link->Out());
-            if (max < tmp) {
-                max = tmp;
-            }
-        }
-        if (!from->isRoot()) {
-            max += GetBranchLength(from);
-        }
-        return max;
-    }
-
-    double GetMinHeight(const Link *from) const {
-        double min = -1;
-        for (const Link *link = from->Next(); link != from; link = link->Next()) {
-            double tmp = GetMinHeight(link->Out());
-            if ((min == -1) || (min > tmp)) {
-                min = tmp;
-            }
-        }
-        if (!from->isRoot()) {
-            min += GetBranchLength(from);
-        }
-        return min;
-    }
-
-    void ToStreamRenorm(const Link *from, std::ostream &os, double normfactor) const {
-        if (from->isLeaf()) {
-            os << GetNodeName(from);
-        } else {
-            os << "(";
-            for (const Link *link = from->Next(); link != from; link = link->Next()) {
-                ToStreamRenorm(link->Out(), os, normfactor);
-                if (link->Next() != from) {
-                    os << ",";
-                }
-            }
-            os << ")";
-            os << GetNodeName(from);
-        }
-        if (from->isRoot()) {
-            os << ";\n";
-        } else {
-            os << ":";
-            os << GetBranchLength(from) * normfactor;
-        }
-    }
-
     std::string GetBranchName(const Link *link) const override {
         return link->GetBranch()->GetName();
     }
 
-    std::string GetNodeName(const Link *link) const override {
-        return link->GetNode()->GetName();
-        /*
-          if (! link->isLeaf())	{
-          return link->GetNode()->GetName();
-          }
-          std::string s = link->GetNode()->GetName();
-          unsigned int l = s.length();
-          unsigned int i = 0;
-          while ((i < l) && (s[i] != '_')) i++;
-          if (i == l)	{
-                  std::cerr << "error in get name\n";
-          exit(1);
-          }
-          i++;
-          return s.substr(i,l-i);
-        */
-    }
-    // trivial accessors
-    // they can be useful to override, so as to bypass Branch::GetName() and
-    // Node::GetName()
+    std::string GetNodeName(const Link *link) const override { return link->GetNode()->GetName(); }
 
     void EraseInternalNodeName();
     void EraseInternalNodeName(Link *from);
-
-    // void Print(std::ostream& os,const Link* from) const ;
-    // void Print(std::ostream& os) const;
-    // printing int netwick format
 
     unsigned int GetSize() const { return GetSize(GetRoot()); }
 
@@ -389,66 +183,6 @@ class Tree : public NewickTree {
 
     void Subdivide(Link *from, int Ninterpol);
 
-    std::string Reduce(const Link *from = nullptr) {
-        if (from == nullptr) {
-            from = GetRoot();
-        }
-        if (from->isLeaf()) {
-            std::cerr << from->GetNode()->GetName() << '\n';
-            ;
-            return from->GetNode()->GetName();
-        }
-        std::string name = "None";
-        for (Link *link = from->Next(); link != from; link = link->Next()) {
-            std::string tmp = Reduce(link->Out());
-            if (tmp == "diff") {
-                name = "diff";
-            } else if (name == "None") {
-                name = tmp;
-            } else if (name != tmp) {
-                name = "diff";
-            }
-        }
-        std::cerr << '\t' << name << '\n';
-        from->GetNode()->SetName(name);
-        return name;
-
-        return "";
-    }
-
-    void PrintReduced(std::ostream &os, const Link *from = nullptr) {
-        if (from == nullptr) {
-            from = GetRoot();
-        }
-        if (from->GetNode()->GetName() != "diff") {
-            os << from->GetNode()->GetName();
-        } else {
-            os << '(';
-            for (const Link *link = from->Next(); link != from; link = link->Next()) {
-                PrintReduced(os, link->Out());
-                if (link->Next() != from) {
-                    os << ',';
-                }
-            }
-            os << ')';
-        }
-        if (from->isRoot()) {
-            os << ";\n";
-        }
-    }
-
-    const Link *ChooseInternalNode() const {
-        int n = CountInternalNodes(GetRoot());
-        int m = (int)(n * Random::Uniform());
-        const Link *tmp;
-        const Link *chosen = ChooseInternalNode(GetRoot(), tmp, m);
-        if (chosen == nullptr) {
-            std::cerr << "error in choose internal node: null pointer\n";
-            exit(1);
-        }
-        return chosen;
-    }
-
     int CountInternalNodes(const Link *from) const;
     const Link *ChooseInternalNode(const Link *from, const Link *&fromup, int &n) const;
     int CountNodes(const Link *from) const;
@@ -482,42 +216,9 @@ class Tree : public NewickTree {
     Link *GetLink(int index) const { return linkmap[index]; }
 
   protected:
-    mutable map<int, const Node *> nodemap;
-    mutable map<int, const Branch *> branchmap;
-    mutable map<int, Link *> linkmap;
-
-    void CheckIndices(Link *from) const {
-        if (!from->isRoot()) {
-            if (from->GetBranch() != branchmap[from->GetBranch()->GetIndex()]) {
-                cerr << "branch index : " << from->GetBranch()->GetIndex() << '\n';
-                exit(1);
-            }
-        } else {
-            if (branchmap[0] != 0) {
-                cerr << "root branch index\n";
-                exit(1);
-            }
-        }
-
-        if (from->GetNode() != nodemap[from->GetNode()->GetIndex()]) {
-            cerr << "node index: " << from->GetNode()->GetIndex() << '\n';
-            exit(1);
-        }
-
-        if (!from->isRoot()) {
-            if (from->Out() != linkmap[from->Out()->GetIndex()]) {
-                cerr << "link index : " << from->Out()->GetIndex() << '\n';
-            }
-        }
-        if (from != linkmap[from->GetIndex()]) {
-            cerr << "link index : " << from->GetIndex() << '\n';
-        }
-
-
-        for (const Link *link = from->Next(); link != from; link = link->Next()) {
-            CheckIndices(link->Out());
-        }
-    }
+    mutable std::map<int, const Node *> nodemap;
+    mutable std::map<int, const Branch *> branchmap;
+    mutable std::map<int, Link *> linkmap;
 
     void SetIndices(Link *from, int &linkindex, int &nodeindex, int &branchindex) {
         if (!from->isRoot()) {
