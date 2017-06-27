@@ -36,14 +36,7 @@ double NewickTree::ToStreamSimplified(ostream &os, const Link *from) const {
     } else {
     }
     os << GetNodeName(from);
-    /*
-      if (!from->isRoot())	{
-      string brval = GetBranchName(from);
-      if (brval != "")	{
-      os << ':' << brval;
-      }
-      }
-    */
+
     if (from->isRoot()) {
         return 0;
     }
@@ -61,69 +54,12 @@ void NewickTree::ToStream(ostream &os, const Link *from) const {
         }
         os << ')';
     }
-    // if (from->isLeaf())	{
     os << GetNodeName(from);
-    // }
     if (!from->isRoot()) {
         string brval = GetBranchName(from);
         if (brval != "") {
             os << ':' << brval;
         }
-    }
-}
-
-Tree::Tree() {
-    root = nullptr;
-    taxset = nullptr;
-}
-
-Tree::Tree(const Tree *from) {
-    taxset = nullptr;
-    root = new Link(); // WARNING parameter was ignored (see old implem in Tree.hpp)
-    // root = new Link(from->root);
-    root->InsertOut(root);
-    RecursiveClone(from->root, root);
-}
-
-void Tree::RecursiveClone(const Link *from, Link *to) {
-    auto node = new Node(from->GetNode());
-    to->SetNode(node);
-    const Link *linkfrom = from->Next();
-    Link *linkto = to;
-    while (linkfrom != from) {
-        auto newnext = new Link(); // WARNING parameter was ignored (see old Tree.hpp)
-        // auto newnext = new Link(linkfrom);  // newnext points to same node and branch as linkfrom
-        newnext->SetNode(node);
-        linkto->Insert(newnext);
-        auto newout = new Link(); // WARNING parameter was ignored (see old Tree.hpp)
-        // auto newout = new Link(linkfrom->Out());  // idem, same node and branch as linkfrom->Out()
-        newout->InsertOut(newnext);
-        auto branch = new Branch(linkfrom->GetBranch());
-        newnext->SetBranch(branch);
-        newout->SetBranch(branch);
-        RecursiveClone(linkfrom->Out(), newout);
-        linkfrom = linkfrom->Next();
-        linkto = linkto->Next();
-    }
-}
-
-void Tree::RecursiveDelete(Link *from) {
-    Link *link = from->Next();
-    while (link != from) {
-        delete link->Out()->GetNode();
-        delete link->GetBranch();
-        RecursiveDelete(link->Out());
-        Link *keep = link->Next();
-        delete link;
-        link = keep;
-    }
-    delete link;
-}
-
-Tree::~Tree() {
-    if (root != nullptr) {
-        RecursiveDelete(root);
-        root = nullptr;
     }
 }
 
@@ -372,113 +308,4 @@ Link *Tree::ParseGroup(string input, Link *from) {
         cout << "exit in parse group\n";
         exit(1);
     }
-}
-
-void Tree::Subdivide(Link *from, int Ninterpol) {
-    for (Link *link = from->Next(); link != from; link = link->Next()) {
-        Subdivide(link->Out(), Ninterpol);
-    }
-    // if ((! from->isLeaf()) && (! from->isRoot()))	{
-    if (!from->isRoot()) {
-        double l = atof(from->GetBranch()->GetName().c_str());
-        if (l <= 0) {
-            cerr << "warning : non strictly positive branch length : " << l << '\n';
-            cerr << "correcting and setting to 0.001\n";
-            l = 0.001;
-        }
-
-        ostringstream s;
-        s << l / Ninterpol;
-
-        delete from->GetBranch();
-
-        Link *current = from;
-        Link * final = from->Out();
-        int i = 0;
-        while (i < Ninterpol - 1) {
-            auto link1 = new Link;
-            auto link2 = new Link;
-            Branch *newbranch = new Branch(s.str());
-            auto newnode = new Node();
-            current->SetBranch(newbranch);
-            link1->SetNext(link2);
-            link2->SetNext(link1);
-            link1->SetBranch(newbranch);
-            link1->SetNode(newnode);
-            link2->SetNode(newnode);
-            current->SetOut(link1);
-            link1->SetOut(current);
-            current = link2;
-            i++;
-        }
-        current->SetOut(final);
-        final->SetOut(current);
-        Branch *newbranch = new Branch(s.str());
-        final->SetBranch(newbranch);
-        current->SetBranch(newbranch);
-    }
-}
-
-int Tree::CountInternalNodes(const Link *from) const {
-    int total = 0;
-    if (!from->isLeaf()) {
-        // if ((! from->isLeaf()) && (! from->isRoot()))	{
-        total = 1;
-        for (const Link *link = from->Next(); link != from; link = link->Next()) {
-            total += CountInternalNodes(link->Out());
-        }
-    }
-    return total;
-}
-
-const Link *Tree::ChooseInternalNode(const Link *from, const Link *&fromup, int &n) const {
-    if (from->isLeaf()) {
-        return nullptr;
-    }
-    const Link *ret = nullptr;
-    if (n == 0) {
-        ret = from;
-    } else {
-        n--;
-        for (const Link *link = from->Next(); link != from; link = link->Next()) {
-            if (ret == nullptr) {
-                const Link *tmp = ChooseInternalNode(link->Out(), fromup, n);
-                if (tmp != nullptr) {
-                    ret = tmp;
-                }
-            }
-        }
-        if ((ret != nullptr) && (fromup == nullptr)) {
-            fromup = from;
-        }
-    }
-    return ret;
-}
-
-int Tree::CountNodes(const Link *from) const {
-    int total = 1;
-    for (const Link *link = from->Next(); link != from; link = link->Next()) {
-        total += CountNodes(link->Out());
-    }
-    return total;
-}
-
-const Link *Tree::ChooseNode(const Link *from, const Link *&fromup, int &n) const {
-    const Link *ret = nullptr;
-    if (n == 0) {
-        ret = from;
-    } else {
-        n--;
-        for (const Link *link = from->Next(); ((ret == nullptr) && (link != from));
-             link = link->Next()) {
-            const Link *tmp = ChooseNode(link->Out(), fromup, n);
-            if (tmp != nullptr) {
-                ret = tmp;
-            }
-        }
-        if ((ret != nullptr) && (fromup == nullptr)) {
-            fromup = from;
-        }
-    }
-    return ret;
 }
