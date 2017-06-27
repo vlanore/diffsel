@@ -41,16 +41,20 @@ if not analysis:
     print(step("Launching diffsel chains"))
 
     print("-- Launching first chain")
-    p2 = Popen(["time ./flatdiffsel_bin -d "+chainname+".ali -t "+chainname+".tree -ncond 2 -x 1 "+str(iterations)+" "+chainname], stderr=PIPE, stdout=PIPE, shell=True)
+    p2 = Popen(["time _build/diffsel -d "+chainname+".ali -t "+chainname+".tree -ncond 2 -x 1 "+str(iterations)+" "+chainname], stderr=PIPE, stdout=PIPE, shell=True)
 
     print("-- Launching second chain")
-    p3 = Popen(["time ./flatdiffsel_bin -d "+chainname+".ali -t "+chainname+".tree -ncond 2 -x 1 "+str(iterations)+" "+chainname+"2"], stderr=PIPE, stdout=PIPE, shell=True)
+    p3 = Popen(["time _build/diffsel -d "+chainname+".ali -t "+chainname+".tree -ncond 2 -x 1 "+str(iterations)+" "+chainname+"2"], stderr=PIPE, stdout=PIPE, shell=True)
 
     print("-- Launching done; starting chain monitoring:")
-    import progressbar
-    bar = progressbar.ProgressBar()
+    try:
+        import progressbar
+        bar = progressbar.ProgressBar()
+        myrange = bar(range(iterations))
+    except:
+        myrange = range(iterations)
+
     for i in bar(range(iterations)):
-        # print ("Iteration "+str(i))
         p2.stdout.readline()
         p3.stdout.readline()
 
@@ -102,7 +106,7 @@ print(step("Convergent site analysis"))
 print("-- Running readdiffsel")
 
 def rdrun(no):
-    p5 = Popen(["./readflatdiffsel_bin -x "+str(burnin)+" 1 "+str(iterations)+" "+chainname+no], shell=True, stdout=PIPE, stderr=PIPE)
+    p5 = Popen(["_build/readdiffsel -x "+str(burnin)+" 1 "+str(iterations)+" "+chainname+no], shell=True, stdout=PIPE, stderr=PIPE)
     r5 = p5.wait()
 
     meanname = chainname+no+"_1.meandiffsel"
