@@ -8,7 +8,7 @@ if (CMAKE_BUILD_TYPE MATCHES COVERAGE)
   set(CMAKE_CXX_FLAGS "-O0 -fprofile-arcs -ftest-coverage")
 endif()
 set(CXX_FEATURES cxx_auto_type cxx_nullptr cxx_final cxx_override cxx_range_for)
-include_directories("src")
+include_directories("src" "include")
 
 # static lib
 set(DIFFSEL_LIB

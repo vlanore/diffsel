@@ -5,6 +5,8 @@
 #include <map>
 #include <string>
 
+#include <doctest.h>
+
 class TaxonSet;  // forward decl
 
 class Node {
@@ -73,7 +75,6 @@ class Tree {
     // create a tree by reading into a file (netwick format expected) ; calls ReadFromStream
     explicit Tree(std::string filename);
 
-    ~Tree() = default;
     Tree(const Tree &) = delete;  // forbidding copy construction
     Tree() = delete;
 

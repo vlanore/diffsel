@@ -1,4 +1,4 @@
-
+#define DOCTEST_CONFIG_IMPLEMENT
 #include "DiffSelModel.hpp"
 #include "Sample.hpp"
 

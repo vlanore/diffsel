@@ -1,3 +1,4 @@
+#define DOCTEST_CONFIG_IMPLEMENT
 #include <cmath>
 #include <fstream>
 #include "Chain.hpp"
