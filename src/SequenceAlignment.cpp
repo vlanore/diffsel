@@ -12,69 +12,6 @@ using namespace std;
 // ---------------------------------------------------------------------------
 int Int(string s) { return atoi(s.c_str()); }
 
-double Double(string s) { return atof(s.c_str()); }
-
-void SequenceAlignment::GetEmpiricalFreq(double *in) const {
-    int n = GetNstate();
-    for (int i = 0; i < GetNstate(); i++) {
-        in[i] = 1;
-    }
-    for (int i = 0; i < GetNtaxa(); i++) {
-        for (int j = 0; j < GetNsite(); j++) {
-            if (GetState(i, j) != unknown) {
-                in[GetState(i, j)]++;
-                n++;
-            }
-        }
-    }
-    for (int i = 0; i < GetNstate(); i++) {
-        in[i] /= n;
-    }
-}
-
-void SequenceAlignment::GetSiteEmpiricalFreq(double **in, double pseudocount) const {
-    if (pseudocount < 0) {
-        for (int j = 0; j < GetNsite(); j++) {
-            for (int i = 0; i < GetNstate(); i++) {
-                in[j][i] = -pseudocount * Random::sGamma(1.0);
-            }
-        }
-    } else {
-        for (int j = 0; j < GetNsite(); j++) {
-            for (int i = 0; i < GetNstate(); i++) {
-                in[j][i] = pseudocount;
-            }
-        }
-    }
-
-    for (int i = 0; i < GetNtaxa(); i++) {
-        for (int j = 0; j < GetNsite(); j++) {
-            if (GetState(i, j) != unknown) {
-                in[j][GetState(i, j)]++;
-            }
-        }
-    }
-    for (int j = 0; j < GetNsite(); j++) {
-        double total = 0;
-        for (int i = 0; i < GetNstate(); i++) {
-            total += in[j][i];
-        }
-        for (int i = 0; i < GetNstate(); i++) {
-            in[j][i] /= total;
-        }
-    }
-}
-
-void SequenceAlignment::ToFasta(ostream &os) const {
-    for (int i = 0; i < Ntaxa; i++) {
-        os << '>' << taxset->GetTaxon(i) << '\n';
-        for (int j = 0; j < Nsite; j++) {
-            os << statespace->GetState(GetState(i, j));
-        }
-        os << '\n';
-    }
-}
-
 void SequenceAlignment::ToStream(ostream &os) const {
     // os << Ntaxa << '\t' << 876<< '\n';
     os << Ntaxa << '\t' << Nsite << '\n';
@@ -99,55 +36,13 @@ void SequenceAlignment::ToStream(ostream &os) const {
     os << '\n';
 }
 
-int SequenceAlignment::GetNonMissingTriplet() const {
-    int nsite = 0;
-    for (int j = 2; j < Nsite - 3; j += 3) {
-        if (NoMissingColumn(j - 1) && NoMissingColumn(j) && NoMissingColumn(j + 1)) {
-            nsite++;
-        }
-    }
-    return nsite;
-}
-
-void SequenceAlignment::ToStreamTriplet(ostream &os) const {
-    int nsite = 0;
-    for (int j = 2; j < Nsite - 3; j += 3) {
-        if (NoMissingColumn(j - 1) && NoMissingColumn(j) && NoMissingColumn(j + 1)) {
-            nsite++;
-        }
-    }
-
-    os << Ntaxa << '\t' << 3 * nsite << '\n';
-    int max = 0;
-    for (int i = 0; i < Ntaxa; i++) {
-        int l = taxset->GetTaxon(i).length();
-        if (max < l) {
-            max = l;
-        }
-    }
-
-    for (int i = 0; i < Ntaxa; i++) {
-        os << taxset->GetTaxon(i);
-        for (unsigned int j = 0; j < 5 + max - taxset->GetTaxon(i).length(); j++) {
-            os << ' ';
-        }
-        for (int j = 2; j < Nsite - 3; j += 3) {
-            if (NoMissingColumn(j - 1) && NoMissingColumn(j) && NoMissingColumn(j + 1)) {
-                os << statespace->GetState(GetState(i, j - 1));
-                os << statespace->GetState(GetState(i, j));
-                os << statespace->GetState(GetState(i, j + 1));
-            }
-        }
-        os << '\n';
-    }
-    os << '\n';
-}
-
-FileSequenceAlignment::FileSequenceAlignment(string filename,
-                                             int /*unused*/) {  // FIXME unused parameter
-    // SpeciesNames = nullptr; // (VL) wat
+// ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+//     FileSequenceAlignment
+// ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+FileSequenceAlignment::FileSequenceAlignment(string filename) {
     SpeciesNames.clear();
-    // cerr << "read data from file : " << filename << "\n";
     ReadDataFromFile(filename, 0);
     taxset = new TaxonSet(SpeciesNames, Ntaxa);
 }
@@ -162,267 +57,30 @@ int FileSequenceAlignment::ReadDataFromFile(string filespec, int forceinterleave
     }
     is >> tmp;
     try {
-        if (tmp == "#NEXUS") {
-            ReadNexus(filespec);
-            return 1;
-        }
-        if (tmp == "#SPECIALALPHABET") {
-            ReadSpecial(filespec);
-            return 1;
-        } else {
-            cerr << "-- [SequenceAlignment] Alignment file uses Phylip format" << endl;
-            if (forceinterleaved == 0) {
-                int returnvalue = TestPhylipSequential(filespec);
-                if (returnvalue != 0) {
-                    cerr << "-- [SequenceAlignment] Alignment file is sequential" << endl;
-                    ReadPhylipSequential(filespec);
-                    return 1;
-                }
-            }
-            cerr << "-- [SequenceAlignment] Alignment file is interleaved";
-            int returnvalue = TestPhylip(filespec, 1);
+        cerr << "-- [SequenceAlignment] Alignment file uses Phylip format" << endl;
+        if (forceinterleaved == 0) {
+            int returnvalue = TestPhylipSequential(filespec);
             if (returnvalue != 0) {
-                cerr << ", taxon names repeated" << endl;
-                ReadPhylip(filespec, 1);
+                cerr << "-- [SequenceAlignment] Alignment file is sequential" << endl;
+                ReadPhylipSequential(filespec);
                 return 1;
             }
-            cerr << ", taxon names not repeated" << endl;
-            TestPhylip(filespec, 0);
-            ReadPhylip(filespec, 0);
+        }
+        cerr << "-- [SequenceAlignment] Alignment file is interleaved";
+        int returnvalue = TestPhylip(filespec, 1);
+        if (returnvalue != 0) {
+            cerr << ", taxon names repeated" << endl;
+            ReadPhylip(filespec, 1);
             return 1;
         }
+        cerr << ", taxon names not repeated" << endl;
+        TestPhylip(filespec, 0);
+        ReadPhylip(filespec, 0);
+        return 1;
     } catch (...) {
         exit(1);
     }
     return 1;
-}
-
-int FileSequenceAlignment::ReadNexus(string filespec) {
-    ifstream theStream((Path + filespec).c_str());
-    try {
-        GoPastNextWord(theStream, "dimensions");
-        GoPastNext(theStream, '=');
-        theStream >> Ntaxa;
-        GoPastNext(theStream, '=');
-        theStream >> Nsite;
-        GoPastNextWord(theStream, "format");
-        GoPastNextWord(theStream, "datatype");
-        GoPastNext(theStream, '=');
-        string type;
-        theStream >> type;
-
-        if (EquivalentStrings(type, "protein") != 0) {
-            statespace = new ProteinStateSpace();
-        } else if (EquivalentStrings(type, "dna") != 0) {
-            statespace = new DNAStateSpace();
-        } else if (EquivalentStrings(type, "rna") != 0) {
-            statespace = new RNAStateSpace();
-        } else {
-            cerr << "error cannot recognise data type\n";
-            cerr << type << "\n";
-            exit(1);
-        }
-
-        if (Data != nullptr) {
-            for (int i = 0; i < Ntaxa; i++) {
-                delete Data[i];
-            }
-            delete[] Data;
-        }
-        Data = new int *[Ntaxa];
-        for (int i = 0; i < Ntaxa; i++) {
-            Data[i] = new int[Nsite];
-        }
-
-        SpeciesNames = std::vector<std::string>(Ntaxa, "");
-
-        GoPastNextWord(theStream, "Matrix");
-
-        int l = 0;
-        while (l < Nsite) {
-            int m = 0;
-            for (int i = 0; i < Ntaxa; i++) {
-                string temp;
-                theStream >> temp;
-                while (temp == "[") {
-                    unsigned char c;
-                    c = 'i';
-                    while (c != ']') {
-                        c = theStream.get();
-                    }
-                    theStream >> temp;
-                }
-
-                if (l == 0) {
-                    SpeciesNames[i] = temp;
-                } else {
-                    if (temp != SpeciesNames[i]) {
-                        cerr << "error when reading tree base: " << temp << '\t' << SpeciesNames[i]
-                             << '\n';
-                        exit(1);
-                    }
-                }
-
-                unsigned char c;
-                int k = l;
-                do {
-                    c = theStream.get();
-                    if (c == '[') {
-                        while (c != ']') {
-                            c = theStream.get();
-                        }
-                        c = theStream.get();
-                    }
-                    if ((c != ' ') && (c != '\t') && (c != '\n') && (c != 13)) {
-                        if (c == '(') {
-                            Data[i][k] = unknown;
-                            while (c != ')') {
-                                theStream >> c;
-                            }
-                        } else if (c == '{') {
-                            Data[i][k] = unknown;
-                            while (c != '}') {
-                                theStream >> c;
-                            }
-                        } else {
-                            ostringstream s;
-                            s << c;
-                            Data[i][k] = statespace->GetState(s.str());
-                        }
-                        k++;
-                    }
-                } while ((!theStream.eof()) && (c != '\n') && (c != 13));
-                if (theStream.eof()) {
-                    if (i < Ntaxa - 1) {
-                        cerr << "error : found " << i << " taxa instead of " << Ntaxa
-                             << " in datafile\n";
-                        exit(1);
-                    }
-                }
-                if (m == 0) {
-                    m = k;
-                } else {
-                    if (m != k) {
-                        cerr << "error when reading nexus : " << m << '\t' << k << '\n';
-                        cerr << "taxa : " << i << '\t' << SpeciesNames[i] << '\n';
-                        if (m > k) {
-                            while (k != m) {
-                                Data[i][k] = unknown;
-                                k++;
-                            }
-                        }
-                    }
-                }
-            }
-            l = m;
-        }
-    } catch (...) {
-        cerr << "error while reading data file\n";
-        return 0;
-    }
-    return 1;
-}
-
-// ---------------------------------------------------------------------------
-//     ReadSpecial()
-// ---------------------------------------------------------------------------
-int FileSequenceAlignment::ReadSpecial(string filename) {
-    int returnvalue = 0;
-    try {
-        ifstream theStream(filename.c_str());
-
-        string tmp;
-        theStream >> tmp;
-        theStream >> Ntaxa;
-        theStream >> Nsite;
-        theStream >> tmp;
-        cerr << tmp << '\n';
-        int Nstate = tmp.length();
-        auto Alphabet = new char[Nstate];
-        int NAlphabetSet = Nstate + 5;
-        auto AlphabetSet = new char[NAlphabetSet];
-        cerr << "alphabet size : " << Nstate << '\n';
-        cerr << "alphabet : ";
-        for (int i = 0; i < Nstate; i++) {
-            Alphabet[i] = tmp[i];
-            AlphabetSet[i] = tmp[i];
-            cerr << Alphabet[i] << ' ';
-        }
-        cerr << '\n';
-
-        AlphabetSet[Nstate] = '?';
-        AlphabetSet[Nstate + 1] = '-';
-        AlphabetSet[Nstate + 2] = '*';
-        AlphabetSet[Nstate + 3] = 'X';
-        AlphabetSet[Nstate + 4] = 'x';
-
-        statespace = new GenericStateSpace(Nstate, Alphabet, NAlphabetSet, AlphabetSet);
-
-        if (Data != nullptr) {
-            for (int i = 0; i < Ntaxa; i++) {
-                delete Data[i];
-            }
-            delete[] Data;
-        }
-        Data = new int *[Ntaxa];
-        for (int i = 0; i < Ntaxa; i++) {
-            Data[i] = new int[Nsite];
-        }
-
-
-        SpeciesNames = std::vector<std::string>(Ntaxa, "");
-
-        int ntaxa = 0;
-        string temp;
-        while ((!theStream.eof()) && (ntaxa < Ntaxa)) {
-            theStream >> temp;
-            SpeciesNames[ntaxa] = temp;
-            int nsite = 0;
-
-            char c;
-            do {
-                c = theStream.get();
-                if ((!theStream.eof()) && (c != ' ') && (c != '\n') && (c != '\t') && (c != 13)) {
-                    if (c == '(') {
-                        Data[ntaxa][nsite] = unknown;
-                        while (c != ')') {
-                            theStream >> c;
-                        }
-                    } else if (c == '{') {
-                        Data[ntaxa][nsite] = unknown;
-                        while (c != '}') {
-                            theStream >> c;
-                        }
-                    } else {
-                        int p = 0;
-                        while ((p < NAlphabetSet) && (c != AlphabetSet[p])) {
-                            p++;
-                        }
-                        if (p == NAlphabetSet) {
-                            cout << "error: does not recognise character. taxon " << ntaxa << '\t'
-                                 << SpeciesNames[ntaxa] << "  site  " << nsite << '\t' << c << '\n';
-                            exit(1);
-                        }
-                        if (p >= Nstate) {
-                            Data[ntaxa][nsite] = unknown;
-                        } else {
-                            for (int l = 0; l < Nstate; l++) {
-                                if (c == Alphabet[l]) {
-                                    Data[ntaxa][nsite] = l;
-                                }
-                            }
-                        }
-                    }
-                    nsite++;
-                }
-            } while ((!theStream.eof()) && (nsite < Nsite));
-            ntaxa++;
-        }
-    } catch (...) {
-        cerr << "error while reading data file\n";
-        return 0;
-    }
-    return returnvalue;
 }
 
 // ---------------------------------------------------------------------------
@@ -457,7 +115,6 @@ int FileSequenceAlignment::TestPhylipSequential(string filespec) {
         }
         Nsite = atoi(temp.c_str());
 
-
         SpeciesNames = std::vector<std::string>(Ntaxa, "");
 
         int AAcomp = 1;
@@ -470,9 +127,8 @@ int FileSequenceAlignment::TestPhylipSequential(string filespec) {
             SpeciesNames[ntaxa] = temp;
             int nsite = 0;
 
-            char c = ' ';
             do {
-                c = theStream.get();
+                char c = theStream.get();
                 if ((!theStream.eof()) && (c != ' ') && (c != '\n') && (c != '\t') && (c != 13)) {
                     if (c == '(') {
                         while (c != ')') {
@@ -582,9 +238,8 @@ void FileSequenceAlignment::ReadPhylipSequential(string filespec) {
             SpeciesNames[ntaxa] = temp;
             int nsite = 0;
 
-            char c;
             do {
-                c = theStream.get();
+                char c = theStream.get();
                 if ((!theStream.eof()) && (c != ' ') && (c != '\n') && (c != '\t') && (c != 13)) {
                     if (c == '(') {
                         Data[ntaxa][nsite] = unknown;
