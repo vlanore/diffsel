@@ -1,5 +1,3 @@
-language: cpp
-
 sudo: false
 
 matrix:
@@ -7,7 +5,9 @@ matrix:
 
     - os: osx
       compiler: clang
-      env: COMPILER=clang++
+      env:
+        - COMPILER=clang++
+        - PYTHON=python
       python: "3.4"
 
     - os: linux
@@ -20,6 +20,7 @@ matrix:
             - g++-5
       env:
         - COMPILER=g++-5
+        - PYTHON=python
       before_script:
         - export CXX=$COMPILER
         - make build-coverage
@@ -36,11 +37,15 @@ matrix:
             - llvm-toolchain-precise-3.6
           packages:
             - clang-3.6
-      env: COMPILER=clang++-3.6
+      env:
+        - COMPILER=clang++-3.6
+        - PYTHON=python
+
 
 before_script:
   - export CXX=$COMPILER
   - $CXX -v
+  - $PYTHON -v
 
 script:
   - make && make test
