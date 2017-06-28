@@ -9,8 +9,9 @@ matrix:
       compiler: clang
       env:
         - COMPILER=clang++
-        - PYTHON=python
-      python: "3.4"
+      before_install:
+        - brew update
+        - brew install python3
 
     - os: linux
       dist: trusty
@@ -22,7 +23,6 @@ matrix:
             - g++-5
       env:
         - COMPILER=g++-5
-        - PYTHON=python
       before_script:
         - export CXX=$COMPILER
         - make build-coverage
@@ -41,13 +41,12 @@ matrix:
             - clang-3.6
       env:
         - COMPILER=clang++-3.6
-        - PYTHON=python
 
 
 before_script:
   - export CXX=$COMPILER
   - $CXX -v
-  - $PYTHON --version
+  - python3 --version
 
 script:
   - make && make test

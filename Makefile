@@ -1,4 +1,5 @@
 .PHONY: clean format fullclean
+PYTHON = python3
 
 
 # COMPILATION
