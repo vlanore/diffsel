@@ -1,23 +1,13 @@
 #ifndef STRINGSTREAMUTILS_H
 #define STRINGSTREAMUTILS_H
 
-#include <cstdlib>
-#include <fstream>
-#include <iomanip>
-#include <iostream>
 #include <sstream>
-
-// ---------------------------------------------------------------------------
-// ---------------------------------------------------------------------------
-//     String Stream Utilities
-// ---------------------------------------------------------------------------
-// ---------------------------------------------------------------------------
 
 const char digit[10] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
 
 inline int GoPastNext(std::istream &is, const char inChar) {
-    unsigned char c;
     if (!is.eof()) {
+        unsigned char c;
         do {
             is >> c;
         } while (c != inChar && !is.eof());
@@ -25,19 +15,7 @@ inline int GoPastNext(std::istream &is, const char inChar) {
     return static_cast<int>(!is.eof());
 }
 
-inline std::string ReadLine(std::istream &is) {
-    std::string str = "";
-    char c;
-    do {
-        is.get(c);
-        if (c != '\n') {
-            str += c;
-        }
-    } while (c != '\n' && !is.eof());
-    return str;
-}
-
-inline void GoPastNextWord(std::istream &is, const std::string inWord) {
+inline void GoPastNextWord(std::istream &is, const std::string &inWord) {
     unsigned int k = 0;
     char c;
     while ((!is.eof()) && (k < inWord.length())) {
@@ -80,44 +58,6 @@ inline int EquivalentStrings(std::string a, std::string b) {
     return cont;
 }
 
-inline void GoPastNextLine(std::istream &is, const std::string inLine) {
-    std::string theLine;
-    do {
-        theLine = ReadLine(is);
-        std::cerr << theLine << "\n";
-    } while (EquivalentStrings(theLine, inLine) == 0);
-}
-
-inline std::string StringReplace(char c, std::string by, std::string s) {
-    std::string tmp;
-    for (char i : s) {
-        if (i == c) {
-            tmp += by;
-        } else {
-            tmp += i;
-        }
-    }
-    return tmp;
-}
-
-inline int EmptyLine(std::string s) {
-    int unsigned n = 0;
-    while ((n < s.length()) && ((s[n] == ' ') || (s[n] == '\t') || (s[n] == '\n'))) {
-        n++;
-    }
-    return static_cast<int>(n == s.length());
-}
-
-inline std::string Filter(std::string input, char c) {
-    std::string temp = "";
-    for (char i : input) {
-        if (i != c) {
-            temp += i;
-        }
-    }
-    return temp;
-}
-
 inline int IsInt(std::string s) {
     int returnValue = 1;
     unsigned int i = 0;
@@ -136,35 +76,6 @@ inline int IsInt(std::string s) {
         if (j == 10) {
             returnValue = 0;
         }
-        i++;
-    }
-    return returnValue;
-}
-
-inline int IsFloat(std::string s) {
-    int returnValue = 1;
-    unsigned int i = 0;
-
-    while ((returnValue != 0) && (i < s.length())) {
-        int j = 0;
-        while ((j < 10) && (digit[j] != s[i])) {
-            j++;
-        }
-        if (j == 10) {
-            if (!((s[i] == '.') || (s[i] == '-') || (s[i] == '+') || (s[i] == 'e'))) {
-                returnValue = 0;
-            }
-        }
-        i++;
-    }
-    return returnValue;
-}
-
-inline int IsDigit(char c) {
-    int returnValue = 0;
-    int i = 0;
-    while ((returnValue == 0) && i < 10) {
-        returnValue = static_cast<int>(c == digit[i]);
         i++;
     }
     return returnValue;

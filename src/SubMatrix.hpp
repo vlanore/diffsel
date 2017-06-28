@@ -46,7 +46,6 @@ class SubMatrix {
     // ComputeArray(int state) is in charge of computing the row of the rate
     // matrix
     // corresponding to all possible rates of substitution AWAY from state
-    //
     virtual void ComputeArray(int state) const = 0;
 
     // ComputeStationary() is in charge of computing the vector of stationary
@@ -406,11 +405,11 @@ inline int SubMatrix::DrawUniformizedTransition(int state, int statedown, int n)
     while ((k < GetNstate()) && (s > p[k])) {
         k++;
     }
+    delete[] p;
     if (k == GetNstate()) {
         std::cerr << "error in DrawUniformizedTransition: overflow\n";
         throw;
     }
-    delete[] p;
     return k;
 }
 
@@ -470,28 +469,6 @@ inline int SubMatrix::DrawOneStep(int state) const {
             std::cerr << row[k] << '\n';
         }
         exit(1);
-    }
-    return k;
-}
-
-inline int SubMatrix::DrawFromStationary() const {
-    double p = Random::Uniform();
-    int k = 0;
-    double tot = mStationary[k];
-    while ((k < GetNstate()) && (tot < p)) {
-        k++;
-        if (k == GetNstate()) {
-            std::cerr << "error in DrawFromStationary\n";
-            double tot = 0;
-            for (int l = 0; l < GetNstate(); l++) {
-                std::cerr << mStationary[l] << '\t';
-                tot += mStationary[l];
-            }
-            std::cerr << '\n';
-            std::cerr << "total : " << tot << '\t' << 1 - tot << '\n';
-            exit(1);
-        }
-        tot += mStationary[k];
     }
     return k;
 }
