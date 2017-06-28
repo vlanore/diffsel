@@ -1,3 +1,5 @@
+language: cpp
+
 sudo: false
 
 matrix:
@@ -45,7 +47,7 @@ matrix:
 before_script:
   - export CXX=$COMPILER
   - $CXX -v
-  - $PYTHON -v
+  - $PYTHON --version
 
 script:
   - make && make test

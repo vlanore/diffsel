@@ -34,7 +34,7 @@ test: all
 	_build/diffsel -d data/samhd1.ali -t data/samhd1.tree -x 1 0 tmp_test
 	_build/readdiffsel tmp_test
 	_build/singleomega data/samhd1.ali data/samhd1.tree tmp_test 1
-	python3 script/non_regression_test -u 250
+	$PYTHON script/non_regression_test -u 250
 
 mvcov: all
 	find _build -type f -name "*.gcno" -exec mv -t src/ {} +
