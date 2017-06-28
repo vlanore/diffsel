@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <map>
+#include <sstream>  // only needed for tests
 #include <string>
 
 #include <doctest.h>
@@ -207,5 +208,18 @@ class Tree {
 
     void SetRoot(Link *link) { root = link; }
 };
+
+TEST_CASE("Tree test") {
+    Tree mytree{"data/toy.tree"};
+    mytree.SetIndices();
+    CHECK(mytree.GetNnode() == 7);  // 4 leaves + 3 internal nodes
+    CHECK(mytree.GetNbranch() == 6);
+    CHECK(mytree.GetNlink() == 13);  // assuming 2 by branch + 1 for the root
+
+    std::stringstream ss;
+    mytree.ToStream(ss);
+    CHECK(ss.str() ==
+          "((S0:0,S1:1):0,(S2:0,S3:1):0);\n");  // apparently it removes the ':0' at the root
+}
 
 #endif  // TREE_H

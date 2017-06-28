@@ -1,7 +1,6 @@
 #include "Tree.hpp"
 #include <fstream>
 #include <list>
-#include <sstream>
 #include "TaxonSet.hpp"
 using namespace std;
 
@@ -275,5 +274,3 @@ Link *Tree::ParseGroup(string input, Link *from) {
         exit(1);
     }
 }
-
-TEST_CASE("test") { printf("Hello world!\n"); }
