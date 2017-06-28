@@ -5,45 +5,12 @@
 #include "TaxonSet.hpp"
 using namespace std;
 
-bool NewickTree::simplify = false;
-
-void NewickTree::ToStream(ostream &os) const {
-    if (simplify) {
-        ToStreamSimplified(os, GetRoot());
-    } else {
-        ToStream(os, GetRoot());
-    }
+void Tree::ToStream(ostream &os) const {
+    ToStream(os, GetRoot());
     os << ";\n";
 }
 
-double NewickTree::ToStreamSimplified(ostream &os, const Link *from) const {
-    if (!from->isLeaf()) {
-        if (from->Next()->Next() == from) {
-            double tot = ToStreamSimplified(os, from->Next()->Out());
-            tot += atof(GetBranchName(from).c_str());
-            return tot;
-        }
-        os << '(';
-        for (const Link *link = from->Next(); link != from; link = link->Next()) {
-            double tmp = ToStreamSimplified(os, link->Out());
-            os << ':' << tmp;
-            if (link->Next() != from) {
-                os << ',';
-            }
-        }
-        os << ')';
-
-    } else {
-    }
-    os << GetNodeName(from);
-
-    if (from->isRoot()) {
-        return 0;
-    }
-    return atof(GetBranchName(from).c_str());
-}
-
-void NewickTree::ToStream(ostream &os, const Link *from) const {
+void Tree::ToStream(ostream &os, const Link *from) const {
     if (!from->isLeaf()) {
         os << '(';
         for (const Link *link = from->Next(); link != from; link = link->Next()) {

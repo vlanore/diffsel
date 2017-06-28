@@ -68,36 +68,17 @@ class Link {
     bool isRoot() const { return (out == this); }
 };
 
-class NewickTree {
+class Tree {
   public:
-    virtual ~NewickTree() = default;
-
-    virtual Link *GetRoot() const = 0;
-
-    void ToStream(std::ostream &os) const;
-    void ToStream(std::ostream &os, const Link *from) const;
-    double ToStreamSimplified(std::ostream &os, const Link *from) const;
-
-  protected:
-    virtual std::string GetNodeName(const Link *link) const = 0;
-    virtual std::string GetBranchName(const Link *link) const = 0;
-    virtual std::string GetLeafNodeName(const Link *link) const { return GetNodeName(link); }
-
-    static bool simplify;
-};
-
-class Tree : public NewickTree {
-  public:
-    Tree() = delete;
-
     // create a tree by reading into a file (netwick format expected) ; calls ReadFromStream
     explicit Tree(std::string filename);
 
-    // calls RecursiveDelete
-    // but does NOT delete the Nodes and Branches (VL: actually it was not called at all :/)
     ~Tree() = default;
-
     Tree(const Tree &) = delete;  // forbidding copy construction
+    Tree() = delete;
+
+    void ToStream(std::ostream &os) const;
+    void ToStream(std::ostream &os, const Link *from) const;
 
     // Delete the leaf pointing by the next link and set everithing right.
     void DeleteNextLeaf(Link *previous);
@@ -105,7 +86,7 @@ class Tree : public NewickTree {
     // Delete the unary Node wich from is paart of and set everithing right.
     void DeleteUnaryNode(Link *from);
 
-    Link *GetRoot() const override { return root; }
+    Link *GetRoot() const { return root; }
     const TaxonSet *GetTaxonSet() const { return taxset; }
 
     void RootAt(Link *from);
@@ -122,15 +103,6 @@ class Tree : public NewickTree {
 
     bool RegisterWith(const TaxonSet *taxset, Link *from,
                       int &tot);  // recursive function called by RegisterWith
-
-    double GetBranchLength(const Link *link) const { return atof(GetBranchName(link).c_str()); }
-
-    std::string GetBranchName(const Link *link) const override {
-        return link->GetBranch()->GetName();
-    }
-
-    std::string GetNodeName(const Link *link) const override { return link->GetNode()->GetName(); }
-
     void EraseInternalNodeName();
     void EraseInternalNodeName(Link *from);
 
@@ -163,12 +135,12 @@ class Tree : public NewickTree {
         SetIndices(GetRoot(), Nlink, Nnode, Nbranch);
     }
 
+    double GetBranchLength(const Link *link) const { return atof(GetBranchName(link).c_str()); }
+    std::string GetBranchName(const Link *link) const { return link->GetBranch()->GetName(); }
+    std::string GetNodeName(const Link *link) const { return link->GetNode()->GetName(); }
     int GetNlink() const { return Nlink; }
-
     int GetNbranch() const { return Nbranch; }
-
     int GetNnode() const { return Nnode; }
-
     const Node *GetNode(int index) const { return nodemap.at(index); }
     const Branch *GetBranch(int index) const { return branchmap.at(index); }
     Link *GetLink(int index) const { return linkmap.at(index); }
