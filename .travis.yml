@@ -49,4 +49,6 @@ before_script:
   - python3 --version
 
 script:
-  - make && make test
+  - make
+  - make short-tests
+  - make test

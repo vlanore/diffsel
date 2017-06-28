@@ -37,6 +37,9 @@ test: all
 	_build/readdiffsel tmp_test
 	_build/singleomega data/samhd1.ali data/samhd1.tree tmp_test 1
 
+short-tests: all
+	_build/tests
+
 mvcov: all
 	find _build -type f -name "*.gcno" -exec mv -t src/ {} +
 	find _build -type f -name "*.gcda" -exec mv -t src/ {} +
