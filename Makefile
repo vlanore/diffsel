@@ -32,6 +32,8 @@ build-coverage:
 
 # TESTING
 test: all
+	_build/diffsel -t data/toy_parsing.tree -d data/toy_interleaved_notrepeated.ali -x 1 0 tmp
+	_build/diffsel -t data/toy_parsing.tree -d data/toy_interleaved_repeated.ali -x 1 0 tmp
 	$(PYTHON) script/non_regression_test -u 250
 	_build/diffsel -d data/samhd1.ali -t data/samhd1.tree -x 1 0 tmp_test
 	_build/readdiffsel tmp_test
