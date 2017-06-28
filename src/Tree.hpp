@@ -79,14 +79,13 @@ class Tree {
     Tree(const Tree &) = delete;  // forbidding copy construction
     Tree() = delete;
 
-    void ToStream(std::ostream &os) const;
-    void ToStream(std::ostream &os, const Link *from) const;
+    void ToStream(std::ostream &os) const; // calls recursive private ToStream method
 
     // Delete the leaf pointing by the next link and set everithing right.
-    void DeleteNextLeaf(Link *previous);
+    void DeleteNextLeaf(Link *previous); // TODO
 
     // Delete the unary Node wich from is paart of and set everithing right.
-    void DeleteUnaryNode(Link *from);
+    void DeleteUnaryNode(Link *from); // TODO
 
     Link *GetRoot() const { return root; }
     const TaxonSet *GetTaxonSet() const { return taxset; }
@@ -137,7 +136,6 @@ class Tree {
         SetIndices(GetRoot(), Nlink, Nnode, Nbranch);
     }
 
-    double GetBranchLength(const Link *link) const { return atof(GetBranchName(link).c_str()); }
     std::string GetBranchName(const Link *link) const { return link->GetBranch()->GetName(); }
     std::string GetNodeName(const Link *link) const { return link->GetNode()->GetName(); }
     int GetNlink() const { return Nlink; }
@@ -158,6 +156,8 @@ class Tree {
     std::map<int, const Node *> nodemap;
     std::map<int, const Branch *> branchmap;
     std::map<int, Link *> linkmap;
+
+    void ToStream(std::ostream &os, const Link *from) const;
 
     void SetIndices(Link *from, int &linkindex, int &nodeindex, int &branchindex) {
         if (!from->isRoot()) {
@@ -188,11 +188,10 @@ class Tree {
         }
     }
 
-    void ReadFromStream(std::istream &is);
     // reading a tree from a stream:
     // recursively invokes the two following functions
+    void ReadFromStream(std::istream &is);
 
-    Link *ParseGroup(std::string input, Link *from);
     // a group is an expression of one of the two following forms:
     //  (Body)Node_name
     //  (Body)Node_name:Branch_name
@@ -201,10 +200,11 @@ class Tree {
     // Node_name cannot contain the ':' character, but Branch_name can
     // thus, if the group reads "(BODY)A:B:C"
     // then Node_name = "A" and Branch_name = "B:C"
+    Link *ParseGroup(std::string input, Link *from);
 
-    Link *ParseList(std::string input, Node *node);
     // a list is an expression of the form X1,X2,...Xn
     // where Xi is a group
+    Link *ParseList(std::string input, Node *node);
 
     void SetRoot(Link *link) { root = link; }
 };
@@ -220,6 +220,10 @@ TEST_CASE("Tree test") {
     mytree.ToStream(ss);
     CHECK(ss.str() ==
           "((S0:0,S1:1):0,(S2:0,S3:1):0);\n");  // apparently it removes the ':0' at the root
+
+
+    CHECK(mytree.GetNode(5)->GetName() == "S0");
+    CHECK(mytree.GetNode(4)->GetName() == "S0");
 }
 
 #endif  // TREE_H

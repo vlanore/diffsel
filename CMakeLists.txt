@@ -5,7 +5,7 @@ project(diffsel CXX)
 set(CMAKE_CXX_FLAGS "-O3 -Wall -Wextra -Wpedantic") # normal mode
 if (CMAKE_BUILD_TYPE MATCHES COVERAGE)
   message(STATUS "Compiling in coverage measurement mode")
-  set(CMAKE_CXX_FLAGS "-O0 -fprofile-arcs -ftests-coverage")
+  set(CMAKE_CXX_FLAGS "-O0 -fprofile-arcs -ftest-coverage")
 endif()
 set(CXX_FEATURES cxx_auto_type cxx_nullptr cxx_final cxx_override cxx_range_for)
 include_directories("src" "include")
