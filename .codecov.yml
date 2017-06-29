@@ -5,3 +5,6 @@ coverage:
         threshold: 5
 ignore:
   - "include"
+
+comment:
+  layout: "header, tree"
