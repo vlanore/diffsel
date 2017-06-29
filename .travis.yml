@@ -39,7 +39,7 @@ matrix:
             - llvm-toolchain-precise-3.6
           packages:
             - clang-3.6
-            - libc6-dbg
+            - g++-5
       env:
         - COMPILER=clang++-3.6
 
