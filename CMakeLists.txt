@@ -24,7 +24,6 @@ set(DIFFSEL_LIB
   src/Random.cpp
   src/Sample.cpp
   src/SequenceAlignment.cpp
-  src/StateSpace.cpp
   src/SubMatrix.cpp
   src/Tree.cpp
   src/Tree.hpp
