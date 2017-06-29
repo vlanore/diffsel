@@ -27,8 +27,7 @@ void Sample::OpenChainFile() {
     }
     currentpoint = 0;
 
-    ifstream newstream{(name + ".chain").c_str()};
-    chain_is.swap(newstream);
+    chain_is = ifstream{(name + ".chain").c_str()};  // move construction (c++11)
 
     if (!chain_is) {
         cerr << "error: cannot find file " << name << ".chain\n";
