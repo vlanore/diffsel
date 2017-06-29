@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <string>
 #include <vector>
-#include "BiologicalSequences.hpp"  //FIXME only here because constant unknown
+#include "BiologicalSequences.hpp"
 
 class StateSpace {
   public:
@@ -38,14 +38,15 @@ class SimpleStateSpace : public StateSpace {
             exit(1);
         }
         int index = pos - AlphabetSet.begin();
-        if (index >= 2 * GetNstate()) {
+        if (index >= 2 * GetNstate()) { // if input is outside of Alphabet
             return unknown;
         } else {
-            return index % GetNstate();
+            return index % GetNstate(); // return correct index even if lowercase input
         }
     }
 
     int GetNstate() const override { return Alphabet.size(); }
+
     std::string GetState(int state) const override {
         if (state == unknown) {
             return "-";
@@ -54,7 +55,7 @@ class SimpleStateSpace : public StateSpace {
         }
     }
 
-  protected:
+  private:
     const std::vector<char> &Alphabet;
     const std::vector<char> &AlphabetSet;
 };

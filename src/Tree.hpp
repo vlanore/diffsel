@@ -221,12 +221,12 @@ TEST_CASE("Tree test") {
     CHECK(ss.str() ==
           "((S0:0,S1:1):0,(S2:0,S3:1):0);\n");  // apparently it removes the ':0' at the root
 
-    for (int i = 0; i < 50; i++) {
-        try {
-            printf("%d: %s\n", i, mytree.GetNode(i)->GetName().c_str());
-        } catch (...) {
-        }
-    }
+    // for (int i = 0; i < 50; i++) {
+    //     try {
+    //         printf("%d: %s\n", i, mytree.GetNode(i)->GetName().c_str());
+    //     } catch (...) {
+    //     }
+    // }
 }
 
 #endif  // TREE_H
