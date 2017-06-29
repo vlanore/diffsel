@@ -38,10 +38,10 @@ class SimpleStateSpace : public StateSpace {
             exit(1);
         }
         int index = pos - AlphabetSet.begin();
-        if (index >= 2 * GetNstate()) { // if input is outside of Alphabet
+        if (index >= 2 * GetNstate()) {  // if input is outside of Alphabet
             return unknown;
         } else {
-            return index % GetNstate(); // return correct index even if lowercase input
+            return index % GetNstate();  // return correct index even if lowercase input
         }
     }
 

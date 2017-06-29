@@ -1,8 +1,8 @@
 #ifndef SAMPLE_H
 #define SAMPLE_H
 
-#include <string>
 #include <fstream>
+#include <string>
 using namespace std;
 
 class ProbModel;
@@ -49,15 +49,15 @@ class Sample {
 
   protected:
     ifstream chain_is;
-    int chainevery;  // chain's saving frequency
-    int chainuntil;  // chain's intended size of the run (number of saved points)
-    int chainsize;   // chain's current size
-    int burnin;      // burnin
-    int every;       // subsampling frequency
-    int until;       // reading chain until this point
-    int currentpoint;
-    ProbModel* model;  // the model
-    string name;       // the name of the chain in the filesystem
+    int chainevery{-1};  // chain's saving frequency
+    int chainuntil{-1};  // chain's intended size of the run (number of saved points)
+    int chainsize{-1};   // chain's current size
+    int burnin{-1};      // burnin
+    int every{-1};       // subsampling frequency
+    int until{-1};       // reading chain until this point
+    int currentpoint{-1};
+    ProbModel* model;          // the model
+    string name{"undefined"};  // the name of the chain in the filesystem
 };
 
 #endif  // SAMPLE_H

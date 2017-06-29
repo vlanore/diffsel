@@ -1,5 +1,6 @@
-#include "ProbModel.hpp"
 #include "Sample.hpp"
+#include <utility>
+#include "ProbModel.hpp"
 
 Sample::Sample(string filename, int in_burnin, int in_every, int in_until) {
     burnin = in_burnin;
@@ -26,7 +27,9 @@ void Sample::OpenChainFile() {
     }
     currentpoint = 0;
 
-    chain_is = ifstream((name + ".chain").c_str());
+    auto newstream = ifstream((name + ".chain").c_str());
+    std::swap(chain_is, newstream);
+
     if (!chain_is) {
         cerr << "error: cannot find file " << name << ".chain\n";
         exit(1);
