@@ -27,7 +27,7 @@ void Sample::OpenChainFile() {
     }
     currentpoint = 0;
 
-    auto newstream = ifstream((name + ".chain").c_str());
+    ifstream newstream{(name + ".chain").c_str()};
     std::swap(chain_is, newstream);
 
     if (!chain_is) {
