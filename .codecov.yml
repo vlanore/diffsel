@@ -1,10 +1,8 @@
 coverage:
   status:
+    patch: false
     project:
       default:
         threshold: 5
 ignore:
   - "include"
-
-comment:
-  layout: "header, tree"
