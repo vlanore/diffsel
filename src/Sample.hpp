@@ -1,23 +1,20 @@
 #ifndef SAMPLE_H
 #define SAMPLE_H
 
-#include <cstdlib>
+#include <string>
 #include <fstream>
 using namespace std;
 
-#include "ProbModel.hpp"
+class ProbModel;
 
-//
 // Sample is in charge of reading chains from file,
 // and computing posterior averages or distributions
-//
-//
 class Sample {
   public:
     /// opening chain from file
     Sample(string filename, int in_burnin = 0, int in_every = 1, int in_until = -1);
 
-    virtual ~Sample();
+    virtual ~Sample() = default;
 
     // return the base for all file names (same as for the chain object)
     string GetName() { return name; }
@@ -51,7 +48,7 @@ class Sample {
     int size;  // sample size (calculated from parameters above)
 
   protected:
-    ifstream* chain_is;
+    ifstream chain_is;
     int chainevery;  // chain's saving frequency
     int chainuntil;  // chain's intended size of the run (number of saved points)
     int chainsize;   // chain's current size

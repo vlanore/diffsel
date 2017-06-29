@@ -1,4 +1,4 @@
-
+#include "ProbModel.hpp"
 #include "Sample.hpp"
 
 Sample::Sample(string filename, int in_burnin, int in_every, int in_until) {
@@ -6,10 +6,7 @@ Sample::Sample(string filename, int in_burnin, int in_every, int in_until) {
     every = in_every;
     until = in_until;
     name = filename;
-    chain_is = 0;
 }
-
-Sample::~Sample() { delete chain_is; }
 
 void Sample::OpenChainFile() {
     if (until == -1) {
@@ -29,13 +26,13 @@ void Sample::OpenChainFile() {
     }
     currentpoint = 0;
 
-    chain_is = new ifstream((name + ".chain").c_str());
+    chain_is = ifstream((name + ".chain").c_str());
     if (!chain_is) {
         cerr << "error: cannot find file " << name << ".chain\n";
         exit(1);
     }
     for (int i = 0; i < burnin; i++) {
-        model->FromStream(*chain_is);
+        model->FromStream(chain_is);
     }
 }
 
@@ -46,9 +43,9 @@ void Sample::GetNextPoint() {
     }
     if (currentpoint) {
         for (int i = 0; i < every - 1; i++) {
-            model->FromStream(*chain_is);
+            model->FromStream(chain_is);
         }
     }
-    model->FromStream(*chain_is);
+    model->FromStream(chain_is);
     currentpoint++;
 }
