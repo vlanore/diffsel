@@ -28,7 +28,7 @@ void Sample::OpenChainFile() {
     currentpoint = 0;
 
     ifstream newstream{(name + ".chain").c_str()};
-    std::swap(chain_is, newstream);
+    chain_is = std::move(newstream);
 
     if (!chain_is) {
         cerr << "error: cannot find file " << name << ".chain\n";
