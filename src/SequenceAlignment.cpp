@@ -1,9 +1,34 @@
 #include "SequenceAlignment.hpp"
 #include <fstream>
+#include <sstream>
 #include "BiologicalSequences.hpp"
 #include "Random.hpp"
-#include "StringStreamUtils.hpp"
 using namespace std;
+
+const char digit[10] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
+
+inline int IsInt(std::string s) {
+    int returnValue = 1;
+    unsigned int i = 0;
+    if ((s[0] == '+') || (s[0] == '-')) {
+        i++;
+    }
+    if (i == s.length()) {
+        returnValue = 0;
+    }
+
+    while ((returnValue != 0) && (i < s.length())) {
+        int j = 0;
+        while ((j < 10) && (digit[j] != s[i])) {
+            j++;
+        }
+        if (j == 10) {
+            returnValue = 0;
+        }
+        i++;
+    }
+    return returnValue;
+}
 
 // ---------------------------------------------------------------------------
 // ---------------------------------------------------------------------------
