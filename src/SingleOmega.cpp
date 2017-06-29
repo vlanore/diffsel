@@ -5,13 +5,11 @@
 using namespace std;
 
 int main(int argc, char* argv[]) {
-    cerr << "Argc " << argc << endl;
     string datafile = argv[1];
     string treefile = argv[2];
     string name = argv[3];
     int it{-1};
     if (argc > 4) {
-        cerr << "Dun dun dun\n";
         it = atoi(argv[4]);
     }
 

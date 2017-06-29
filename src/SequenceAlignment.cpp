@@ -13,7 +13,6 @@ using namespace std;
 int Int(string s) { return atoi(s.c_str()); }
 
 void SequenceAlignment::ToStream(ostream &os) const {
-    // os << Ntaxa << '\t' << 876<< '\n';
     os << Ntaxa << '\t' << Nsite << '\n';
     int max = 0;
     for (int i = 0; i < Ntaxa; i++) {
