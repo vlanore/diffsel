@@ -12,6 +12,7 @@ include_directories("src" "utils")
 
 # static lib
 set(DIFFSEL_LIB
+  src/BiologicalSequences.cpp
   src/BranchSitePath.cpp
   src/Chain.cpp
   src/Chrono.cpp
