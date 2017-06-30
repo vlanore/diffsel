@@ -32,7 +32,7 @@ else:
         BOLD = ''
         UNDERLINE = ''
 
-def error(string):
+def boldred(string):
     return bcolors.FAIL+bcolors.BOLD+string+bcolors.ENDC
 
 def param(myparam):
@@ -44,8 +44,21 @@ def data(myparam):
 def step(string):
     return bcolors.BOLD+bcolors.HEADER+string+bcolors.ENDC
 
-def success(string):
+def boldgreen(string):
     return bcolors.BOLD+bcolors.OKGREEN+string+bcolors.ENDC
+
+def good(string):
+    return "-- ("+bcolors.OKGREEN+"Good"+bcolors.ENDC+") "+string
+
+def bad(string):
+    return "-- ("+boldred("Bad")+") "+string
+
+def success(string):
+    return "-- ["+boldgreen("SUCCESS")+"] "+string
+
+def failure(string):
+    return "-- ["+boldred("FAILURE")+"] "+string
+
 
 # Codon functions
 bases = ["A", "C", "G", "T"]

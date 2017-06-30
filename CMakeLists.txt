@@ -8,7 +8,7 @@ if (CMAKE_BUILD_TYPE MATCHES COVERAGE)
   set(CMAKE_CXX_FLAGS "-O0 -fprofile-arcs -ftest-coverage")
 endif()
 set(CXX_FEATURES cxx_auto_type cxx_nullptr cxx_final cxx_override cxx_range_for)
-include_directories("src" "include")
+include_directories("src" "utils")
 
 # static lib
 set(DIFFSEL_LIB
@@ -51,6 +51,11 @@ target_compile_features(singleomega PRIVATE ${CXX_FEATURES})
 add_executable(multigenesingleomega "src/MultiGeneSingleOmega.cpp")
 target_link_libraries(multigenesingleomega diffsel_lib)
 target_compile_features(multigenesingleomega PRIVATE ${CXX_FEATURES})
+
+# Tracecomp
+add_executable(tracecomp "utils/TraceComp.cpp" "utils/Correlation.cpp")
+target_link_libraries(tracecomp diffsel_lib)
+target_compile_features(tracecomp PRIVATE ${CXX_FEATURES})
 
 # Tests
 add_executable(tests "src/test.cpp")
