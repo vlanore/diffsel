@@ -5,15 +5,18 @@
 #include "StateSpace.hpp"
 
 class CodonStateSpace : public StateSpace {
+    using Codon = int;
+    using Base = int;
+    using AminoAcid = int;
+
   public:
     static const int Npos = 3;
 
     // by default, codons always exclude stops
     // if a method takes or returns a codon stops INCLUDED, then this is made
-    // explicit in the
-    // method's name
+    // explicit in the method's name
+    explicit CodonStateSpace(GeneticCodeType type);
 
-    CodonStateSpace(GeneticCodeType type);
     ~CodonStateSpace() override;
 
     // -----
@@ -22,11 +25,11 @@ class CodonStateSpace : public StateSpace {
 
     int GetNstate() const override { return Nstate; }
 
-    // give a three letter code, returns codon (if stop exits with error message)
-    int GetState(std::string word) const override;
+    // gets a three letter code, returns codon (if stop exits with error message)
+    Codon GetState(std::string word) const override;
 
     // give a codon (stops excluded), returns a three letter code
-    std::string GetState(int codon) const override;
+    std::string GetState(Codon codon) const override;
 
     // -----
     // codon specific methods
@@ -38,7 +41,7 @@ class CodonStateSpace : public StateSpace {
     // returns a codon based on three letters
     // returns -1 (== unknown) if at least one of the positions is unknown
     // if stop exits with error message...
-    int GetCodonFromDNA(int pos1, int pos2, int pos3) const;
+    Codon GetCodonFromDNA(Base pos1, Base pos2, Base pos3) const;
 
     // 2 codons excluding stops are compared
     // method returns -1 if identical
@@ -46,11 +49,11 @@ class CodonStateSpace : public StateSpace {
     // otherwise, returns the position at which codons differ (i.e. returns 0,1 or
     // 2 if the codons
     // differ at position 1,2 or 3)
-    int GetDifferingPosition(int i, int j) const;
+    int GetDifferingPosition(Codon i, Codon j) const;
 
     // return the integer encoding for the base at requested position
     // stops excluded
-    int GetCodonPosition(int pos, int codon) const {
+    Base GetCodonPosition(int pos, Codon codon) const {
         if ((pos < 0) || (pos >= Npos)) {
             std::cerr << "GetCodonPosition: pos out of bound\n";
             std::cerr << pos << '\n';
@@ -70,10 +73,10 @@ class CodonStateSpace : public StateSpace {
     int IsNonCTNearest(int a, int b) const;
 
     // translation stops excluded
-    int Translation(int codon) const { return CodonCode[codon]; }
+    int Translation(Codon codon) const { return CodonCode[codon]; }
 
     // stops excluded
-    bool Synonymous(int codon1, int codon2) const {
+    bool Synonymous(Codon codon1, Codon codon2) const {
         return (CodonCode[codon1] == CodonCode[codon2]);
     }
 
@@ -81,7 +84,7 @@ class CodonStateSpace : public StateSpace {
     // otherwise returns integer in [0,19] standing for an amino-acid (one letter
     // code, alphabetical
     // order)
-    int TranslationWithStops(int codon) const { return CodonCodeWithStops[codon]; }
+    AminoAcid TranslationWithStops(Codon codon) const { return CodonCodeWithStops[codon]; }
 
     bool CheckStop(int pos1, int pos2, int pos3) const;
 
@@ -117,7 +120,7 @@ class CodonStateSpace : public StateSpace {
     int *StopPos2;
     int *StopPos3;
 
-    mutable std::map<int, int> degeneracy;
+    std::map<int, int> degeneracy;
 };
 
 #endif

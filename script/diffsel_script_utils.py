@@ -57,7 +57,11 @@ def selected_codon():
     aa1 = ["AAT", "AAC"]
     return random.choice(aa1)
 
-def mutate(codon):
-    result = list(codon)
-    result[random.randint(0,2)] = random.choice(bases)
-    return "".join(result)
+def mutate(codon, proba=100):
+    if random.randint(1,100) <= proba:
+        result = list(codon)
+        result[random.randint(0,2)] = random.choice(bases)
+        print("Decided to mutate codon "+codon+" to "+"".join(result)+" with probability "+str(proba))
+        return "".join(result)
+    else:
+        return codon

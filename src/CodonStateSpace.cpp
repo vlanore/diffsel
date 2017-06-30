@@ -2,7 +2,6 @@
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
-#include "Exception.hpp"
 using namespace std;
 
 CodonStateSpace::CodonStateSpace(GeneticCodeType type) {
@@ -186,7 +185,7 @@ int CodonStateSpace::GetCodonFromDNA(int pos1, int pos2, int pos3) const {
         } else if (code == MtInv) {
             cerr << "mt inv\n";
         }
-        throw new Exception;
+        throw 1;
     }
     return l;
 }

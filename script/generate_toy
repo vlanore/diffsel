@@ -18,8 +18,8 @@ else:
         mystr += str(2**n)+" "+str(length)+'\n'
         lastcodon = ""
         for i in range(2**(n-1)):
-            codon = selected_codon()
-            codon2 = mutate(codon)
+            codon = mutate(selected_codon(), 20)
+            codon2 = mutate(codon, 80)
             # codon2 = rand_codon()
             mystr+="S"+str(2*i)+"\t"+codon2+'\n'
             mystr+="S"+str(2*i+1)+"\t"+codon+'\n'

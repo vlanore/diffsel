@@ -1,7 +1,6 @@
 #include "CodonSequenceAlignment.hpp"
 #include <cstdlib>
 #include <iostream>
-#include "Exception.hpp"
 #include "Random.hpp"
 using namespace std;
 
@@ -60,7 +59,7 @@ CodonSequenceAlignment::CodonSequenceAlignment(SequenceAlignment *from, bool for
             }
         }
 
-    } catch (Exception) {
+    } catch (...) {
         cerr << "Codon Sequence Alignment: failed to read the datafile\n";
         exit(1);
     }
