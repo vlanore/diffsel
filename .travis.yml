@@ -9,6 +9,7 @@ matrix:
       compiler: clang
       env:
         - COMPILER=clang++
+        - NONREG=true
       before_install:
         - brew update
         - brew install python3
@@ -23,6 +24,7 @@ matrix:
             - g++-5
       env:
         - COMPILER=g++-5
+        - NONREG=false
       before_script:
         - export CXX=$COMPILER
         - make build-coverage
@@ -42,6 +44,7 @@ matrix:
             - g++-5
       env:
         - COMPILER=clang++-3.6
+        - NONREG=true
 
 
 before_script:
@@ -53,3 +56,4 @@ script:
   - make
   - make short-tests
   - make test
+  - if [ "$NONREG" = "true" ]; then make nonreg; fi

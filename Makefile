@@ -42,6 +42,9 @@ test: all
 short-tests: all
 	_build/tests
 
+nonreg: all
+	script/non_regression_test
+
 mvcov: all
 	find _build -type f -name "*.gcno" -exec mv -t src/ {} +
 	find _build -type f -name "*.gcda" -exec mv -t src/ {} +
