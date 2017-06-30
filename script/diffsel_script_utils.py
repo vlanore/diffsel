@@ -51,7 +51,7 @@ def good(string):
     return "-- ("+bcolors.OKGREEN+"Good"+bcolors.ENDC+") "+string
 
 def bad(string):
-    return "-- ("+boldred("Bad")+") "+string
+    return "-- ("+bcolors.FAIL+"Bad"+bcolors.ENDC+") "+string
 
 def success(string):
     return "-- ["+boldgreen("SUCCESS")+"] "+string

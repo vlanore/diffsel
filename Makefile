@@ -1,4 +1,4 @@
-.PHONY: clean format fullclean
+.PHONY: clean format fullclean build-coverage build-normal test short-tests mvcov
 PYTHON = python3
 
 
@@ -32,12 +32,12 @@ build-coverage:
 
 # TESTING
 test: all
-	_build/diffsel -t data/toy_parsing.tree -d data/toy_interleaved_notrepeated.ali -x 1 0 tmp
-	_build/diffsel -t data/toy_parsing.tree -d data/toy_interleaved_repeated.ali -x 1 0 tmp
-	$(PYTHON) script/non_regression_test -u 250
-	_build/diffsel -d data/samhd1.ali -t data/samhd1.tree -x 1 0 tmp_test
-	_build/readdiffsel tmp_test
-	_build/singleomega data/samhd1.ali data/samhd1.tree tmp_test 1
+	@echo "\n===== Parser 1/2 =====" && _build/diffsel -t data/toy_parsing.tree -d data/toy_interleaved_notrepeated.ali -x 1 0 tmp
+	@echo "\n===== Parser 2/2 =====" && _build/diffsel -t data/toy_parsing.tree -d data/toy_interleaved_repeated.ali -x 1 0 tmp
+	@echo "\n===== Non-reg test (short run) =====" && $(PYTHON) script/non_regression_test -u 250 -f
+	@echo "\n===== Diffsel w/ real data (1 iteration) =====" && _build/diffsel -d data/samhd1.ali -t data/samhd1.tree -x 1 0 tmp_test
+	@echo "\n===== Readdiffsel =====" && _build/readdiffsel tmp_test
+	@echo "\n===== SingleOmega =====" && _build/singleomega data/samhd1.ali data/samhd1.tree tmp_test 1
 
 short-tests: all
 	_build/tests

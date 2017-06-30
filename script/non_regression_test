@@ -14,6 +14,7 @@ parser.add_argument('-d', '--depth', type=int, default=7, help="depth of the phy
 parser.add_argument('-b', '--burnin', type=float, default=0.2, help="burnin (as a float between 0 and 1); default is 0.2")
 parser.add_argument('-a', '--analysis-only', dest="analysis", action='store_true', help="set this flag to run only the analysis part of the test\
  (you need to have diffsel traces already)")
+parser.add_argument('-f', '--failures-allowed', dest="failure", action='store_true', help="set this flag to ignore (ie, not return an error) if the test fails")
 args = parser.parse_args()
 
 chainname = args.name
@@ -26,6 +27,8 @@ burninin = args.burnin
 print("-- Burn-in is "+param(burninin * 100)+"%")
 analysis = args.analysis
 print("-- Analysis only: "+param(analysis))
+allowfailure = args.failure
+print("-- Failure allowed: "+param(analysis))
 
 from subprocess import Popen, PIPE, call
 if not analysis:
@@ -71,6 +74,7 @@ if not analysis:
 
 #===================================================================================================
 print(step("Chain convergence analysis"))
+convergence = False
 
 import os.path
 if isfile(chainname+".trace") and isfile(chainname+"2.trace"):
@@ -81,7 +85,7 @@ else:
 
 burnin = int(iterations * burninin)
 print("-- Running tracecomp with burnin : "+data(burnin))
-p4 = Popen(["bin/tracecomp -x "+str(burnin)+" -o "+chainname+" "+chainname+" "+chainname+"2"], shell=True, stdout=PIPE, stderr=PIPE)
+p4 = Popen(["_build/tracecomp -x "+str(burnin)+" -o "+chainname+" "+chainname+" "+chainname+"2"], shell=True, stdout=PIPE, stderr=PIPE)
 r4 = p4.wait()
 
 if r4 == 0 and isfile(chainname+".contdiff"):
@@ -94,7 +98,6 @@ if r4 == 0 and isfile(chainname+".contdiff"):
     print("-- Minimum effsize is "+data(mineff)+" and maximum rel_diff is "+data(maxrel))
     if mineff < 50 or maxrel > 0.3:
         print(bad("The chains do not seem to have converged!"))
-        convergence = False
     else:
         print(good("The chains seem to have converged!"))
         convergence = True
@@ -104,6 +107,7 @@ else:
 
 #===================================================================================================
 print(step("Convergent site analysis"))
+detection = False
 
 print("-- Running readdiffsel")
 
@@ -132,7 +136,6 @@ if rdrun("") == [11] and rdrun("2") == [11]:
     detection = True
 else:
     print(bad("The chains detected the wrong aminoacids!"))
-    detection = True
 
 #===================================================================================================
 print(step("Non-regression test result"))
@@ -140,4 +143,5 @@ if detection and convergence:
     print(success("Test has succeeded!"))
 else:
     print(failure("Test failed!"))
-    exit(1)
+    if not allowfailure:
+        exit(1)
