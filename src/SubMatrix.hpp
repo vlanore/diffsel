@@ -24,8 +24,6 @@
 // SubMatrix uses in
 // ComputeArray And ComputeStationary,
 // based on the values stored by the parent nodes)
-//
-//
 
 #ifndef SUBMATRIX_H
 #define SUBMATRIX_H
@@ -35,7 +33,6 @@
 #include <iostream>
 #include "PathSuffStat.hpp"
 #include "Random.hpp"
-
 
 class SubMatrix {
   protected:
@@ -60,31 +57,47 @@ class SubMatrix {
     static int nunimax;
     static int diagcount;
 
+    static double meanz;
+    static double maxz;
+    static double nz;
+
   public:
-    static int GetDiagCount() { return diagcount; }
-    static void ResetDiagCount() { diagcount = 0; }
+    SubMatrix(int inNstate, bool innormalise = false)
+        : Nstate(inNstate), normalise(innormalise), ndiagfailed(0) {
+        Create();
+    }
 
+    virtual ~SubMatrix();
+
+    // static getters
     static int GetUniSubCount() { return nunisubcount; }
-
+    static int GetDiagCount() { return diagcount; }
     static double GetMeanUni() { return ((double)nunimax) / nuni; }
 
-    SubMatrix(int inNstate, bool innormalise = false);
-    virtual ~SubMatrix();
+    // getters
+    int GetNstate() const { return Nstate; }
+    const double *GetRow(int i) const;
+    const double *GetStationary() const;
+    double GetRate() const;
+    double *GetEigenVal() const;
+    double **GetEigenVect() const;
+    double **GetInvEigenVect() const;
+    int GetDiagStat() const { return ndiagfailed; }
+    double GetUniformizationMu() const;
+    double **GetQ() const { return Q; }
+
+    static void ResetDiagCount() { diagcount = 0; }
+
+    double Stationary(int i) const;
 
     void Create();
 
     double operator()(int /*i*/, int /*j*/) const;
-    const double *GetRow(int i) const;
 
-    const double *GetStationary() const;
-    double Stationary(int i) const;
-
-    int GetNstate() const { return Nstate; }
-
-    double GetRate() const;
     void ScalarMul(double e);
 
     bool isNormalised() const { return normalise; }
+
     void Normalise() const;
 
     virtual void CorruptMatrix();
@@ -93,25 +106,10 @@ class SubMatrix {
     void ActivatePowers() const;
     void InactivatePowers() const;
     double Power(int n, int i, int j) const;
-    double GetUniformizationMu() const;
-
-    double *GetEigenVal() const;
-    double **GetEigenVect() const;
-    double **GetInvEigenVect() const;
-
     virtual void ToStream(std::ostream &os) const;
-
-    int GetDiagStat() const { return ndiagfailed; }
 
     void BackwardPropagate(const double *up, double *down, double length) const;
     void ForwardPropagate(const double *down, double *up, double length) const;
-    // virtual void     FiniteTime(int i0, double* down, double length);
-
-    double **GetQ() const { return Q; }
-
-    static double meanz;
-    static double maxz;
-    static double nz;
 
     // uniformization resampling methods
     // CPU level 1
@@ -119,7 +117,6 @@ class SubMatrix {
     double GetFiniteTimeTransitionProb(int stateup, int statedown, double efflength) const;
     int DrawUniformizedTransition(int state, int statedown, int n) const;
     int DrawUniformizedSubstitutionNumber(int stateup, int statedown, double efflength) const;
-    //
 
     // used by accept-reject resampling method
     // CPU level 1
@@ -169,7 +166,6 @@ class SubMatrix {
     // vi : imaginary part
     // u : the matrix of eigen vectors
     // invu : the inverse of u
-
     mutable double **u;
     mutable double **invu;
     mutable double *v;
@@ -178,10 +174,10 @@ class SubMatrix {
     mutable int ndiagfailed;
 };
 
+
 //-------------------------------------------------------------------------
 //	* Inline definitions
 //-------------------------------------------------------------------------
-
 inline double SubMatrix::operator()(int i, int j) const {
     if (!flagarray[i]) {
         UpdateRow(i);

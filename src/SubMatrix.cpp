@@ -16,15 +16,6 @@ double SubMatrix::nz = 0;
 double SubMatrix::meanz = 0;
 double SubMatrix::maxz = 0;
 
-// ---------------------------------------------------------------------------
-//     SubMatrix()
-// ---------------------------------------------------------------------------
-SubMatrix::SubMatrix(int inNstate, bool innormalise) : Nstate(inNstate), normalise(innormalise) {
-    ndiagfailed = 0;
-    // discn = 10;
-    Create();
-}
-
 void SubMatrix::Create() {
     Q = new double *[Nstate];
     for (int i = 0; i < Nstate; i++) {
@@ -103,7 +94,6 @@ SubMatrix::~SubMatrix() {
 // ---------------------------------------------------------------------------
 //     void ScalarMul()
 // ---------------------------------------------------------------------------
-
 void SubMatrix::ScalarMul(double e) {
     for (int i = 0; i < Nstate; i++) {
         v[i] *= e;
@@ -115,7 +105,6 @@ void SubMatrix::ScalarMul(double e) {
 // ---------------------------------------------------------------------------
 //     Diagonalise()
 // ---------------------------------------------------------------------------
-
 int SubMatrix::Diagonalise() const {
     if (!ArrayUpdated()) {
         UpdateMatrix();
@@ -138,50 +127,9 @@ int SubMatrix::Diagonalise() const {
     return static_cast<int>(failed);
 }
 
-/*
-int SubMatrix::Diagonalise() const {
-    if (!ArrayUpdated()) {
-        UpdateMatrix();
-    }
-
-        // copy Q into aux
-        for (int i=0; i<Nstate; i++)	{
-                for (int j=0; j<Nstate; j++)	{
-                        aux[i][j] = Q[i][j];
-                }
-        }
-
-        double * w = new double[Nstate];
-        int* iw = new int[Nstate];
-
-        // diagonalise a into v and u
-    cerr << "diag\n";
-        int success = EigenRealGeneral(Nstate, aux, v, vi, u, iw, w);
-    cerr << "diag ok\n";
-    cerr << success << '\n';
-
-        // copy u into aux
-        for (int i=0; i<Nstate; i++)	{
-                for (int j=0; j<Nstate; j++)	{
-                        aux[i][j] = u[i][j];
-                }
-        }
-
-        // invert a into invu
-        InvertMatrix(aux, Nstate, w, iw, invu);
-
-        // CheckDiag();
-
-        delete[] w;
-        delete[] iw;
-        return success;
-}
-*/
-
 // ---------------------------------------------------------------------------
 //     ComputeRate()
 // ---------------------------------------------------------------------------
-
 double SubMatrix::GetRate() const {
     if (!ArrayUpdated()) {
         UpdateStationary();
