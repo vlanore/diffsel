@@ -100,7 +100,6 @@ class SubMatrix {
     double **GetInvEigenVect() const;
 
     virtual void ToStream(std::ostream &os) const;
-    void CheckReversibility() const;
 
     int GetDiagStat() const { return ndiagfailed; }
 
@@ -109,9 +108,6 @@ class SubMatrix {
     // virtual void     FiniteTime(int i0, double* down, double length);
 
     double **GetQ() const { return Q; }
-    void ComputeExponential(double range, double **expo) const;
-    void ApproachExponential(double range, double **expo, int prec = 1024) const;
-    void PowerOf2(double **y, int z) const;
 
     static double meanz;
     static double maxz;
@@ -435,7 +431,6 @@ inline int SubMatrix::DrawUniformizedSubstitutionNumber(int stateup, int statedo
             std::cerr << stateup << '\t' << statedown << '\n';
 
             ToStream(std::cerr);
-            CheckReversibility();
             throw;
         }
     }
