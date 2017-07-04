@@ -4,7 +4,6 @@
 #include <fstream>
 #include <iostream>
 #include "linalg.hpp"
-// #include "linalg2.hpp"
 using namespace std;
 
 int SubMatrix::nuni = 0;
@@ -206,7 +205,6 @@ void SubMatrix::Normalise() const {
 //     Powers
 // ---------------------------------------------------------------------------
 // ---------------------------------------------------------------------------
-
 void SubMatrix::ActivatePowers() const {
     if (!powflag) {
         if (!ArrayUpdated()) {
@@ -319,13 +317,13 @@ void SubMatrix::ComputePowers(int N) const {
 
 void SubMatrix::ToStream(ostream &os) const {
     os << GetNstate() << '\n';
-    os << "stationaries: \n";
+    os << "stationaries:\n";
     for (int i = 0; i < GetNstate(); i++) {
         os << Stationary(i) << '\t';
     }
     os << '\n';
 
-    os << "rate matrix\n";
+    os << "rate matrix:\n";
     for (int i = 0; i < GetNstate(); i++) {
         for (int j = 0; j < GetNstate(); j++) {
             os << Q[i][j] << '\t';

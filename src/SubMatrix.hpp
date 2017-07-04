@@ -25,8 +25,13 @@
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
+#include <sstream>
 #include "PathSuffStat.hpp"
 #include "Random.hpp"
+
+using Vector = double *;
+using ConstVect = const double *;
+using Matrix = double **;
 
 class SubMatrix {
   protected:
@@ -64,18 +69,18 @@ class SubMatrix {
     mutable int npow;
     mutable double UniMu;
 
-    double ***mPow;
+    Matrix *mPow;
 
-    mutable double **Q;           // Q : the infinitesimal generator matrix
-    mutable double *mStationary;  // the stationary probabilities of the matrix
-    mutable double **aux;         // an auxiliary matrix
+    mutable Matrix Q;            // Q : the infinitesimal generator matrix
+    mutable Vector mStationary;  // the stationary probabilities of the matrix
+    mutable Matrix aux;          // an auxiliary matrix
 
     bool normalise;
 
-    mutable double **u;     // u : the matrix of eigen vectors
-    mutable double **invu;  // invu : the inverse of u
-    mutable double *v;      // v : eigenvalues
-    mutable double *vi;     // vi : imaginary part
+    mutable Matrix u;     // u : the matrix of eigen vectors
+    mutable Matrix invu;  // invu : the inverse of u
+    mutable Vector v;     // v : eigenvalues
+    mutable Vector vi;    // vi : imaginary part
 
     mutable int ndiagfailed;
 
@@ -85,6 +90,7 @@ class SubMatrix {
         Create();
     }
 
+    SubMatrix(const SubMatrix &) = delete;
     virtual ~SubMatrix();
 
     void Create();  // manual allocation of internal resources (requires Nstate and UniSubNmax)
@@ -96,15 +102,14 @@ class SubMatrix {
 
     // getters
     int GetNstate() const { return Nstate; }
-    const double *GetRow(int i) const;
-    const double *GetStationary() const;
+    ConstVect GetStationary() const;
     double GetRate() const;
-    double *GetEigenVal() const;
-    double **GetEigenVect() const;
-    double **GetInvEigenVect() const;
+    Vector GetEigenVal() const;
+    Matrix GetEigenVect() const;
+    Matrix GetInvEigenVect() const;
     int GetDiagStat() const { return ndiagfailed; }
     double GetUniformizationMu() const;
-    double **GetQ() const { return Q; }
+    Matrix GetQ() const { return Q; }
 
     static void ResetDiagCount() { diagcount = 0; }
 
@@ -143,6 +148,7 @@ class SubMatrix {
     double SuffStatLogProb(PathSuffStat *suffstat);
 
   protected:
+    ConstVect GetRow(int i) const;
     void UpdateRow(int state) const;
     void UpdateStationary() const;
 
@@ -165,14 +171,14 @@ inline double SubMatrix::operator()(int i, int j) const {
     return Q[i][j];
 }
 
-inline const double *SubMatrix::GetRow(int i) const {
+inline ConstVect SubMatrix::GetRow(int i) const {
     if (!flagarray[i]) {
         UpdateRow(i);
     }
     return Q[i];
 }
 
-inline const double *SubMatrix::GetStationary() const {
+inline ConstVect SubMatrix::GetStationary() const {
     if (!statflag) {
         UpdateStationary();
     }
@@ -221,9 +227,9 @@ inline void SubMatrix::UpdateRow(int state) const {
 }
 
 inline void SubMatrix::BackwardPropagate(const double *up, double *down, double length) const {
-    double **eigenvect = GetEigenVect();
-    double **inveigenvect = GetInvEigenVect();
-    double *eigenval = GetEigenVal();
+    Matrix eigenvect = GetEigenVect();
+    Matrix inveigenvect = GetInvEigenVect();
+    Vector eigenval = GetEigenVal();
 
     int matSize = GetNstate();
 
@@ -298,9 +304,9 @@ inline void SubMatrix::BackwardPropagate(const double *up, double *down, double 
 }
 
 inline void SubMatrix::ForwardPropagate(const double *down, double *up, double length) const {
-    double **eigenvect = GetEigenVect();
-    double **inveigenvect = GetInvEigenVect();
-    double *eigenval = GetEigenVal();
+    Matrix eigenvect = GetEigenVect();
+    Matrix inveigenvect = GetInvEigenVect();
+    Vector eigenval = GetEigenVal();
 
     auto aux = new double[GetNstate()];
 
@@ -333,9 +339,9 @@ inline void SubMatrix::ForwardPropagate(const double *down, double *up, double l
 
 inline double SubMatrix::GetFiniteTimeTransitionProb(int stateup, int statedown,
                                                      double efflength) const {
-    double **invp = GetInvEigenVect();
-    double **p = GetEigenVect();
-    double *l = GetEigenVal();
+    Matrix invp = GetInvEigenVect();
+    Matrix p = GetEigenVect();
+    Vector l = GetEigenVal();
     double tot = 0;
     for (int i = 0; i < GetNstate(); i++) {
         tot += p[stateup][i] * exp(efflength * l[i]) * invp[i][statedown];
@@ -417,13 +423,13 @@ inline int SubMatrix::DrawUniformizedSubstitutionNumber(int stateup, int statedo
 }
 
 inline double SubMatrix::DrawWaitingTime(int state) const {
-    const double *row = GetRow(state);
+    ConstVect row = GetRow(state);
     double t = Random::sExpo() / (-row[state]);
     return t;
 }
 
 inline int SubMatrix::DrawOneStep(int state) const {
-    const double *row = GetRow(state);
+    ConstVect row = GetRow(state);
     double p = -row[state] * Random::Uniform();
     int k = -1;
     double tot = 0;
@@ -452,14 +458,48 @@ TEST_CASE("SubMatrix tests") {
       protected:
         void ComputeArray(int) const override {}
 
-        void ComputeStationary() const override {}
+        void ComputeStationary() const override {
+            for (int i=0; i<4; ++i) {
+                mStationary[i] = 0.25;
+            }
+        }
 
       public:
         MyMatrix() : SubMatrix(4) {}
+
+        double &ref(int i, int j) { return Q[i][j]; }
+
+        using SubMatrix::Diagonalise;
     };
 
     MyMatrix myMatrix{};
     CHECK(myMatrix.GetNstate() == 4);
+
+    for (int i=0; i<4; ++i){
+        for (int j=0; j<4; ++j){
+            if (i == j ){
+                myMatrix.ref(i,j) = -0.75;
+            } else {
+                myMatrix.ref(i,j) = 0.25;
+            }
+        }
+    }
+
+    myMatrix.Diagonalise();
+
+    std::stringstream ss;
+    myMatrix.ToStream(ss);
+    CHECK(ss.str() ==
+          "4\n\
+stationaries:\n\
+0.25\t0.25\t0.25\t0.25\t\n\
+rate matrix:\n\
+-0.75\t0.25\t0.25\t0.25\t\n\
+0.25\t-0.75\t0.25\t0.25\t\n\
+0.25\t0.25\t-0.75\t0.25\t\n\
+0.25\t0.25\t0.25\t-0.75\t\n\
+\n\
+0\t-1\t-1\t-1\t\n");
 }
 
 #endif  // SUBMATRIX_H
