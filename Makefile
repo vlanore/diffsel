@@ -4,7 +4,7 @@ PYTHON = python3
 
 # COMPILATION
 # Requires: cmake 3.1.0 or better
-all: cmake
+all: cmake utils/Eigen
 	@cd _build ; make --no-print-directory -j8
 
 cmake: _build/Makefile
@@ -14,11 +14,18 @@ _build/Makefile: CMakeLists.txt
 	@mkdir _build
 	@cd _build ; cmake ..
 
+utils/Eigen:
+	@curl https://bitbucket.org/eigen/eigen/get/3.3.3.tar.gz -o eigen.tar.gz
+	@tar -xvf eigen.tar.gz
+	@cp -r eigen-eigen-67e894c6cd8f/Eigen utils
+	@rm -rf eigen.tar.gz eigen-eigen-67e894c6cd8f
+
 clean:
 	@rm -rf _build doc/html src/*gcno src/*.gcda
 
 fullclean: clean
 	@rm -f tmp*
+	@rm -rf utils/Eigen
 
 
 # BUILD TYPES

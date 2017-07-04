@@ -36,18 +36,14 @@ using Matrix = double **;
 class SubMatrix {
   protected:
     // these 2 pure virtual functions are the most essential component of the
-    // SubMatrix class
-    // see GTRSubMatrix.cpp and CodonSubMatrix.cpp for examples
+    // SubMatrix class see GTRSubMatrix.cpp and CodonSubMatrix.cpp for examples
 
     // ComputeArray(int state) is in charge of computing the row of the rate
-    // matrix
-    // corresponding to all possible rates of substitution AWAY from state
+    // matrix corresponding to all possible rates of substitution AWAY from state
     virtual void ComputeArray(int state) const = 0;
 
     // ComputeStationary() is in charge of computing the vector of stationary
-    // probabilities
-    // (equilibirum frequencies)
-    // of the substitution process
+    // probabilities (equilibirum frequencies) of the substitution process
     virtual void ComputeStationary() const = 0;
 
     static const int UniSubNmax = 500;
