@@ -28,10 +28,16 @@
 #include <sstream>
 #include "PathSuffStat.hpp"
 #include "Random.hpp"
+#include <Eigen/Dense>
 
 using Vector = double *;
 using ConstVect = const double *;
 using Matrix = double **;
+using Eigen::RowMajor;
+using Eigen::Dynamic;
+using EMatrix = Eigen::Matrix<double, Dynamic, Dynamic, RowMajor>;
+using EMap = Eigen::Map<Eigen::Matrix<double, Dynamic, Dynamic, RowMajor>>;
+using EVec = Eigen::VectorXd;
 
 class SubMatrix {
   protected:
@@ -67,7 +73,7 @@ class SubMatrix {
 
     Matrix *mPow;
 
-    mutable Matrix Q;            // Q : the infinitesimal generator matrix
+    mutable EMatrix Q;            // Q : the infinitesimal generator matrix
     mutable Vector mStationary;  // the stationary probabilities of the matrix
     mutable Matrix aux;          // an auxiliary matrix
 
@@ -105,7 +111,6 @@ class SubMatrix {
     Matrix GetInvEigenVect() const;
     int GetDiagStat() const { return ndiagfailed; }
     double GetUniformizationMu() const;
-    Matrix GetQ() const { return Q; }
 
     static void ResetDiagCount() { diagcount = 0; }
 
@@ -144,7 +149,7 @@ class SubMatrix {
     double SuffStatLogProb(PathSuffStat *suffstat);
 
   protected:
-    ConstVect GetRow(int i) const;
+    EVec GetRow(int i) const;
     void UpdateRow(int state) const;
     void UpdateStationary() const;
 
@@ -164,14 +169,14 @@ inline double SubMatrix::operator()(int i, int j) const {
     if (!flagarray[i]) {
         UpdateRow(i);
     }
-    return Q[i][j];
+    return Q(i, j);
 }
 
-inline ConstVect SubMatrix::GetRow(int i) const {
+inline EVec SubMatrix::GetRow(int i) const {
     if (!flagarray[i]) {
         UpdateRow(i);
     }
-    return Q[i];
+    return Q.row(i);
 }
 
 inline ConstVect SubMatrix::GetStationary() const {
@@ -419,13 +424,13 @@ inline int SubMatrix::DrawUniformizedSubstitutionNumber(int stateup, int statedo
 }
 
 inline double SubMatrix::DrawWaitingTime(int state) const {
-    ConstVect row = GetRow(state);
+    EVec row = GetRow(state);
     double t = Random::sExpo() / (-row[state]);
     return t;
 }
 
 inline int SubMatrix::DrawOneStep(int state) const {
-    ConstVect row = GetRow(state);
+    EVec row = GetRow(state);
     double p = -row[state] * Random::Uniform();
     int k = -1;
     double tot = 0;
@@ -463,7 +468,7 @@ TEST_CASE("SubMatrix tests") {
       public:
         MyMatrix() : SubMatrix(4) {}
 
-        double &ref(int i, int j) { return Q[i][j]; }
+        double &ref(int i, int j) { return Q(i, j); }
 
         using SubMatrix::Diagonalise;
     };

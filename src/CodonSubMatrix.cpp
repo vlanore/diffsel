@@ -9,14 +9,14 @@ void MGCodonSubMatrix::ComputeArray(int i) const {
             if ((pos != -1) && (pos != 3)) {
                 int a = GetCodonPosition(pos, i);
                 int b = GetCodonPosition(pos, j);
-                Q[i][j] = (*NucMatrix)(a, b);
-                total += Q[i][j];
+                Q(i, j) = (*NucMatrix)(a, b);
+                total += Q(i, j);
             } else {
-                Q[i][j] = 0;
+                Q(i, j) = 0;
             }
         }
     }
-    Q[i][i] = -total;
+    Q(i, i) = -total;
 }
 
 void MGCodonSubMatrix::ComputeStationary() const {
@@ -72,17 +72,17 @@ void MGOmegaCodonSubMatrix::ComputeArray(int i) const {
                     cerr << pos << '\n';
                     exit(1);
                 }
-                Q[i][j] = (*NucMatrix)(a, b);
+                Q(i, j) = (*NucMatrix)(a, b);
                 if (!Synonymous(i, j)) {
-                    Q[i][j] *= GetOmega();
+                    Q(i, j) *= GetOmega();
                 }
             } else {
-                Q[i][j] = 0;
+                Q(i, j) = 0;
             }
-            total += Q[i][j];
+            total += Q(i, j);
         }
     }
-    Q[i][i] = -total;
+    Q(i, i) = -total;
     if (total < 0) {
         cerr << "negative rate away\n";
         exit(1);
@@ -124,7 +124,7 @@ void AminoAcidReducedCodonSubMatrix::ComputeStationary() {
 }
 
 void AminoAcidReducedCodonSubMatrix::ComputeArray(int a) {
-    // Q[a][[b] = [ \sum _{i|a, j|b} CodonQ[i][j] ] / [ \sum_{i|a} CodonStat[i] ]
+    // Q[a][[b] = [ \sum _{i|a, j|b} CodonQ(i, j) ] / [ \sum_{i|a} CodonStat[i] ]
 
     for (int b = 0; b < GetNstate(); b++) {
         Q[a][b] = 0;
