@@ -144,6 +144,11 @@ int SubMatrix::Diagonalise() const {
 
 
     int n = LinAlg::DiagonalizeRateMatrix(ptr, mStationary, Nstate, v, u, invu, nmax, epsilon);
+
+
+    delete[] ptr;
+
+
     bool failed = (n == nmax);
     if (failed) {
         cerr << "in submatrix: diag failed\n";
