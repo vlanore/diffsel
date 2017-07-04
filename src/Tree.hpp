@@ -209,6 +209,9 @@ class Tree {
     void SetRoot(Link *link) { root = link; }
 };
 
+/*
+#### TESTS #########################################################################################
+*/
 TEST_CASE("Tree test") {
     Tree mytree{"data/toy.tree"};
     mytree.SetIndices();

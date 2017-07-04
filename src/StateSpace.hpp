@@ -81,6 +81,9 @@ class ProteinStateSpace : public SimpleStateSpace {
         : SimpleStateSpace(alphabet, alphabetSet) {}
 };
 
+/*
+#### TESTS #########################################################################################
+*/
 TEST_CASE("StateSpace tests") {
     DNAStateSpace myDnaSS;
     CHECK(myDnaSS.GetState(0) == "A");

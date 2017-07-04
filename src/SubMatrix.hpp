@@ -3,13 +3,6 @@
 // the instant rate matrix of a substitution process
 // but only the mathematical aspects of it
 //
-// RandomSubMatrix:
-// this class derives from SubMatrix and from Dnode
-// therefore, it knows everything about substitution processes (as a SubMatrix)
-// and at the same time, it can be inserted as a deterministic node in a
-// probabilistic model (as a
-// Dnode)
-//
 // If you need to define a new substitution process
 // - derive a new class deriving (directly or indirectly) from SubMatrix
 // in this class, implements the ComputeArray and ComputeStationary functions
@@ -28,6 +21,7 @@
 #ifndef SUBMATRIX_H
 #define SUBMATRIX_H
 
+#include <doctest.h>
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
@@ -61,6 +55,30 @@ class SubMatrix {
     static double maxz;
     static double nz;
 
+    mutable bool powflag;
+    mutable bool diagflag;
+    mutable bool statflag;
+    mutable bool *flagarray;
+
+    int Nstate;
+    mutable int npow;
+    mutable double UniMu;
+
+    double ***mPow;
+
+    mutable double **Q;           // Q : the infinitesimal generator matrix
+    mutable double *mStationary;  // the stationary probabilities of the matrix
+    mutable double **aux;         // an auxiliary matrix
+
+    bool normalise;
+
+    mutable double **u;     // u : the matrix of eigen vectors
+    mutable double **invu;  // invu : the inverse of u
+    mutable double *v;      // v : eigenvalues
+    mutable double *vi;     // vi : imaginary part
+
+    mutable int ndiagfailed;
+
   public:
     SubMatrix(int inNstate, bool innormalise = false)
         : Nstate(inNstate), normalise(innormalise), ndiagfailed(0) {
@@ -68,6 +86,8 @@ class SubMatrix {
     }
 
     virtual ~SubMatrix();
+
+    void Create();  // manual allocation of internal resources (requires Nstate and UniSubNmax)
 
     // static getters
     static int GetUniSubCount() { return nunisubcount; }
@@ -89,15 +109,10 @@ class SubMatrix {
     static void ResetDiagCount() { diagcount = 0; }
 
     double Stationary(int i) const;
-
-    void Create();
-
     double operator()(int /*i*/, int /*j*/) const;
-
     void ScalarMul(double e);
 
     bool isNormalised() const { return normalise; }
-
     void Normalise() const;
 
     virtual void CorruptMatrix();
@@ -106,6 +121,7 @@ class SubMatrix {
     void ActivatePowers() const;
     void InactivatePowers() const;
     double Power(int n, int i, int j) const;
+
     virtual void ToStream(std::ostream &os) const;
 
     void BackwardPropagate(const double *up, double *down, double length) const;
@@ -136,42 +152,6 @@ class SubMatrix {
     bool ArrayUpdated() const;
 
     int Diagonalise() const;
-
-    // data members
-
-    mutable bool powflag;
-    mutable bool diagflag;
-    mutable bool statflag;
-    mutable bool *flagarray;
-
-    int Nstate;
-    mutable int npow;
-    mutable double UniMu;
-
-    double ***mPow;
-
-    // Q : the infinitesimal generator matrix
-    mutable double **Q;
-
-    // the stationary probabilities of the matrix
-    mutable double *mStationary;
-
-    bool normalise;
-
-    // an auxiliary matrix
-    mutable double **aux;
-
-  protected:
-    // v : eigenvalues
-    // vi : imaginary part
-    // u : the matrix of eigen vectors
-    // invu : the inverse of u
-    mutable double **u;
-    mutable double **invu;
-    mutable double *v;
-    mutable double *vi;
-
-    mutable int ndiagfailed;
 };
 
 
@@ -462,6 +442,24 @@ inline int SubMatrix::DrawOneStep(int state) const {
         exit(1);
     }
     return k;
+}
+
+/*
+#### TESTS #########################################################################################
+*/
+TEST_CASE("SubMatrix tests") {
+    class MyMatrix : public SubMatrix {
+      protected:
+        void ComputeArray(int) const override {}
+
+        void ComputeStationary() const override {}
+
+      public:
+        MyMatrix() : SubMatrix(4) {}
+    };
+
+    MyMatrix myMatrix{};
+    CHECK(myMatrix.GetNstate() == 4);
 }
 
 #endif  // SUBMATRIX_H
