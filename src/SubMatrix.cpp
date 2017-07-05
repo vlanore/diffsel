@@ -40,7 +40,7 @@ void SubMatrix::Create() {
     // vi = new double[Nstate];
 
     mStationary = EVector(Nstate);
-    // mStationary = new double[Nstate];
+    oldStationary = new double[Nstate];
 
     UniMu = 1;
     mPow = new double**[UniSubNmax];
@@ -89,6 +89,7 @@ SubMatrix::~SubMatrix() {
         delete[] mPow;
     }
     // delete[] mStationary;
+    delete[] oldStationary;
     delete[] flagarray;
     // delete[] v;
     // delete[] vi;
@@ -133,7 +134,7 @@ int SubMatrix::Diagonalise() const {
 
     for (int i = 0; i < Nstate; i++) {
         for (int j = 0; j < Nstate; j++) {
-            invu(i, j) = solver.eigenvectors()(j, i).real() * sqrt(stat[j]);
+            invu(i, j) = u(j, i) * sqrt(stat[j]);
         }
     }
     for (int i = 0; i < Nstate; i++) {

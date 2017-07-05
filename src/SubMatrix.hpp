@@ -33,10 +33,7 @@
 using Vector = double *;
 using ConstVect = const double *;
 using Matrix = double **;
-using Eigen::RowMajor;
-using Eigen::Dynamic;
-using EMatrix = Eigen::Matrix<double, Dynamic, Dynamic, RowMajor>;
-using EMap = Eigen::Map<Eigen::Matrix<double, Dynamic, Dynamic, RowMajor>>;
+using EMatrix = Eigen::MatrixXd;
 using EVector = Eigen::VectorXd;
 
 class SubMatrix {
@@ -75,6 +72,7 @@ class SubMatrix {
     Matrix *mPow;
     mutable EMatrix Q;            // Q : the infinitesimal generator matrix
     mutable EVector mStationary;  // the stationary probabilities of the matrix
+    double *oldStationary;
     // mutable Matrix aux;          // an auxiliary matrix
 
     mutable Eigen::EigenSolver<EMatrix> solver;
@@ -105,6 +103,12 @@ class SubMatrix {
     // getters
     int GetNstate() const { return Nstate; }
     const EVector &GetStationary() const;
+    double *OldGetStationary() const {
+        if (!statflag) {
+            UpdateStationary();
+        }
+        return oldStationary;
+    }
     double GetRate() const;
     const EVector &GetEigenVal() const;
     const EMatrix &GetEigenVect() const;
@@ -212,6 +216,9 @@ inline bool SubMatrix::ArrayUpdated() const {
 
 inline void SubMatrix::UpdateStationary() const {
     ComputeStationary();
+    for (int i = 0; i < Nstate; i++) {
+        oldStationary[i] = mStationary[i];
+    }
     statflag = true;
 }
 

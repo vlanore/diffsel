@@ -36,6 +36,11 @@ build-coverage:
 	@mkdir _build
 	@cd _build ; cmake -DCMAKE_BUILD_TYPE=COVERAGE -DCMAKE_CXX_OUTPUT_EXTENSION_REPLACE=ON ..
 
+build-perf:
+	@rm -rf _build
+	@mkdir _build
+	@cd _build ; cmake -DCMAKE_BUILD_TYPE=PERF ..
+
 
 # TESTING
 test: all

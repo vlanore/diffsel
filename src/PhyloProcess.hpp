@@ -45,15 +45,15 @@ class PhyloProcess {
         // return submatrix[branch->GetIndex()][site];
     }
 
-    const EVector& GetRootFreq(int site) {
-        if (rootfreq.size()) {
+    const double* GetRootFreq(int site) {
+        if (rootfreq) {
             return rootfreq[site];
         }
         if (!rootsubmatrix) {
             std::cerr << "error in PhyloProcess::GetRootFreq\n";
             exit(1);
         }
-        return rootsubmatrix[site]->GetStationary();
+        return rootsubmatrix[site]->OldGetStationary();
     }
 
 
@@ -113,12 +113,12 @@ class PhyloProcess {
     // various accessors
 
     bool isMissing(const Node* node, int site) {
-        // return false; // (VL) why was there two return statements?
+        return false;
         return missingmap[node][site];
     }
 
     bool isMissing(const Link* link, int site) {
-        // return false; (VL) why
+        return false;
         return (missingmap[link->GetNode()][site] || missingmap[link->Out()->GetNode()][site]);
     }
 
@@ -175,7 +175,7 @@ class PhyloProcess {
     double* branchlength;
     double* siterate;
     SubMatrix*** submatrix;
-    std::vector<EVector> rootfreq;
+    double** rootfreq;
     SubMatrix** rootsubmatrix;
 
     int* sitearray;
