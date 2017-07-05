@@ -22,13 +22,13 @@
 #define SUBMATRIX_H
 
 #include <doctest.h>
+#include <Eigen/Dense>
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
 #include "PathSuffStat.hpp"
 #include "Random.hpp"
-#include <Eigen/Dense>
 
 using Vector = double *;
 using ConstVect = const double *;
@@ -75,7 +75,7 @@ class SubMatrix {
     Matrix *mPow;
     mutable EMatrix Q;            // Q : the infinitesimal generator matrix
     mutable EVector mStationary;  // the stationary probabilities of the matrix
-    mutable Matrix aux;          // an auxiliary matrix
+    // mutable Matrix aux;          // an auxiliary matrix
 
     mutable Eigen::EigenSolver<EMatrix> solver;
 
@@ -104,11 +104,11 @@ class SubMatrix {
 
     // getters
     int GetNstate() const { return Nstate; }
-    EVector GetStationary() const;
+    const EVector &GetStationary() const;
     double GetRate() const;
-    EVector GetEigenVal() const;
-    EMatrix GetEigenVect() const;
-    EMatrix GetInvEigenVect() const;
+    const EVector &GetEigenVal() const;
+    const EMatrix &GetEigenVect() const;
+    const EMatrix &GetInvEigenVect() const;
     int GetDiagStat() const { return ndiagfailed; }
     double GetUniformizationMu() const;
 
@@ -129,7 +129,7 @@ class SubMatrix {
     double Power(int n, int i, int j) const;
 
     virtual void ToStream(std::ostream &os) const;
- 
+
     void BackwardPropagate(const double *up, double *down, double length) const;
     void ForwardPropagate(const double *down, double *up, double length) const;
 
@@ -179,7 +179,7 @@ inline EVector SubMatrix::GetRow(int i) const {
     return Q.row(i);
 }
 
-inline EVector SubMatrix::GetStationary() const {
+inline const EVector &SubMatrix::GetStationary() const {
     if (!statflag) {
         UpdateStationary();
     }
@@ -228,9 +228,9 @@ inline void SubMatrix::UpdateRow(int state) const {
 }
 
 inline void SubMatrix::BackwardPropagate(const double *up, double *down, double length) const {
-    auto eigenvect = GetEigenVect();
-    auto inveigenvect = GetInvEigenVect();
-    auto eigenval = GetEigenVal();
+    auto &eigenvect = GetEigenVect();
+    auto &inveigenvect = GetInvEigenVect();
+    auto &eigenval = GetEigenVal();
 
     int matSize = GetNstate();
 
@@ -305,9 +305,9 @@ inline void SubMatrix::BackwardPropagate(const double *up, double *down, double 
 }
 
 inline void SubMatrix::ForwardPropagate(const double *down, double *up, double length) const {
-    auto eigenvect = GetEigenVect();
-    auto inveigenvect = GetInvEigenVect();
-    auto eigenval = GetEigenVal();
+    auto &eigenvect = GetEigenVect();
+    auto &inveigenvect = GetInvEigenVect();
+    auto &eigenval = GetEigenVal();
 
     auto aux = new double[GetNstate()];
 
@@ -340,9 +340,9 @@ inline void SubMatrix::ForwardPropagate(const double *down, double *up, double l
 
 inline double SubMatrix::GetFiniteTimeTransitionProb(int stateup, int statedown,
                                                      double efflength) const {
-    auto invp = GetInvEigenVect();
-    auto p = GetEigenVect();
-    auto l = GetEigenVal();
+    auto &invp = GetInvEigenVect();
+    auto &p = GetEigenVect();
+    auto &l = GetEigenVal();
     double tot = 0;
     for (int i = 0; i < GetNstate(); i++) {
         tot += p(stateup, i) * exp(efflength * l[i]) * invp(i, statedown);
@@ -460,7 +460,7 @@ TEST_CASE("SubMatrix tests") {
         void ComputeArray(int) const override {}
 
         void ComputeStationary() const override {
-            for (int i=0; i<4; ++i) {
+            for (int i = 0; i < 4; ++i) {
                 mStationary[i] = 0.25;
             }
         }
@@ -476,12 +476,12 @@ TEST_CASE("SubMatrix tests") {
     MyMatrix myMatrix{};
     CHECK(myMatrix.GetNstate() == 4);
 
-    for (int i=0; i<4; ++i){
-        for (int j=0; j<4; ++j){
-            if (i == j ){
-                myMatrix.ref(i,j) = -0.75;
+    for (int i = 0; i < 4; ++i) {
+        for (int j = 0; j < 4; ++j) {
+            if (i == j) {
+                myMatrix.ref(i, j) = -0.75;
             } else {
-                myMatrix.ref(i,j) = 0.25;
+                myMatrix.ref(i, j) = 0.25;
             }
         }
     }

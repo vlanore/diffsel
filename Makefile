@@ -16,7 +16,7 @@ _build/Makefile: CMakeLists.txt
 
 utils/Eigen:
 	@curl https://bitbucket.org/eigen/eigen/get/3.3.3.tar.gz -o eigen.tar.gz
-	@tar -xvf eigen.tar.gz
+	@tar -xf eigen.tar.gz
 	@cp -r eigen-eigen-67e894c6cd8f/Eigen utils
 	@rm -rf eigen.tar.gz eigen-eigen-67e894c6cd8f
 
@@ -51,6 +51,9 @@ short-tests: all
 
 nonreg: all
 	$(PYTHON) script/non_regression_test
+
+ready-perf:
+	sudo bash -c 'echo "0" > /proc/sys/kernel/perf_event_paranoid' # nothing to see here :)
 
 mvcov: all
 	find _build -type f -name "*.gcno" -exec mv -t src/ {} +

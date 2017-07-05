@@ -45,7 +45,7 @@ class PhyloProcess {
         // return submatrix[branch->GetIndex()][site];
     }
 
-    EVector GetRootFreq(int site) {
+    const EVector& GetRootFreq(int site) {
         if (rootfreq.size()) {
             return rootfreq[site];
         }

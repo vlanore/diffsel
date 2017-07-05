@@ -13,10 +13,10 @@ PhyloProcess::PhyloProcess(Tree *intree, SequenceAlignment *indata, double *inbr
     siterate = insiterate;
     submatrix = insubmatrix;
 
-    if (inrootfreq){
+    if (inrootfreq) {
         // rootfreq = inrootfreq;
         rootfreq = vector<EVector>(GetNsite());
-        for (int i=0; i<GetNsite(); i++) {
+        for (int i = 0; i < GetNsite(); i++) {
             rootfreq[i] = Eigen::Map<Eigen::VectorXd>(inrootfreq[i], GetNstate());
         }
     }
@@ -125,7 +125,7 @@ double PhyloProcess::SiteLogLikelihood(int site) {
     Pruning(GetRoot(), site);
     double ret = 0;
     double *t = GetCondLikelihood(GetRoot());
-    auto stat = GetRootFreq(site);
+    auto &stat = GetRootFreq(site);
 
     for (int k = 0; k < GetNstate(); k++) {
         ret += t[k] * stat[k];
@@ -146,7 +146,7 @@ double PhyloProcess::FastSiteLogLikelihood(int site) {
     }
     double ret = 0;
     double *t = GetCondLikelihood(GetRoot());
-    auto stat = GetRootFreq(site);
+    auto &stat = GetRootFreq(site);
     for (int k = 0; k < GetNstate(); k++) {
         ret += t[k] * stat[k];
     }
@@ -201,7 +201,7 @@ double PhyloProcess::GetPathLogProb() {
 double PhyloProcess::GetPathLogProb(const Link *from, int site) {
     double total = 0;
     if (from->isRoot()) {
-        auto stat = GetRootFreq(site);
+        auto &stat = GetRootFreq(site);
         total += log(stat[GetState(from->GetNode(), site)]);
     } else {
         // total +=
@@ -290,7 +290,7 @@ void PhyloProcess::PruningAncestral(const Link *from, int site) {
         auto cumulaux = new double[GetNstate()];
         try {
             double *tbl = GetCondLikelihood(from);
-            auto stat = GetRootFreq(site);
+            auto &stat = GetRootFreq(site);
             double tot = 0;
             for (int k = 0; k < GetNstate(); k++) {
                 aux[k] = stat[k] * tbl[k];
@@ -345,7 +345,7 @@ void PhyloProcess::PruningAncestral(const Link *from, int site) {
                     }
                 }
                 if (max == 0) {
-                    auto stat = GetSubMatrix(link->GetBranch(), site)->GetStationary();
+                    auto &stat = GetSubMatrix(link->GetBranch(), site)->GetStationary();
                     for (int k = 0; k < GetNstate(); k++) {
                         aux[k] = stat[k];
                     }
@@ -386,7 +386,7 @@ void PhyloProcess::PruningAncestral(const Link *from, int site) {
 void PhyloProcess::RootPosteriorDraw(int site) {
     auto aux = new double[GetNstate()];
     double *tbl = GetCondLikelihood(GetRoot());
-    auto stat = GetRootFreq(site);
+    auto &stat = GetRootFreq(site);
     for (int k = 0; k < GetNstate(); k++) {
         aux[k] = stat[k] * tbl[k];
     }
@@ -399,7 +399,7 @@ void PhyloProcess::PriorSample(const Link *from, int site, bool rootprior) {
     if (from->isRoot()) {
         if (rootprior) {
             // TEMPORARY FIXME FIXME
-            auto stat = GetRootFreq(site);
+            auto &stat = GetRootFreq(site);
             vector<double> tmp(stat.size());
             Eigen::Map<Eigen::VectorXd> map(tmp.data(), stat.size());
             map = stat;

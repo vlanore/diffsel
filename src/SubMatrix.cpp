@@ -3,7 +3,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
-#include "linalg.hpp"
+// #include "linalg.hpp"
 using namespace std;
 
 int SubMatrix::nuni = 0;
@@ -43,7 +43,7 @@ void SubMatrix::Create() {
     // mStationary = new double[Nstate];
 
     UniMu = 1;
-    mPow = new double **[UniSubNmax];
+    mPow = new double**[UniSubNmax];
     for (int n = 0; n < UniSubNmax; n++) {
         mPow[n] = nullptr;
     }
@@ -56,10 +56,10 @@ void SubMatrix::Create() {
     }
     powflag = false;
 
-    aux = new double *[Nstate];
-    for (int i = 0; i < Nstate; i++) {
-        aux[i] = new double[Nstate];
-    }
+    // aux = new double *[Nstate];
+    // for (int i = 0; i < Nstate; i++) {
+    //     aux[i] = new double[Nstate];
+    // }
 }
 
 // ---------------------------------------------------------------------------
@@ -71,7 +71,7 @@ SubMatrix::~SubMatrix() {
         // delete[] Q[i];
         // delete[] u[i];
         // delete[] invu[i];
-        delete[] aux[i];
+        // delete[] aux[i];
     }
     // delete[] Q;
     // delete[] u;
@@ -93,7 +93,7 @@ SubMatrix::~SubMatrix() {
     // delete[] v;
     // delete[] vi;
 
-    delete[] aux;
+    // delete[] aux;
 }
 
 // ---------------------------------------------------------------------------
@@ -116,59 +116,33 @@ int SubMatrix::Diagonalise() const {
     }
 
     diagcount++;
+    auto& stat = GetStationary();
 
-    // int nmax = 1000;
-    // double epsilon = 1e-20;
+    EMatrix a(Nstate, Nstate);
 
-    // UGLYNESS BELOW ======================================================
-    // vector<vector<double>> data(Q.rows(), vector<double>(Q.cols()));
-    // for (int i=0; i<Q.rows(); i++) {
-    //     Eigen::Map<Eigen::VectorXd>(data[i].data(), Q.cols()) = Q.row(i);
-    // }
-    // // for (auto row : data) {
-    // //     for (auto e : row){
-    // //         cerr << e << ' ';
-    // //     }
-    // //     cerr << '\n';
-    // // }
-    // // cerr << '\n';
+    for (int i = 0; i < Nstate; i++) {
+        for (int j = 0; j < Nstate; j++) {
+            a(i, j) = Q(i, j) * sqrt(stat[i] / stat[j]);
+        }
+    }
 
-    // double **ptr = new double*[Q.rows()];
-    // for (int i=0; i<Q.rows(); i++) {
-    //     ptr[i] = data[i].data();
-    // }
-    // for (int i=0; i<Q.rows(); i++) {
-    //     for (int j=0; j<Q.cols(); j++){
-    //         cerr << ptr[i][j] << ' ';
-    //     }
-    //     cerr << '\n';
-    // }
-    // cerr << '\n';
-
-    // UGLYNESS ABOVE ======================================================
-
-    solver.compute(Q);
+    solver.compute(a);
     v = solver.eigenvalues().real();
     vi = solver.eigenvalues().imag();
     u = solver.eigenvectors().real();
-    invu = solver.eigenvectors().inverse().real();
 
-    // int n = LinAlg::DiagonalizeRateMatrix(ptr, mStationary, Nstate, v, u, invu, nmax, epsilon);
+    for (int i = 0; i < Nstate; i++) {
+        for (int j = 0; j < Nstate; j++) {
+            invu(i, j) = solver.eigenvectors()(j, i).real() * sqrt(stat[j]);
+        }
+    }
+    for (int i = 0; i < Nstate; i++) {
+        for (int j = 0; j < Nstate; j++) {
+            u(i, j) /= sqrt(stat[i]);
+        }
+    }
 
-
-    // delete[] ptr;
-
-
-    // bool failed = (n == nmax);
-    // if (failed) {
-    //     cerr << "in submatrix: diag failed\n";
-    //     cerr << "n : " << n << '\t' << nmax << '\n';
-    //     ofstream os("mat");
-    //     ToStream(os);
-    //     exit(1);
-    // }
-    // diagflag = true;
-    // return static_cast<int>(failed);
+    diagflag = true;
     return 0;
 }
 
@@ -188,27 +162,27 @@ double SubMatrix::GetRate() const {
     double norm = 0;
     for (int i = 0; i < Nstate - 1; i++) {
         for (int j = i + 1; j < Nstate; j++) {
-            norm += mStationary[i] * Q(i,j);
+            norm += mStationary[i] * Q(i, j);
         }
     }
     return 2 * norm;
 }
 
-EVector SubMatrix::GetEigenVal() const {
+const EVector& SubMatrix::GetEigenVal() const {
     if (!diagflag) {
         Diagonalise();
     }
     return v;
 }
 
-EMatrix SubMatrix::GetEigenVect() const {
+const EMatrix& SubMatrix::GetEigenVect() const {
     if (!diagflag) {
         Diagonalise();
     }
     return u;
 }
 
-EMatrix SubMatrix::GetInvEigenVect() const {
+const EMatrix& SubMatrix::GetInvEigenVect() const {
     if (!diagflag) {
         Diagonalise();
     }
@@ -241,7 +215,7 @@ void SubMatrix::Normalise() const {
     double norm = GetRate();
     for (int i = 0; i < Nstate; i++) {
         for (int j = 0; j < Nstate; j++) {
-            Q(i,j) /= norm;
+            Q(i, j) /= norm;
         }
     }
 }
@@ -275,7 +249,7 @@ void SubMatrix::ActivatePowers() const {
         }
         for (int i = 0; i < Nstate; i++) {
             for (int j = 0; j < Nstate; j++) {
-                mPow[0][i][j] += Q(i,j) / UniMu;
+                mPow[0][i][j] += Q(i, j) / UniMu;
                 if (mPow[0][i][j] < 0) {
                     cerr << "error in SubMatrix::ComputePowers: negative prob : ";
                     cerr << i << '\t' << j << '\t' << mPow[0][i][j] << '\n';
@@ -310,7 +284,7 @@ void SubMatrix::InactivatePowers() const {
 
 void SubMatrix::CreatePowers(int n) const {
     if (mPow[n] == nullptr) {
-        mPow[n] = new double *[Nstate];
+        mPow[n] = new double*[Nstate];
         for (int i = 0; i < Nstate; i++) {
             mPow[n][i] = new double[Nstate];
         }
@@ -349,7 +323,7 @@ void SubMatrix::ComputePowers(int N) const {
             CreatePowers(n);
             for (int i = 0; i < Nstate; i++) {
                 for (int j = 0; j < Nstate; j++) {
-                    double &t = mPow[n][i][j];
+                    double& t = mPow[n][i][j];
                     t = 0;
                     for (int k = 0; k < Nstate; k++) {
                         t += mPow[n - 1][i][k] * mPow[0][k][j];
@@ -361,7 +335,7 @@ void SubMatrix::ComputePowers(int N) const {
     }
 }
 
-void SubMatrix::ToStream(ostream &os) const {
+void SubMatrix::ToStream(ostream& os) const {
     os << GetNstate() << '\n';
     os << "stationaries:\n";
     for (int i = 0; i < GetNstate(); i++) {
@@ -372,7 +346,7 @@ void SubMatrix::ToStream(ostream &os) const {
     os << "rate matrix:\n";
     for (int i = 0; i < GetNstate(); i++) {
         for (int j = 0; j < GetNstate(); j++) {
-            os << Q(i,j) << '\t';
+            os << Q(i, j) << '\t';
         }
         os << '\n';
     }
@@ -384,9 +358,9 @@ void SubMatrix::ToStream(ostream &os) const {
     os << '\n';
 }
 
-double SubMatrix::SuffStatLogProb(PathSuffStat *suffstat) {
+double SubMatrix::SuffStatLogProb(PathSuffStat* suffstat) {
     double total = 0;
-    auto stat = GetStationary();
+    auto& stat = GetStationary();
     for (auto i : suffstat->rootcount) {
         total += i.second * log(stat[i.first]);
     }

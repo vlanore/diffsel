@@ -127,7 +127,7 @@ void MGMSFitnessSubMatrix::ComputeArray(int i) const {
         }
     }
 
-Q(i, i) = -total;
+    Q(i, i) = -total;
 
     if (total < 0) {
         cerr << "negative rate away\n";

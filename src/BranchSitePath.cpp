@@ -113,15 +113,20 @@ void BranchSitePath::AddSuffStat(PathSuffStat &suffstat, double factor) {
 }
 
 void BranchSitePath::AddLengthSuffStat(int &count, double &beta, double factor, SubMatrix *mat) {
+    cerr << "-- [BranchSitePath::AddLengthSuffStat] Started\n";
     Plink *link = Init();
     while (link) {
+        cerr << "-- [BranchSitePath::AddLengthSuffStat] Getting link state\n";
         int state = link->GetState();
+        cerr << "-- [BranchSitePath::AddLengthSuffStat] Accessing matrix data\n";
         beta -= GetRelativeTime(link) * factor * (*mat)(state, state);
+        cerr << "-- [BranchSitePath::AddLengthSuffStat] Done accessing matrix data\n";
         if (link != last) {
             count++;
         }
         link = link->Next();
     }
+    cerr << "-- [BranchSitePath::AddLengthSuffStat] Ended\n";
 }
 
 void BranchSitePath::AddCounts(int **paircounts, int *statecounts) {
