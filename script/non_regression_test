@@ -9,7 +9,7 @@ print(step("Parsing command line arguments"))
 from argparse import ArgumentParser, FileType
 parser = ArgumentParser(description='A non-regression test for diffsel that generates a toy alignment+tree, runs two diffsel chains and analyzes the results.')
 parser.add_argument('-n', '--name', default="tmp_nonreg", help="the name of the run (used to name output files); default is 'tmp_nonreg'")
-parser.add_argument('-u', '--until', type=int, default=6500, help="number of iterations to run diffsel for; default is 10k")
+parser.add_argument('-u', '--until', type=int, default=10000, help="number of iterations to run diffsel for; default is 10k")
 parser.add_argument('-d', '--depth', type=int, default=7, help="depth of the phylogenetic tree (which is binary and balanced); default is 7")
 parser.add_argument('-b', '--burnin', type=float, default=0.2, help="burnin (as a float between 0 and 1); default is 0.2")
 parser.add_argument('-a', '--analysis-only', dest="analysis", action='store_true', help="set this flag to run only the analysis part of the test\
