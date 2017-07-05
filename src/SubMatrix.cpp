@@ -151,6 +151,7 @@ int SubMatrix::Diagonalise() const {
     v = solver.eigenvalues().real();
     vi = solver.eigenvalues().imag();
     u = solver.eigenvectors().real();
+    invu = solver.eigenvectors().inverse().real();
 
     // int n = LinAlg::DiagonalizeRateMatrix(ptr, mStationary, Nstate, v, u, invu, nmax, epsilon);
 
