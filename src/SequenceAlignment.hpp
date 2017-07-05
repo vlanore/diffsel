@@ -52,6 +52,7 @@ class FileSequenceAlignment : public SequenceAlignment {
     explicit FileSequenceAlignment(std::string filename);
 
   private:
+    void FailFormat();
     int ReadDataFromFile(std::string filespec, int forceinterleaved = 0);
     int TestPhylipSequential(std::string filespec);
     void ReadPhylipSequential(std::string filespec);

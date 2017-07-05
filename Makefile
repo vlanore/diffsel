@@ -37,6 +37,8 @@ build-coverage:
 	@cd _build ; cmake -DCMAKE_BUILD_TYPE=COVERAGE -DCMAKE_CXX_OUTPUT_EXTENSION_REPLACE=ON ..
 
 build-perf:
+	@sudo bash -c 'echo "0" > /proc/sys/kernel/perf_event_paranoid' # nothing to see here :)
+	@sudo bash -c 'echo "0" > /proc/sys/kernel/kptr_restrict' # nothing to see here :)
 	@rm -rf _build
 	@mkdir _build
 	@cd _build ; cmake -DCMAKE_BUILD_TYPE=PERF ..
@@ -56,9 +58,6 @@ short-tests: all
 
 nonreg: all
 	$(PYTHON) script/non_regression_test
-
-ready-perf:
-	sudo bash -c 'echo "0" > /proc/sys/kernel/perf_event_paranoid' # nothing to see here :)
 
 mvcov: all
 	find _build -type f -name "*.gcno" -exec mv -t src/ {} +

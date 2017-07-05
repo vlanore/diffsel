@@ -32,7 +32,6 @@ set(DIFFSEL_LIB
   src/SubMatrix.cpp
   src/Tree.cpp
   src/Tree.hpp
-  src/linalg.cpp
   )
 add_library (diffsel_lib STATIC ${DIFFSEL_LIB})
 target_compile_features(diffsel_lib PUBLIC ${CXX_FEATURES})

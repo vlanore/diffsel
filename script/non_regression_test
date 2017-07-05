@@ -96,7 +96,7 @@ if r4 == 0 and isfile(chainname+".contdiff"):
     mineff = min([int(l[1]) for l in tcout])
     maxrel = max([float(l[2]) for l in tcout])
     print("-- Minimum effsize is "+data(mineff)+" and maximum rel_diff is "+data(maxrel))
-    if mineff < 50 or maxrel > 0.35:
+    if mineff < 50 or maxrel > 0.3:
         print(bad("The chains do not seem to have converged!"))
     else:
         print(good("The chains seem to have converged!"))
