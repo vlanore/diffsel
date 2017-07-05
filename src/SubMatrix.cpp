@@ -22,20 +22,25 @@ void SubMatrix::Create() {
     // }
     Q = EMatrix(Nstate, Nstate);
 
-    u = new double *[Nstate];
-    for (int i = 0; i < Nstate; i++) {
-        u[i] = new double[Nstate];
-    }
+    u = EMatrix(Nstate, Nstate);
+    // u = new double *[Nstate];
+    // for (int i = 0; i < Nstate; i++) {
+    //     u[i] = new double[Nstate];
+    // }
 
-    invu = new double *[Nstate];
-    for (int i = 0; i < Nstate; i++) {
-        invu[i] = new double[Nstate];
-    }
+    invu = EMatrix(Nstate, Nstate);
+    // invu = new double *[Nstate];
+    // for (int i = 0; i < Nstate; i++) {
+    //     invu[i] = new double[Nstate];
+    // }
 
-    v = new double[Nstate];
-    vi = new double[Nstate];
+    v = EVector(Nstate);
+    vi = EVector(Nstate);
+    // v = new double[Nstate];
+    // vi = new double[Nstate];
 
-    mStationary = new double[Nstate];
+    mStationary = EVector(Nstate);
+    // mStationary = new double[Nstate];
 
     UniMu = 1;
     mPow = new double **[UniSubNmax];
@@ -64,13 +69,13 @@ void SubMatrix::Create() {
 SubMatrix::~SubMatrix() {
     for (int i = 0; i < Nstate; i++) {
         // delete[] Q[i];
-        delete[] u[i];
-        delete[] invu[i];
+        // delete[] u[i];
+        // delete[] invu[i];
         delete[] aux[i];
     }
     // delete[] Q;
-    delete[] u;
-    delete[] invu;
+    // delete[] u;
+    // delete[] invu;
 
     if (mPow != nullptr) {
         for (int n = 0; n < UniSubNmax; n++) {
@@ -83,10 +88,10 @@ SubMatrix::~SubMatrix() {
         }
         delete[] mPow;
     }
-    delete[] mStationary;
+    // delete[] mStationary;
     delete[] flagarray;
-    delete[] v;
-    delete[] vi;
+    // delete[] v;
+    // delete[] vi;
 
     delete[] aux;
 }
@@ -112,26 +117,26 @@ int SubMatrix::Diagonalise() const {
 
     diagcount++;
 
-    int nmax = 1000;
-    double epsilon = 1e-20;
+    // int nmax = 1000;
+    // double epsilon = 1e-20;
 
     // UGLYNESS BELOW ======================================================
-    vector<vector<double>> data(Q.rows(), vector<double>(Q.cols()));
-    for (int i=0; i<Q.rows(); i++) {
-        Eigen::Map<Eigen::VectorXd>(data[i].data(), Q.cols()) = Q.row(i);
-    }
-    // for (auto row : data) {
-    //     for (auto e : row){
-    //         cerr << e << ' ';
-    //     }
-    //     cerr << '\n';
+    // vector<vector<double>> data(Q.rows(), vector<double>(Q.cols()));
+    // for (int i=0; i<Q.rows(); i++) {
+    //     Eigen::Map<Eigen::VectorXd>(data[i].data(), Q.cols()) = Q.row(i);
     // }
-    // cerr << '\n';
+    // // for (auto row : data) {
+    // //     for (auto e : row){
+    // //         cerr << e << ' ';
+    // //     }
+    // //     cerr << '\n';
+    // // }
+    // // cerr << '\n';
 
-    double **ptr = new double*[Q.rows()];
-    for (int i=0; i<Q.rows(); i++) {
-        ptr[i] = data[i].data();
-    }
+    // double **ptr = new double*[Q.rows()];
+    // for (int i=0; i<Q.rows(); i++) {
+    //     ptr[i] = data[i].data();
+    // }
     // for (int i=0; i<Q.rows(); i++) {
     //     for (int j=0; j<Q.cols(); j++){
     //         cerr << ptr[i][j] << ' ';
@@ -142,23 +147,28 @@ int SubMatrix::Diagonalise() const {
 
     // UGLYNESS ABOVE ======================================================
 
+    solver.compute(Q);
+    v = solver.eigenvalues().real();
+    vi = solver.eigenvalues().imag();
+    u = solver.eigenvectors().real();
 
-    int n = LinAlg::DiagonalizeRateMatrix(ptr, mStationary, Nstate, v, u, invu, nmax, epsilon);
+    // int n = LinAlg::DiagonalizeRateMatrix(ptr, mStationary, Nstate, v, u, invu, nmax, epsilon);
 
 
-    delete[] ptr;
+    // delete[] ptr;
 
 
-    bool failed = (n == nmax);
-    if (failed) {
-        cerr << "in submatrix: diag failed\n";
-        cerr << "n : " << n << '\t' << nmax << '\n';
-        ofstream os("mat");
-        ToStream(os);
-        exit(1);
-    }
-    diagflag = true;
-    return static_cast<int>(failed);
+    // bool failed = (n == nmax);
+    // if (failed) {
+    //     cerr << "in submatrix: diag failed\n";
+    //     cerr << "n : " << n << '\t' << nmax << '\n';
+    //     ofstream os("mat");
+    //     ToStream(os);
+    //     exit(1);
+    // }
+    // diagflag = true;
+    // return static_cast<int>(failed);
+    return 0;
 }
 
 // ---------------------------------------------------------------------------
@@ -183,21 +193,21 @@ double SubMatrix::GetRate() const {
     return 2 * norm;
 }
 
-double *SubMatrix::GetEigenVal() const {
+EVector SubMatrix::GetEigenVal() const {
     if (!diagflag) {
         Diagonalise();
     }
     return v;
 }
 
-double **SubMatrix::GetEigenVect() const {
+EMatrix SubMatrix::GetEigenVect() const {
     if (!diagflag) {
         Diagonalise();
     }
     return u;
 }
 
-double **SubMatrix::GetInvEigenVect() const {
+EMatrix SubMatrix::GetInvEigenVect() const {
     if (!diagflag) {
         Diagonalise();
     }
@@ -375,7 +385,7 @@ void SubMatrix::ToStream(ostream &os) const {
 
 double SubMatrix::SuffStatLogProb(PathSuffStat *suffstat) {
     double total = 0;
-    const double *stat = GetStationary();
+    auto stat = GetStationary();
     for (auto i : suffstat->rootcount) {
         total += i.second * log(stat[i.first]);
     }

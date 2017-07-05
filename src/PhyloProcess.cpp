@@ -12,7 +12,15 @@ PhyloProcess::PhyloProcess(Tree *intree, SequenceAlignment *indata, double *inbr
     branchlength = inbranchlength;
     siterate = insiterate;
     submatrix = insubmatrix;
-    rootfreq = inrootfreq;
+
+    if (inrootfreq){
+        // rootfreq = inrootfreq;
+        rootfreq = vector<EVector>(GetNsite());
+        for (int i=0; i<GetNsite(); i++) {
+            rootfreq[i] = Eigen::Map<Eigen::VectorXd>(inrootfreq[i], GetNstate());
+        }
+    }
+
     rootsubmatrix = inrootsubmatrix;
 }
 
@@ -117,7 +125,7 @@ double PhyloProcess::SiteLogLikelihood(int site) {
     Pruning(GetRoot(), site);
     double ret = 0;
     double *t = GetCondLikelihood(GetRoot());
-    const double *stat = GetRootFreq(site);
+    auto stat = GetRootFreq(site);
 
     for (int k = 0; k < GetNstate(); k++) {
         ret += t[k] * stat[k];
@@ -138,7 +146,7 @@ double PhyloProcess::FastSiteLogLikelihood(int site) {
     }
     double ret = 0;
     double *t = GetCondLikelihood(GetRoot());
-    const double *stat = GetRootFreq(site);
+    auto stat = GetRootFreq(site);
     for (int k = 0; k < GetNstate(); k++) {
         ret += t[k] * stat[k];
     }
@@ -193,7 +201,7 @@ double PhyloProcess::GetPathLogProb() {
 double PhyloProcess::GetPathLogProb(const Link *from, int site) {
     double total = 0;
     if (from->isRoot()) {
-        const double *stat = GetRootFreq(site);
+        auto stat = GetRootFreq(site);
         total += log(stat[GetState(from->GetNode(), site)]);
     } else {
         // total +=
@@ -266,7 +274,7 @@ void PhyloProcess::Pruning(const Link *from, int site) {
             }
             cerr << '\n';
             exit(1);
-            max = 1e-20;
+            // max = 1e-20;
         }
         for (int k = 0; k < GetNstate(); k++) {
             t[k] /= max;
@@ -282,7 +290,7 @@ void PhyloProcess::PruningAncestral(const Link *from, int site) {
         auto cumulaux = new double[GetNstate()];
         try {
             double *tbl = GetCondLikelihood(from);
-            const double *stat = GetRootFreq(site);
+            auto stat = GetRootFreq(site);
             double tot = 0;
             for (int k = 0; k < GetNstate(); k++) {
                 aux[k] = stat[k] * tbl[k];
@@ -305,7 +313,7 @@ void PhyloProcess::PruningAncestral(const Link *from, int site) {
                 cerr << aux[k] << '\n';
             }
             exit(1);
-            throw;
+            // throw;
         }
         delete[] aux;
         delete[] cumulaux;
@@ -337,7 +345,7 @@ void PhyloProcess::PruningAncestral(const Link *from, int site) {
                     }
                 }
                 if (max == 0) {
-                    const double *stat = GetSubMatrix(link->GetBranch(), site)->GetStationary();
+                    auto stat = GetSubMatrix(link->GetBranch(), site)->GetStationary();
                     for (int k = 0; k < GetNstate(); k++) {
                         aux[k] = stat[k];
                     }
@@ -365,7 +373,7 @@ void PhyloProcess::PruningAncestral(const Link *from, int site) {
                     cerr << aux[k] << '\n';
                 }
                 exit(1);
-                throw;
+                // throw;
             }
             delete[] aux;
             delete[] cumulaux;
@@ -378,7 +386,7 @@ void PhyloProcess::PruningAncestral(const Link *from, int site) {
 void PhyloProcess::RootPosteriorDraw(int site) {
     auto aux = new double[GetNstate()];
     double *tbl = GetCondLikelihood(GetRoot());
-    const double *stat = GetRootFreq(site);
+    auto stat = GetRootFreq(site);
     for (int k = 0; k < GetNstate(); k++) {
         aux[k] = stat[k] * tbl[k];
     }
@@ -390,7 +398,14 @@ void PhyloProcess::PriorSample(const Link *from, int site, bool rootprior) {
     int &state = GetState(from->GetNode(), site);
     if (from->isRoot()) {
         if (rootprior) {
-            state = Random::DrawFromDiscreteDistribution(GetRootFreq(site), GetNstate());
+            // TEMPORARY FIXME FIXME
+            auto stat = GetRootFreq(site);
+            vector<double> tmp(stat.size());
+            Eigen::Map<Eigen::VectorXd> map(tmp.data(), stat.size());
+            map = stat;
+
+            state = Random::DrawFromDiscreteDistribution(tmp.data(), GetNstate());
+
         } else {
             RootPosteriorDraw(site);
         }

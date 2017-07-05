@@ -37,7 +37,7 @@ using Eigen::RowMajor;
 using Eigen::Dynamic;
 using EMatrix = Eigen::Matrix<double, Dynamic, Dynamic, RowMajor>;
 using EMap = Eigen::Map<Eigen::Matrix<double, Dynamic, Dynamic, RowMajor>>;
-using EVec = Eigen::VectorXd;
+using EVector = Eigen::VectorXd;
 
 class SubMatrix {
   protected:
@@ -70,19 +70,19 @@ class SubMatrix {
     int Nstate;
     mutable int npow;
     mutable double UniMu;
-
-    Matrix *mPow;
-
-    mutable EMatrix Q;            // Q : the infinitesimal generator matrix
-    mutable Vector mStationary;  // the stationary probabilities of the matrix
-    mutable Matrix aux;          // an auxiliary matrix
-
     bool normalise;
 
-    mutable Matrix u;     // u : the matrix of eigen vectors
-    mutable Matrix invu;  // invu : the inverse of u
-    mutable Vector v;     // v : eigenvalues
-    mutable Vector vi;    // vi : imaginary part
+    Matrix *mPow;
+    mutable EMatrix Q;            // Q : the infinitesimal generator matrix
+    mutable EVector mStationary;  // the stationary probabilities of the matrix
+    mutable Matrix aux;          // an auxiliary matrix
+
+    mutable Eigen::EigenSolver<EMatrix> solver;
+
+    mutable EMatrix u;     // u : the matrix of eigen vectors
+    mutable EMatrix invu;  // invu : the inverse of u
+    mutable EVector v;     // v : eigenvalues
+    mutable EVector vi;    // vi : imaginary part
 
     mutable int ndiagfailed;
 
@@ -104,11 +104,11 @@ class SubMatrix {
 
     // getters
     int GetNstate() const { return Nstate; }
-    ConstVect GetStationary() const;
+    EVector GetStationary() const;
     double GetRate() const;
-    Vector GetEigenVal() const;
-    Matrix GetEigenVect() const;
-    Matrix GetInvEigenVect() const;
+    EVector GetEigenVal() const;
+    EMatrix GetEigenVect() const;
+    EMatrix GetInvEigenVect() const;
     int GetDiagStat() const { return ndiagfailed; }
     double GetUniformizationMu() const;
 
@@ -129,7 +129,7 @@ class SubMatrix {
     double Power(int n, int i, int j) const;
 
     virtual void ToStream(std::ostream &os) const;
-
+ 
     void BackwardPropagate(const double *up, double *down, double length) const;
     void ForwardPropagate(const double *down, double *up, double length) const;
 
@@ -149,7 +149,7 @@ class SubMatrix {
     double SuffStatLogProb(PathSuffStat *suffstat);
 
   protected:
-    EVec GetRow(int i) const;
+    EVector GetRow(int i) const;
     void UpdateRow(int state) const;
     void UpdateStationary() const;
 
@@ -172,14 +172,14 @@ inline double SubMatrix::operator()(int i, int j) const {
     return Q(i, j);
 }
 
-inline EVec SubMatrix::GetRow(int i) const {
+inline EVector SubMatrix::GetRow(int i) const {
     if (!flagarray[i]) {
         UpdateRow(i);
     }
     return Q.row(i);
 }
 
-inline ConstVect SubMatrix::GetStationary() const {
+inline EVector SubMatrix::GetStationary() const {
     if (!statflag) {
         UpdateStationary();
     }
@@ -228,9 +228,9 @@ inline void SubMatrix::UpdateRow(int state) const {
 }
 
 inline void SubMatrix::BackwardPropagate(const double *up, double *down, double length) const {
-    Matrix eigenvect = GetEigenVect();
-    Matrix inveigenvect = GetInvEigenVect();
-    Vector eigenval = GetEigenVal();
+    auto eigenvect = GetEigenVect();
+    auto inveigenvect = GetInvEigenVect();
+    auto eigenval = GetEigenVal();
 
     int matSize = GetNstate();
 
@@ -241,7 +241,7 @@ inline void SubMatrix::BackwardPropagate(const double *up, double *down, double 
     }
     for (int i = 0; i < GetNstate(); i++) {
         for (int j = 0; j < GetNstate(); j++) {
-            aux[i] += inveigenvect[i][j] * up[j];
+            aux[i] += inveigenvect(i, j) * up[j];
         }
     }
 
@@ -255,7 +255,7 @@ inline void SubMatrix::BackwardPropagate(const double *up, double *down, double 
 
     for (int i = 0; i < GetNstate(); i++) {
         for (int j = 0; j < GetNstate(); j++) {
-            down[i] += eigenvect[i][j] * aux[j];
+            down[i] += eigenvect(i, j) * aux[j];
         }
     }
 
@@ -305,9 +305,9 @@ inline void SubMatrix::BackwardPropagate(const double *up, double *down, double 
 }
 
 inline void SubMatrix::ForwardPropagate(const double *down, double *up, double length) const {
-    Matrix eigenvect = GetEigenVect();
-    Matrix inveigenvect = GetInvEigenVect();
-    Vector eigenval = GetEigenVal();
+    auto eigenvect = GetEigenVect();
+    auto inveigenvect = GetInvEigenVect();
+    auto eigenval = GetEigenVal();
 
     auto aux = new double[GetNstate()];
 
@@ -317,7 +317,7 @@ inline void SubMatrix::ForwardPropagate(const double *down, double *up, double l
 
     for (int i = 0; i < GetNstate(); i++) {
         for (int j = 0; j < GetNstate(); j++) {
-            aux[i] += down[j] * eigenvect[j][i];
+            aux[i] += down[j] * eigenvect(j, i);
         }
     }
 
@@ -331,7 +331,7 @@ inline void SubMatrix::ForwardPropagate(const double *down, double *up, double l
 
     for (int i = 0; i < GetNstate(); i++) {
         for (int j = 0; j < GetNstate(); j++) {
-            up[i] += aux[j] * inveigenvect[j][i];
+            up[i] += aux[j] * inveigenvect(j, i);
         }
     }
 
@@ -340,12 +340,12 @@ inline void SubMatrix::ForwardPropagate(const double *down, double *up, double l
 
 inline double SubMatrix::GetFiniteTimeTransitionProb(int stateup, int statedown,
                                                      double efflength) const {
-    Matrix invp = GetInvEigenVect();
-    Matrix p = GetEigenVect();
-    Vector l = GetEigenVal();
+    auto invp = GetInvEigenVect();
+    auto p = GetEigenVect();
+    auto l = GetEigenVal();
     double tot = 0;
     for (int i = 0; i < GetNstate(); i++) {
-        tot += p[stateup][i] * exp(efflength * l[i]) * invp[i][statedown];
+        tot += p(stateup, i) * exp(efflength * l[i]) * invp(i, statedown);
     }
     return tot;
 }
@@ -424,13 +424,13 @@ inline int SubMatrix::DrawUniformizedSubstitutionNumber(int stateup, int statedo
 }
 
 inline double SubMatrix::DrawWaitingTime(int state) const {
-    EVec row = GetRow(state);
+    EVector row = GetRow(state);
     double t = Random::sExpo() / (-row[state]);
     return t;
 }
 
 inline int SubMatrix::DrawOneStep(int state) const {
-    EVec row = GetRow(state);
+    EVector row = GetRow(state);
     double p = -row[state] * Random::Uniform();
     int k = -1;
     double tot = 0;
@@ -500,7 +500,7 @@ rate matrix:\n\
 0.25\t0.25\t-0.75\t0.25\t\n\
 0.25\t0.25\t0.25\t-0.75\t\n\
 \n\
-0\t-1\t-1\t-1\t\n");
+-1\t0\t-1\t-1\t\n");
 }
 
 #endif  // SUBMATRIX_H
