@@ -189,34 +189,3 @@ int CodonStateSpace::GetCodonFromDNA(int pos1, int pos2, int pos3) const {
     }
     return l;
 }
-
-int CodonStateSpace::GetDifferingPosition(int i, int j) const {
-    // identical
-    if ((GetCodonPosition(0, i) == GetCodonPosition(0, j)) &&
-        (GetCodonPosition(1, i) == GetCodonPosition(1, j)) &&
-        (GetCodonPosition(2, i) == GetCodonPosition(2, j))) {
-        return -1;
-    }
-    if (GetCodonPosition(0, i) != GetCodonPosition(0, j)) {
-        if ((GetCodonPosition(1, i) == GetCodonPosition(1, j)) &&
-            (GetCodonPosition(2, i) == GetCodonPosition(2, j))) {
-            return 0;
-        }
-        return 3;
-    }
-    if (GetCodonPosition(1, i) != GetCodonPosition(1, j)) {
-        if ((GetCodonPosition(0, i) == GetCodonPosition(0, j)) &&
-            (GetCodonPosition(2, i) == GetCodonPosition(2, j))) {
-            return 1;
-        }
-        return 3;
-    }
-    if (GetCodonPosition(2, i) != GetCodonPosition(2, j)) {
-        if ((GetCodonPosition(1, i) == GetCodonPosition(1, j)) &&
-            (GetCodonPosition(0, i) == GetCodonPosition(0, j))) {
-            return 2;
-        }
-        return 3;
-    }
-    return 3;
-}

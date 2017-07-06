@@ -152,7 +152,6 @@ class DiffSelModel : public ProbModel {
     DiffSelModel(const DiffSelModel&) = delete;
 
     ~DiffSelModel() {
-        std::cerr << "DESTRUCTOR CALLED\n";
         // delete tree;
         delete[] branchlength;
         delete[] branchlengthcount;

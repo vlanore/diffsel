@@ -13,7 +13,8 @@ cscope*
 *.gcda
 *.meandiffsel
 *.signdiffsel
-*.contdiff
+*.contdiffa
+*.data
 tmp*
 _build/
 __pycache__/

@@ -1,4 +1,4 @@
-.PHONY: clean format fullclean build-coverage build-normal test short-tests mvcov
+.PHONY: clean format fullclean build-coverage build-normal build-perf test short-tests mvcov perf-process perf
 PYTHON = python3
 
 
@@ -62,6 +62,16 @@ nonreg: all
 mvcov: all
 	find _build -type f -name "*.gcno" -exec mv -t src/ {} +
 	find _build -type f -name "*.gcda" -exec mv -t src/ {} +
+
+perf: all
+	perf record -g _build/diffsel -t data/C4Amaranthaceae.tree -d data/C4Amaranthaceaeshort.ali -ncond 2 -x 1 10 tmp_mychain
+
+perf-process:
+	perf script | c++filt > tmp_filtered_perf_script
+	gprof2dot -w -s --skew 0.25 -f perf tmp_filtered_perf_script | dot -Tpdf -o tmp_perfgraph.pdf
+	evince tmp_perfgraph.pdf &
+	../FlameGraph/stackcollapse-perf.pl tmp_filtered_perf_script | ../FlameGraph/flamegraph.pl > tmp_flame.svg
+	firefox tmp_flame.svg &
 
 
 # CODE QUALITY

@@ -49,7 +49,36 @@ class CodonStateSpace : public StateSpace {
     // otherwise, returns the position at which codons differ (i.e. returns 0,1 or
     // 2 if the codons
     // differ at position 1,2 or 3)
-    int GetDifferingPosition(Codon i, Codon j) const;
+    int GetDifferingPosition(Codon i, Codon j) const {
+        // identical
+        if ((GetCodonPosition(0, i) == GetCodonPosition(0, j)) &&
+            (GetCodonPosition(1, i) == GetCodonPosition(1, j)) &&
+            (GetCodonPosition(2, i) == GetCodonPosition(2, j))) {
+            return -1;
+        }
+        if (GetCodonPosition(0, i) != GetCodonPosition(0, j)) {
+            if ((GetCodonPosition(1, i) == GetCodonPosition(1, j)) &&
+                (GetCodonPosition(2, i) == GetCodonPosition(2, j))) {
+                return 0;
+            }
+            return 3;
+        }
+        if (GetCodonPosition(1, i) != GetCodonPosition(1, j)) {
+            if ((GetCodonPosition(0, i) == GetCodonPosition(0, j)) &&
+                (GetCodonPosition(2, i) == GetCodonPosition(2, j))) {
+                return 1;
+            }
+            return 3;
+        }
+        if (GetCodonPosition(2, i) != GetCodonPosition(2, j)) {
+            if ((GetCodonPosition(1, i) == GetCodonPosition(1, j)) &&
+                (GetCodonPosition(0, i) == GetCodonPosition(0, j))) {
+                return 2;
+            }
+            return 3;
+        }
+        return 3;
+    }
 
     // return the integer encoding for the base at requested position
     // stops excluded
