@@ -129,7 +129,8 @@ double PhyloProcess::SiteLogLikelihood(int site) {
         }
         exit(1);
     }
-    return log(ret) + t[GetNstate()];
+    sitelnL[site] = log(ret) + t[GetNstate()];
+    return sitelnL[site];
 }
 
 double PhyloProcess::FastSiteLogLikelihood(int site) {

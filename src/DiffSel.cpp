@@ -68,7 +68,7 @@ class DiffSelChain : public Chain {
 
         if (modeltype == "DIFFSEL") {
             model = std::unique_ptr<DiffSelModel>(new DiffSelModel(
-                datafile, treefile, category, level, fixglob, fixvar, codonmodel, false));
+                datafile, treefile, category, level, fixglob, fixvar, codonmodel, true));
         } else {
             cerr << "-- Error when opening file " << name
                  << " : does not recognise model type : " << modeltype << '\n';

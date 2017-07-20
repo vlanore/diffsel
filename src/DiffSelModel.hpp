@@ -497,6 +497,7 @@ class DiffSelModel : public ProbModel {
         UpdateFitnessProfiles();
         CorruptNucMatrix();
         CorruptCodonMatrices();
+        phyloprocess->GetLogProb();
     }
 
     void UpdateAll() {
