@@ -421,6 +421,8 @@ void PhyloProcess::ResampleState(int site) {
 double PhyloProcess::Move(double fraction) {
     DrawSites(fraction);
     ResampleSub();
+    // restoring full resampling mode
+    DrawSites(1.0);
     return 1.0;
 }
 
