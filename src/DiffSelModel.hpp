@@ -773,7 +773,11 @@ class DiffSelModel : public ProbModel {
         }
 
         UpdateAll();
-        phyloprocess->ResampleSub();
+        // phyloprocess->ResampleSub();
+        // fraction of sites that are resampled
+        // can be made into a parameter of the mcmc
+        double frac = 1;
+        phyloprocess->Move(frac);
 
         return 1.0;
     }
