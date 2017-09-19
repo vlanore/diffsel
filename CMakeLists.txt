@@ -41,6 +41,11 @@ add_executable(diffsel "src/DiffSel.cpp")
 target_link_libraries(diffsel diffsel_lib)
 target_compile_features(diffsel PRIVATE ${CXX_FEATURES})
 
+# DiffselSparse
+add_executable(diffselsparse "src/DiffSelSparse.cpp")
+target_link_libraries(diffselsparse diffsel_lib)
+target_compile_features(diffselsparse PRIVATE ${CXX_FEATURES})
+
 # ReadDiffSel
 add_executable(readdiffsel "src/ReadDiffSel.cpp")
 target_link_libraries(readdiffsel diffsel_lib)
