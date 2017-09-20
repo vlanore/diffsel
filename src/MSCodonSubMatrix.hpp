@@ -35,37 +35,53 @@ license and that you accept its terms.*/
 class MGSRFitnessSubMatrix : public MGCodonSubMatrix {
   public:
     MGSRFitnessSubMatrix(const CodonStateSpace *instatespace, const SubMatrix *inNucMatrix,
-                         const double *infitness, bool innormalise = false)
+                         const Eigen::VectorXd& fitness0,
+                         const Eigen::VectorXd& fitness,
+                         const Eigen::Matrix<bool,Eigen::Dynamic,1>& ind_conv,
+                         bool innormalise = false)
         : SubMatrix(instatespace->GetNstate(), innormalise),
           CodonSubMatrix(instatespace, innormalise),
           MGCodonSubMatrix(instatespace, inNucMatrix, innormalise),
-          fitness(infitness) {}
+          fitness0(fitness0),
+          fitness(fitness),
+          ind_conv(ind_conv) {}
 
-    double GetFitness(int aastate) const { return fitness[aastate] + 1e-6; }
+  private:
+    double GetFitness(int aastate) const {
+        return (ind_conv[aastate] ? fitness[aastate] : fitness0[aastate]) + 1e-6;
+    }
 
-  protected:
     // look at how ComputeArray and ComputeStationary are implemented in
     // CodonSubMatrix.cpp
 
     void ComputeArray(int i) const override;
     void ComputeStationary() const override;
     // data members
-    const double *fitness;
+    const Eigen::VectorXd& fitness0;
+    const Eigen::VectorXd& fitness;
+    const Eigen::Matrix<bool,Eigen::Dynamic,1>& ind_conv;
 };
 
 // mutation selection
 class MGMSFitnessSubMatrix : public MGCodonSubMatrix {
   public:
     MGMSFitnessSubMatrix(const CodonStateSpace *instatespace, const SubMatrix *inNucMatrix,
-                         const double *infitness, bool innormalise = false)
+                         const Eigen::VectorXd& fitness0,
+                         const Eigen::VectorXd& fitness,
+                         const Eigen::Matrix<bool,Eigen::Dynamic,1>& ind_conv,
+                         bool innormalise = false)
         : SubMatrix(instatespace->GetNstate(), innormalise),
           CodonSubMatrix(instatespace, innormalise),
           MGCodonSubMatrix(instatespace, inNucMatrix, innormalise),
-          fitness(infitness) {}
+          fitness0(fitness0),
+          fitness(fitness),
+          ind_conv(ind_conv) {}
 
-    double GetFitness(int aastate) const { return fitness[aastate] + 1e-6; }
+  private:
+    double GetFitness(int aastate) const {
+        return (ind_conv[aastate] ? fitness[aastate] : fitness0[aastate]) + 1e-6;
+    }
 
-  protected:
     // look at how ComputeArray and ComputeStationary are implemented in
     // CodonSubMatrix.cpp
 
@@ -73,7 +89,9 @@ class MGMSFitnessSubMatrix : public MGCodonSubMatrix {
     void ComputeStationary() const override;
 
     // data members
-    const double *fitness;
-};
+    const Eigen::VectorXd& fitness0;
+    const Eigen::VectorXd& fitness;
+    const Eigen::Matrix<bool,Eigen::Dynamic,1>& ind_conv;
+    };
 
 #endif

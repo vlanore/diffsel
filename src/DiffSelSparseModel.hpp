@@ -36,10 +36,10 @@ license and that you accept its terms.*/
 const int Nrr = Nnuc * (Nnuc - 1) / 2;
 const int Nstate = 61;
 
-using AAProfile = Eigen::Matrix<double, 20, 1>;
+using AAProfile = Eigen::Matrix<double, Eigen::Dynamic, 1>;
 
 
-void InitUniformDirichlet(Eigen::VectorXd&& v) {
+void InitUniformDirichlet(Eigen::VectorXd& v) {
     double tot = 0.;
     for (int i = 0; i < v.size(); i++) {
         v[i] = Random::sExpo();
@@ -286,48 +286,17 @@ class DiffSelSparseModel : public ProbModel {
         for (auto& G_k : fitness) {
             for (int i = 0; i < Nsite; i++)
                 for (int aa = 0; aa < Naa; aa++) {
-                    G_k(i, aa) = Random::Gamma(fitness_shape, fitness_shape / fitness_inv_rates[aa]);
+                    G_k(i, aa) =
+                        Random::Gamma(fitness_shape, fitness_shape / fitness_inv_rates[aa]);
                 }
         }
 
         for (int k = 0; k < Ncond; k++) {
             prob_conv_lambda[k] = pow(10., Random::sNormal());
             prob_conv_mu[k] = pow(10., Random::sNormal());
+            prob_conv[k] = Random::Beta(prob_conv_lambda[k], prob_conv_mu[k]);
         }
 
-        // variance parameters (one for each condition, 1..Ncond)
-        varsel = new double[Ncond];
-        for (int k = 1; k < Ncond; k++) {
-            varsel[k] = 1.0;
-        }
-
-        // differential selection effects
-        // normally distributed
-        delta = new double**[Ncond];
-
-        // by convention, delta[0] == baseline
-        delta[0] = baseline;
-        for (int k = 1; k < Ncond; k++) {
-            delta[k] = new double*[Nsite];
-            for (int i = 0; i < Nsite; i++) {
-                delta[k][i] = new double[Naa];
-                for (int l = 0; l < Naa; l++) {
-                    delta[k][i][l] = sqrt(varsel[k]) * Random::sNormal();
-                }
-            }
-        }
-
-        // fitnessprofiles...
-        fitnessprofile = new double**[Ncond];
-        fitnessprofile[0] = baseline;
-        for (int k = 1; k < Ncond; k++) {
-            fitnessprofile[k] = new double*[Nsite];
-            for (int i = 0; i < Nsite; i++) {
-                fitnessprofile[k][i] = new double[Naa];
-            }
-        }
-
-        UpdateFitnessProfiles();
 
         // codon matrices
         // per condition and per site
@@ -338,11 +307,19 @@ class DiffSelSparseModel : public ProbModel {
                 if (codonmodel == 0) {
                     condsubmatrixarray[k][i] =
                         new MGSRFitnessSubMatrix((CodonStateSpace*)codondata->GetStateSpace(),
-                                                 nucmatrix, fitnessprofile[k][i], false);
+                                                 nucmatrix,
+                                                 fitness[0].row(i),
+                                                 fitness[k].row(i),
+                                                 ind_conv[k].row(i),
+                                                 false);
                 } else {
                     condsubmatrixarray[k][i] =
                         new MGMSFitnessSubMatrix((CodonStateSpace*)codondata->GetStateSpace(),
-                                                 nucmatrix, fitnessprofile[k][i], false);
+                                                 nucmatrix,
+                                                 fitness[0].row(i),
+                                                 fitness[k].row(i),
+                                                 ind_conv[k].row(i),
+                                                 false);
                 }
             }
         }
@@ -385,28 +362,6 @@ class DiffSelSparseModel : public ProbModel {
         bksitecondsuffstatlogprob = new double*[Ncond];
         for (int k = 0; k < Ncond; k++) {
             bksitecondsuffstatlogprob[k] = new double[Nsite];
-        }
-
-        // flagging conditions to be updated
-        // condalloc[k][l] is 1 iff condition l should recompute its fitness profiles whenever
-        // delta[k] has changed
-        condalloc = new int*[Ncond];
-        for (int k = 0; k < Ncond; k++) {
-            condalloc[k] = new int[Ncond];
-            for (int l = 0; l < Ncond; l++) {
-                condalloc[k][l] = 0;
-            }
-        }
-        for (int l = 0; l < Ncond; l++) {
-            condalloc[0][l] = 1;
-        }
-        if (Nlevel == 2) {
-            for (int l = 1; l < Ncond; l++) {
-                condalloc[1][l] = 1;
-            }
-        }
-        for (int l = Nlevel; l < Ncond; l++) {
-            condalloc[l][l] = 1;
         }
     }
 
@@ -452,49 +407,6 @@ class DiffSelSparseModel : public ProbModel {
         }
     }
 
-    // ------------------
-    // Update system
-    // ------------------
-
-    void UpdateFitnessProfiles() {
-        for (int i = 0; i < Nsite; i++) {
-            UpdateSiteFitnessProfiles(i);
-        }
-    }
-
-    void UpdateSiteFitnessProfiles(int i) {
-        for (int k = 1; k < Ncond; k++) {
-            UpdateSiteCondFitnessProfile(i, k);
-        }
-    }
-
-    void UpdateSiteFlaggedFitnessProfiles(int i, int condflag) {
-        for (int k = 1; k < Ncond; k++) {
-            if (condalloc[condflag][k]) {
-                UpdateSiteCondFitnessProfile(i, k);
-            }
-        }
-    }
-
-    void UpdateSiteCondFitnessProfile(int i, int k) {
-        double total = 0;
-        for (int a = 0; a < Naa; a++) {
-            double b = baseline[i][a];
-            double d = 0;
-            if (Nlevel == 2) {
-                d += delta[1][i][a];
-            }
-            if (k >= Nlevel) {
-                d += delta[k][i][a];
-            }
-            fitnessprofile[k][i][a] = b * exp(d);
-            total += fitnessprofile[k][i][a];
-        }
-        for (int a = 0; a < Naa; a++) {
-            fitnessprofile[k][i][a] /= total;
-        }
-    }
-
     void CorruptNucMatrix() {
         nucmatrix->CopyStationary(nucstat);
         nucmatrix->CorruptMatrix();
@@ -512,17 +424,8 @@ class DiffSelSparseModel : public ProbModel {
         }
     }
 
-    void CorruptSiteFlaggedCodonMatrices(int i, int condflag) {
-        for (int k = 0; k < Ncond; k++) {
-            if (condalloc[condflag][k]) {
-                condsubmatrixarray[k][i]->CorruptMatrix();
-            }
-        }
-    }
-
     void Update() override {
         cerr << "in diffsel update\n";
-        UpdateFitnessProfiles();
         CorruptNucMatrix();
         CorruptCodonMatrices();
         phyloprocess->GetLogProb();
@@ -548,7 +451,6 @@ class DiffSelSparseModel : public ProbModel {
     }
 
     void UpdateSite(int i) {
-        UpdateSiteFitnessProfiles(i);
         CorruptSiteCodonMatrices(i);
         for (int k = 0; k < Ncond; k++) {
             sitecondsuffstatlogprob[k][i] = SiteCondSuffStatLogProb(i, k);
@@ -556,7 +458,6 @@ class DiffSelSparseModel : public ProbModel {
     }
 
     void CheckSite(int i) {
-        UpdateSiteFitnessProfiles(i);
         CorruptSiteCodonMatrices(i);
         for (int k = 0; k < Ncond; k++) {
             if (fabs(sitecondsuffstatlogprob[k][i] - SiteCondSuffStatLogProb(i, k)) > 1e-8) {
@@ -586,16 +487,6 @@ class DiffSelSparseModel : public ProbModel {
         }
     }
 
-
-    void UpdateSiteFlagged(int i, int condflag) {
-        UpdateSiteFlaggedFitnessProfiles(i, condflag);
-        CorruptSiteFlaggedCodonMatrices(i, condflag);
-        for (int k = 0; k < Ncond; k++) {
-            if (condalloc[condflag][k]) {
-                sitecondsuffstatlogprob[k][i] = SiteCondSuffStatLogProb(i, k);
-            }
-        }
-    }
 
     // ---------------
     // suff stat log probs
