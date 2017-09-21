@@ -77,10 +77,6 @@ class DiffSelSparseModel : public ProbModel {
     int Ncond;
 
     // number of levels of the model
-    // with 2 levels, structure of the model is as follows:
-    // baseline (condition 0)
-    // baseline  * exp(*delta1) (condition 1)
-    // baseline * exp(delta1 + deltak) (for condition k=2..Ncond)
     int Nlevel;
 
     // -----
@@ -107,7 +103,6 @@ class DiffSelSparseModel : public ProbModel {
     double fitness_shape;
     AAProfile fitness_inv_rates;
     // differential selection factors across conditions k=1..Ncond and across sites
-    // by convention, delta[0] == baseline
     // Ncond * Nsite * Naa
     std::vector<Eigen::MatrixXd> fitness;
 
@@ -528,48 +523,6 @@ class DiffSelSparseModel : public ProbModel {
         */
     }
 
-    double SiteGlobalProfileLogProb(int) { return 0; }
-
-    double ProfileLogProb() {
-        double total = 0;
-        for (int k = 1; k < Ncond; k++) {
-            total += CondProfileLogProb(k);
-        }
-        return total;
-    }
-
-    double CondProfileLogProb(int k) {
-        double total = 0;
-        for (int i = 0; i < Nsite; i++) {
-            total += SiteCondProfileLogProb(i, k);
-        }
-        total -= 0.5 * Nsite * Naa * log(2 * Pi * varsel[k]);
-        return total;
-    }
-
-    double SiteCondProfileLogProb(int i, int k) {
-        if (k == 0) {
-            return 0;
-        }
-        double sum2 = 0;
-        for (int a = 0; a < Naa; a++) {
-            sum2 += delta[k][i][a] * delta[k][i][a];
-        }
-        return -0.5 * sum2 / varsel[k];
-    }
-
-    double VarSelLogProb() {
-        double total = 0;
-        for (int k = 1; k < Ncond; k++) {
-            total += CondVarSelLogProb(k);
-        }
-        return total;
-    }
-
-    double CondVarSelLogProb(int k) {
-        // exponential of mean 1
-        return -varsel[k];
-    }
 
     double LambdaLogProb() { return -log(10.0) - lambda / 10; }
 
@@ -669,19 +622,7 @@ class DiffSelSparseModel : public ProbModel {
             UpdateAll();
 
             for (int rep = 0; rep < nrep; rep++) {
-                MoveBaseline(0.15, 10, 1);
-
-                for (int k = 1; k < Ncond; k++) {
-                    MoveDelta(k, 5, 1, 10);
-                    MoveDelta(k, 3, 5, 10);
-                    MoveDelta(k, 1, 10, 10);
-                    MoveDelta(k, 1, 20, 10);
-                }
-
-                if (!fixvar) {
-                    MoveVarSel(1.0, 10);
-                    MoveVarSel(0.3, 10);
-                }
+              /* ci gissaient movebaseline, movedelta et move varsel*/
             }
 
             MoveRR(0.1, 1, 10);
@@ -702,81 +643,6 @@ class DiffSelSparseModel : public ProbModel {
         return 1.0;
     }
 
-
-    double MoveBaseline(double tuning, int n, int nrep) {
-        double nacc = 0;
-        double ntot = 0;
-        double bk[Naa];
-        for (int rep = 0; rep < nrep; rep++) {
-            for (int i = 0; i < Nsite; i++) {
-                // CheckSite(i);
-
-                for (int a = 0; a < Naa; a++) {
-                    bk[a] = baseline[i][a];
-                }
-                BackupSite(i);
-
-                double deltalogprob = -SiteGlobalProfileLogProb(i) - GetSiteSuffStatLogProb(i);
-                double loghastings = Random::ProfileProposeMove(baseline[i], Naa, tuning, n);
-                deltalogprob += loghastings;
-
-                UpdateSite(i);
-
-                deltalogprob += SiteGlobalProfileLogProb(i) + GetSiteSuffStatLogProb(i);
-
-                int accepted = (log(Random::Uniform()) < deltalogprob);
-                if (accepted) {
-                    nacc++;
-                } else {
-                    for (int a = 0; a < Naa; a++) {
-                        baseline[i][a] = bk[a];
-                    }
-                    RestoreSite(i);
-                }
-                ntot++;
-                // CheckSite(i);
-            }
-        }
-        return nacc / ntot;
-    }
-
-    double MoveDelta(int k, double tuning, int n, int nrep) {
-        double nacc = 0;
-        double ntot = 0;
-        double bk[Naa];
-        for (int rep = 0; rep < nrep; rep++) {
-            for (int i = 0; i < Nsite; i++) {
-                // CheckSite(i);
-
-                for (int a = 0; a < Naa; a++) {
-                    bk[a] = delta[k][i][a];
-                }
-                BackupSite(i);
-
-                double deltalogprob = -SiteCondProfileLogProb(i, k) - GetSiteSuffStatLogProb(i);
-                double loghastings = Random::RealVectorProposeMove(delta[k][i], Naa, tuning, n);
-                deltalogprob += loghastings;
-
-                // UpdateSite(i);
-                UpdateSiteFlagged(i, k);
-
-                deltalogprob += SiteCondProfileLogProb(i, k) + GetSiteSuffStatLogProb(i);
-
-                int accepted = (log(Random::Uniform()) < deltalogprob);
-                if (accepted) {
-                    nacc++;
-                } else {
-                    for (int a = 0; a < Naa; a++) {
-                        delta[k][i][a] = bk[a];
-                    }
-                    RestoreSite(i);
-                }
-                ntot++;
-                // CheckSite(i);
-            }
-        }
-        return nacc / ntot;
-    }
 
     double MoveRR(double tuning, int n, int nrep) {
         double nacc = 0;
@@ -849,29 +715,6 @@ class DiffSelSparseModel : public ProbModel {
     }
 
 
-    double MoveVarSel(double tuning, int nrep) {
-        double nacc = 0;
-        double ntot = 0;
-        for (int rep = 0; rep < nrep; rep++) {
-            for (int k = 1; k < Ncond; k++) {
-                double deltalogprob = -CondVarSelLogProb(k) - CondProfileLogProb(k);
-                double m = tuning * (Random::Uniform() - 0.5);
-                double e = exp(m);
-                varsel[k] *= e;
-                deltalogprob += CondVarSelLogProb(k) + CondProfileLogProb(k);
-                deltalogprob += m;
-                int accepted = (log(Random::Uniform()) < deltalogprob);
-                if (accepted) {
-                    nacc++;
-                } else {
-                    varsel[k] /= e;
-                }
-                ntot++;
-            }
-        }
-        return nacc / ntot;
-    }
-
     double MoveBranchLength() {
         for (int j = 0; j < Nbranch; j++) {
             branchlength[j] =
@@ -910,7 +753,6 @@ class DiffSelSparseModel : public ProbModel {
 
     int GetNsite() { return Nsite; }
     int GetNcond() { return Ncond; }
-    double* GetDelta(int k, int i) { return delta[k][i]; }
 
     double GetEntropy(double* profile, int dim) {
         double tot = 0;
@@ -928,73 +770,16 @@ class DiffSelSparseModel : public ProbModel {
         return tot;
     }
 
-    double GetMeanBaselineEntropy() {
-        double mean = 0;
-        for (int i = 0; i < Nsite; i++) {
-            mean += GetEntropy(baseline[i], Naa);
-        }
-        mean /= Nsite;
-        return mean;
-    }
-
-    double GetMeanVar(int k) {
-        double totvar = 0;
-        for (int i = 0; i < Nsite; i++) {
-            double var = 0;
-            for (int j = 0; j < Naa; j++) {
-                double tmp = delta[k][i][j];
-                var += tmp * tmp;
-            }
-            var /= Naa;
-            totvar += var;
-        }
-        return totvar / Nsite;
-    }
-
-    double GetLogPrior() {
-        double total = 0;
-
-        // branchlengths
-        total += LambdaLogProb();
-        total += LengthLogProb();
-
-        // uniform on relrates and nucstat
-        total += Random::logGamma((double)Nnuc);
-        total += Random::logGamma((double)Nrr);
-
-        // uniform on baseline
-        total += GlobalProfileLogProb();
-
-        // variance parameters
-        total += VarSelLogProb();
-
-        // differential selection effects
-        total += ProfileLogProb();
-
-        return total;
-    }
-
-    double GetLogLikelihood() { return phyloprocess->GetFastLogProb(); }
 
     void TraceHeader(std::ostream& os) override {
-        os << "#logprior\tlnL\tlength\t";
-        os << "globent\t";
-        for (int k = 1; k < Ncond; k++) {
-            os << "selvar" << k << '\t';
-        }
+        os << "length\t";
         os << "statent\t";
         os << "rrent\t";
         os << "diag\n";
     }
 
     void Trace(ostream& os) override {
-        os << GetLogPrior() << '\t';
-        os << GetLogLikelihood() << '\t';
         os << GetTotalLength() << '\t';
-        os << GetMeanBaselineEntropy() << '\t';
-        for (int k = 1; k < Ncond; k++) {
-            os << GetMeanVar(k) << '\t';
-        }
         os << GetEntropy(nucstat, Nnuc) << '\t';
         os << GetEntropy(nucrelrate, Nrr) << '\t';
         os << SubMatrix::GetDiagCount() << '\n';
@@ -1013,21 +798,6 @@ class DiffSelSparseModel : public ProbModel {
         for (int i = 0; i < Nnuc; i++) {
             is >> nucstat[i];
         }
-        for (int i = 0; i < Nsite; i++) {
-            for (int a = 0; a < Naa; a++) {
-                is >> baseline[i][a];
-            }
-        }
-        for (int k = 1; k < Ncond; k++) {
-            is >> varsel[k];
-        }
-        for (int k = 1; k < Ncond; k++) {
-            for (int i = 0; i < Nsite; i++) {
-                for (int a = 0; a < Naa; a++) {
-                    is >> delta[k][i][a];
-                }
-            }
-        }
     }
 
     void ToStream(ostream& os) override {
@@ -1044,22 +814,5 @@ class DiffSelSparseModel : public ProbModel {
             os << nucstat[i] << '\t';
         }
         os << '\n';
-        for (int i = 0; i < Nsite; i++) {
-            for (int a = 0; a < Naa; a++) {
-                os << baseline[i][a] << '\t';
-            }
-            os << '\n';
-        }
-        for (int k = 1; k < Ncond; k++) {
-            os << varsel[k] << '\n';
-        }
-        for (int k = 1; k < Ncond; k++) {
-            for (int i = 0; i < Nsite; i++) {
-                for (int a = 0; a < Naa; a++) {
-                    os << delta[k][i][a] << '\t';
-                }
-                os << '\n';
-            }
-        }
     }
 };
