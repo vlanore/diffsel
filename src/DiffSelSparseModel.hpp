@@ -712,7 +712,7 @@ class DiffSelSparseModel : public ProbModel {
     double MoveFitnessInvRates(double tuning) {
         auto partial_gamma_log_density = [](double alpha, double m, double x) {
             double beta = alpha / m;
-            return pow(beta, alpha) * exp(- beta * x);
+            return pow(beta, alpha) * exp(-beta * x);
         };
 
         auto fitness_log_density = [&]() {

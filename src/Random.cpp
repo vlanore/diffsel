@@ -549,8 +549,8 @@ double Random::ProfileProposeMove(
 }
 
 double Random::ProfileProposeMove(
-                                  Eigen::VectorXd& profile, double tuning,
-                                  int n) {  // n==0dirichlet resampling, otherwise, vase communiquants
+    Eigen::VectorXd &profile, double tuning,
+    int n) {  // n==0dirichlet resampling, otherwise, vase communiquants
 
     double ret = 0;
     int dim = profile.size();
