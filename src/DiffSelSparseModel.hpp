@@ -683,12 +683,12 @@ class DiffSelSparseModel : public ProbModel {
         };
 
         auto fitness_log_density = [&]() {
-            double loglikelihood = - fitness_shape;
+            double loglikelihood = -fitness_shape;
             for (auto& G_k : fitness)
                 for (int i = 0; i < Nsite; i++)
                     for (int aa = 0; aa < Naa; aa++) {
-                        loglikelihood +=
-                            partial_gamma_log_density(fitness_shape, fitness_inv_rates[aa], G_k(i, aa));
+                        loglikelihood += partial_gamma_log_density(
+                            fitness_shape, fitness_inv_rates[aa], G_k(i, aa));
                     }
             return loglikelihood;
         };
