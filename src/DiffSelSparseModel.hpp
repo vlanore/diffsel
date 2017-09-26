@@ -107,7 +107,7 @@ class DiffSelSparseModel : public ProbModel {
     std::vector<Eigen::MatrixXd> fitness;
 
     Eigen::VectorXd prob_conv;  // indexed by condition
-    vector<BMatrix> ind_conv;  // indexed by condition * sites * aa;
+    vector<BMatrix> ind_conv;   // indexed by condition * sites * aa;
 
 
     // codon substitution matrices
@@ -674,6 +674,39 @@ class DiffSelSparseModel : public ProbModel {
             }
         }
         return nacc / ntot;
+    }
+
+    double MoveFitnessShape(double tuning) {
+        auto partial_gamma_log_density = [](double alpha, double m, double x) {
+            double beta = alpha / m;
+            return pow(beta, alpha) / tgamma(alpha) * pow(x, alpha - 1);
+        };
+
+        auto fitness_log_density = [&]() {
+            double loglikelihood = - fitness_shape;
+            for (auto& G_k : fitness)
+                for (int i = 0; i < Nsite; i++)
+                    for (int aa = 0; aa < Naa; aa++) {
+                        loglikelihood +=
+                            partial_gamma_log_density(fitness_shape, fitness_inv_rates[aa], G_k(i, aa));
+                    }
+            return loglikelihood;
+        };
+
+        double bk = fitness_shape;
+
+        double loglikelihood_before = fitness_log_density();
+        fitness_shape *= tuning * exp(Random::Uniform() - 0.5);
+        double loglikelihood_after = fitness_log_density();
+
+        double loghastings = 1.;
+        double deltalogprob = loglikelihood_after - loglikelihood_before + loghastings;
+
+        bool accepted = (log(Random::Uniform()) < deltalogprob);
+        if (!accepted) {
+            fitness_shape = bk;
+        }
+        return static_cast<bool>(accepted);
     }
 
     double MoveRR(double tuning, int n, int nrep) {

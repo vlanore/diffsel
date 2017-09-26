@@ -196,9 +196,7 @@ double Random::Beta(double alpha, double beta) {
 // ---------------------------------------------------------------------------------
 //		Alternative parameterization
 // ---------------------------------------------------------------------------------
-double Random::BetaMV(double m, double v) {
-    return Random::Beta(m / v, (1 - m) / v);
-}
+double Random::BetaMV(double m, double v) { return Random::Beta(m / v, (1 - m) / v); }
 
 // ---------------------------------------------------------------------------------
 //		DrawFromDiscreteDistribution()
