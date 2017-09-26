@@ -709,6 +709,38 @@ class DiffSelSparseModel : public ProbModel {
         return static_cast<bool>(accepted);
     }
 
+    double MoveFitnessInvRates(double tuning) {
+        auto partial_gamma_log_density = [](double alpha, double m, double x) {
+            double beta = alpha / m;
+            return pow(beta, alpha) * exp(- beta * x);
+        };
+
+        auto fitness_log_density = [&]() {
+            double loglikelihood = 0;
+            for (auto& G_k : fitness)
+                for (int i = 0; i < Nsite; i++)
+                    for (int aa = 0; aa < Naa; aa++) {
+                        loglikelihood += partial_gamma_log_density(
+                            fitness_shape, fitness_inv_rates[aa], G_k(i, aa));
+                    }
+            return loglikelihood;
+        };
+
+        AAProfile bk = fitness_inv_rates;
+
+        double loglikelihood_before = fitness_log_density();
+        double loghastings = Random::ProfileProposeMove(fitness_inv_rates, tuning, 0);
+        double loglikelihood_after = fitness_log_density();
+
+        double deltalogprob = loglikelihood_after - loglikelihood_before + loghastings;
+
+        bool accepted = (log(Random::Uniform()) < deltalogprob);
+        if (!accepted) {
+            fitness_inv_rates = bk;
+        }
+        return static_cast<bool>(accepted);
+    }
+
     double MoveRR(double tuning, int n, int nrep) {
         double nacc = 0;
         double ntot = 0;

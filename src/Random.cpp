@@ -548,6 +548,60 @@ double Random::ProfileProposeMove(
     return ret;
 }
 
+double Random::ProfileProposeMove(
+                                  Eigen::VectorXd& profile, double tuning,
+                                  int n) {  // n==0dirichlet resampling, otherwise, vase communiquants
+
+    double ret = 0;
+    int dim = profile.size();
+    if (n == 0) {  // dirichlet
+        auto oldprofile = profile;
+        double total = 0;
+        for (int i = 0; i < dim; i++) {
+            profile[i] = Random::sGamma(tuning * oldprofile[i]);
+            if (profile[i] == 0) {
+                std::cerr << "error in dirichlet resampling : 0 \n";
+                exit(1);
+            }
+            total += profile[i];
+        }
+        double logHastings = 0;
+        for (int i = 0; i < dim; i++) {
+            profile[i] /= total;
+            logHastings += -Random::logGamma(tuning * oldprofile[i]) +
+                           Random::logGamma(tuning * profile[i]) -
+                           (tuning * profile[i] - 1.0) * log(oldprofile[i]) +
+                           (tuning * oldprofile[i] - 1.0) * log(profile[i]);
+        }
+        return logHastings;
+    }
+    if (2 * n > dim) {
+        n = dim / 2;
+    }
+    std::vector<int> indices(2 * n, 0);
+    Random::DrawFromUrn(indices, 2 * n, dim);
+    for (int i = 0; i < n; i++) {
+        int i1 = indices[2 * i];
+        int i2 = indices[2 * i + 1];
+        double tot = profile[i1] + profile[i2];
+        double x = profile[i1];
+
+        double h = tot * tuning * (Random::Uniform() - 0.5);
+        x += h;
+        while ((x < 0) || (x > tot)) {
+            if (x < 0) {
+                x = -x;
+            }
+            if (x > tot) {
+                x = 2 * tot - x;
+            }
+        }
+        profile[i1] = x;
+        profile[i2] = tot - x;
+    }
+    return ret;
+}
+
 double Random::RealVectorProposeMove(double *x, int dim, double tuning, int n) {
     // auto indices = new int[n];
     std::vector<int> indices(n, 0);

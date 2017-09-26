@@ -29,6 +29,7 @@ license and that you accept its terms.*/
 #define RANDOM_H
 
 #include <vector>
+#include <Eigen/Dense>
 
 #define MT_LEN 624  // (VL) required for magic
 
@@ -65,6 +66,7 @@ class Random {
     static double logMultivariateGamma(double a, int p);
 
     static double ProfileProposeMove(double *profile, int dim, double tuning, int n);
+    static double ProfileProposeMove(Eigen::VectorXd& profile, double tuning, int n);
     static double RealVectorProposeMove(double *x, int dim, double tuning, int n);
 
   private:
