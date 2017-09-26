@@ -106,8 +106,6 @@ class DiffSelSparseModel : public ProbModel {
     // Ncond * Nsite * Naa
     std::vector<Eigen::MatrixXd> fitness;
 
-    Eigen::VectorXd prob_conv_lambda;
-    Eigen::VectorXd prob_conv_mu;
     Eigen::VectorXd prob_conv;  // indexed by condition
     vector<Eigen::Matrix<bool, Eigen::Dynamic, Eigen::Dynamic>>
         ind_conv;  // indexed by condition * sites * aa;
@@ -287,9 +285,7 @@ class DiffSelSparseModel : public ProbModel {
         }
 
         for (int k = 0; k < Ncond; k++) {
-            prob_conv_lambda[k] = pow(10., Random::sNormal());
-            prob_conv_mu[k] = pow(10., Random::sNormal());
-            prob_conv[k] = Random::Beta(prob_conv_lambda[k], prob_conv_mu[k]);
+            prob_conv[k] = Random::Beta(0.2, 1.8);
         }
 
 
