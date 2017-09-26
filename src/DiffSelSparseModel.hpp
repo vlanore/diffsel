@@ -37,7 +37,7 @@ const int Nrr = Nnuc * (Nnuc - 1) / 2;
 const int Nstate = 61;
 
 using AAProfile = Eigen::Matrix<double, Eigen::Dynamic, 1>;
-
+using BMatrix = Eigen::Matrix<bool, Eigen::Dynamic, Eigen::Dynamic>;
 
 void InitUniformDirichlet(Eigen::VectorXd& v) {
     double tot = 0.;
@@ -107,8 +107,7 @@ class DiffSelSparseModel : public ProbModel {
     std::vector<Eigen::MatrixXd> fitness;
 
     Eigen::VectorXd prob_conv;  // indexed by condition
-    vector<Eigen::Matrix<bool, Eigen::Dynamic, Eigen::Dynamic>>
-        ind_conv;  // indexed by condition * sites * aa;
+    vector<BMatrix> ind_conv;  // indexed by condition * sites * aa;
 
 
     // codon substitution matrices
@@ -288,6 +287,12 @@ class DiffSelSparseModel : public ProbModel {
             prob_conv[k] = Random::Beta(0.2, 1.8);
         }
 
+        ind_conv = vector<BMatrix>(Ncond, BMatrix(Nsite, Naa));
+        for (int k = 0; k < Ncond; k++)
+            for (int i = 0; i < Nsite; i++)
+                for (int aa = 0; aa < Naa; aa++) {
+                    ind_conv[k](i, aa) = (Random::Uniform() < prob_conv[k]);
+                }
 
         // codon matrices
         // per condition and per site

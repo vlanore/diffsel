@@ -49,6 +49,7 @@ class Random {
     static int Poisson(double mu);
     static double Gamma(double alpha, double beta);
     static double Beta(double alpha, double beta);
+    static double BetaMV(double m, double v);
     static double sNormal();
     static double sExpo();
     static double sGamma(double);

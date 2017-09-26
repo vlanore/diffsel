@@ -186,11 +186,18 @@ double Random::Gamma(double alpha, double beta) { return sGamma(alpha) / beta; }
 
 
 // ---------------------------------------------------------------------------------
-//		Gamma()
+//		Beta()
 // ---------------------------------------------------------------------------------
 double Random::Beta(double alpha, double beta) {
     double x = Gamma(alpha, 1.);
     return x / (x + Gamma(beta, 1.));
+}
+
+// ---------------------------------------------------------------------------------
+//		Alternative parameterization
+// ---------------------------------------------------------------------------------
+double Random::BetaMV(double m, double v) {
+    return Random::Beta(m / v, (1 - m) / v);
 }
 
 // ---------------------------------------------------------------------------------
