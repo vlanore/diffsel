@@ -34,10 +34,9 @@ license and that you accept its terms.*/
 // square root
 class MGSRFitnessSubMatrix : public MGCodonSubMatrix {
   public:
-    MGSRFitnessSubMatrix(const CodonStateSpace *instatespace, const SubMatrix *inNucMatrix,
-                         const Eigen::VectorXd& fitness0,
-                         const Eigen::VectorXd& fitness,
-                         const Eigen::Matrix<bool,Eigen::Dynamic,1>& ind_conv,
+    MGSRFitnessSubMatrix(const CodonStateSpace* instatespace, const SubMatrix* inNucMatrix,
+                         const Eigen::VectorXd& fitness0, const Eigen::VectorXd& fitness,
+                         const Eigen::Matrix<bool, Eigen::Dynamic, 1>& ind_conv,
                          bool innormalise = false)
         : SubMatrix(instatespace->GetNstate(), innormalise),
           CodonSubMatrix(instatespace, innormalise),
@@ -59,16 +58,15 @@ class MGSRFitnessSubMatrix : public MGCodonSubMatrix {
     // data members
     const Eigen::VectorXd& fitness0;
     const Eigen::VectorXd& fitness;
-    const Eigen::Matrix<bool,Eigen::Dynamic,1>& ind_conv;
+    const Eigen::Matrix<bool, Eigen::Dynamic, 1>& ind_conv;
 };
 
 // mutation selection
 class MGMSFitnessSubMatrix : public MGCodonSubMatrix {
   public:
-    MGMSFitnessSubMatrix(const CodonStateSpace *instatespace, const SubMatrix *inNucMatrix,
-                         const Eigen::VectorXd& fitness0,
-                         const Eigen::VectorXd& fitness,
-                         const Eigen::Matrix<bool,Eigen::Dynamic,1>& ind_conv,
+    MGMSFitnessSubMatrix(const CodonStateSpace* instatespace, const SubMatrix* inNucMatrix,
+                         const Eigen::VectorXd& fitness0, const Eigen::VectorXd& fitness,
+                         const Eigen::Matrix<bool, Eigen::Dynamic, 1>& ind_conv,
                          bool innormalise = false)
         : SubMatrix(instatespace->GetNstate(), innormalise),
           CodonSubMatrix(instatespace, innormalise),
@@ -91,7 +89,7 @@ class MGMSFitnessSubMatrix : public MGCodonSubMatrix {
     // data members
     const Eigen::VectorXd& fitness0;
     const Eigen::VectorXd& fitness;
-    const Eigen::Matrix<bool,Eigen::Dynamic,1>& ind_conv;
-    };
+    const Eigen::Matrix<bool, Eigen::Dynamic, 1>& ind_conv;
+};
 
 #endif

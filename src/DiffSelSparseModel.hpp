@@ -274,7 +274,7 @@ class DiffSelSparseModel : public ProbModel {
         // normalized (true) GTR nucleotide substitution matrix
         nucmatrix = new GTRSubMatrix(Nnuc, nucrelrate, nucstat, true);
 
-        fitness_shape = 1.;
+        fitness_shape = Random::sExpo();
         InitUniformDirichlet(fitness_inv_rates);
 
         fitness = std::vector<Eigen::MatrixXd>(Ncond, Eigen::MatrixXd(Nsite, Naa));
@@ -300,21 +300,13 @@ class DiffSelSparseModel : public ProbModel {
             condsubmatrixarray[k] = new CodonSubMatrix*[Nsite];
             for (int i = 0; i < Nsite; i++) {
                 if (codonmodel == 0) {
-                    condsubmatrixarray[k][i] =
-                        new MGSRFitnessSubMatrix((CodonStateSpace*)codondata->GetStateSpace(),
-                                                 nucmatrix,
-                                                 fitness[0].row(i),
-                                                 fitness[k].row(i),
-                                                 ind_conv[k].row(i),
-                                                 false);
+                    condsubmatrixarray[k][i] = new MGSRFitnessSubMatrix(
+                        (CodonStateSpace*)codondata->GetStateSpace(), nucmatrix, fitness[0].row(i),
+                        fitness[k].row(i), ind_conv[k].row(i), false);
                 } else {
-                    condsubmatrixarray[k][i] =
-                        new MGMSFitnessSubMatrix((CodonStateSpace*)codondata->GetStateSpace(),
-                                                 nucmatrix,
-                                                 fitness[0].row(i),
-                                                 fitness[k].row(i),
-                                                 ind_conv[k].row(i),
-                                                 false);
+                    condsubmatrixarray[k][i] = new MGMSFitnessSubMatrix(
+                        (CodonStateSpace*)codondata->GetStateSpace(), nucmatrix, fitness[0].row(i),
+                        fitness[k].row(i), ind_conv[k].row(i), false);
                 }
             }
         }
@@ -622,7 +614,7 @@ class DiffSelSparseModel : public ProbModel {
             UpdateAll();
 
             for (int rep = 0; rep < nrep; rep++) {
-              /* ci gissaient movebaseline, movedelta et move varsel*/
+                /* ci gissaient movebaseline, movedelta et move varsel*/
             }
 
             MoveRR(0.1, 1, 10);
@@ -652,28 +644,29 @@ class DiffSelSparseModel : public ProbModel {
         for (int rep = 0; rep < nrep; rep++) {
             for (int i = 0; i < Nsite; i++) {
                 int aa = Random::Choose(Naa);
-                double bk = fitness[cond](i,aa);
+                double bk = fitness[cond](i, aa);
                 BackupSite(i);
 
                 double loglikelihood_before =
-                    partial_gamma_log_density(fitness_shape, fitness_inv_rates[aa], bk)
-                    + GetSiteSuffStatLogProb(i);
+                    partial_gamma_log_density(fitness_shape, fitness_inv_rates[aa], bk) +
+                    GetSiteSuffStatLogProb(i);
 
-                fitness[cond](i,aa) *= tuning * exp(Random::Uniform() - 0.5);
+                fitness[cond](i, aa) *= tuning * exp(Random::Uniform() - 0.5);
                 UpdateSite(i);
                 double loglikelihood_after =
-                    partial_gamma_log_density(fitness_shape, fitness_inv_rates[aa], fitness[cond](i,aa))
-                    + GetSiteSuffStatLogProb(i);
+                    partial_gamma_log_density(fitness_shape, fitness_inv_rates[aa],
+                                              fitness[cond](i, aa)) +
+                    GetSiteSuffStatLogProb(i);
 
                 double loghastings = 1.;
-                
+
                 double deltalogprob = loglikelihood_after - loglikelihood_before + loghastings;
 
                 int accepted = (log(Random::Uniform()) < deltalogprob);
                 if (accepted) {
                     nacc++;
                 } else {
-                    fitness[cond](i,aa) = bk;
+                    fitness[cond](i, aa) = bk;
                     RestoreSite(i);
                 }
                 ntot++;
@@ -681,7 +674,7 @@ class DiffSelSparseModel : public ProbModel {
         }
         return nacc / ntot;
     }
-  
+
     double MoveRR(double tuning, int n, int nrep) {
         double nacc = 0;
         double ntot = 0;
