@@ -37,7 +37,8 @@ const int Nrr = Nnuc * (Nnuc - 1) / 2;
 const int Nstate = 61;
 
 using AAProfile = Eigen::Matrix<double, Eigen::Dynamic, 1>;
-using BMatrix = Eigen::Matrix<bool, Eigen::Dynamic, Eigen::Dynamic>;
+using BMatrix = Eigen::Matrix<bool, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
+using DMatrix = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
 
 void InitUniformDirichlet(Eigen::VectorXd& v) {
     double tot = 0.;
@@ -104,7 +105,7 @@ class DiffSelSparseModel : public ProbModel {
     AAProfile fitness_inv_rates;
     // differential selection factors across conditions k=1..Ncond and across sites
     // Ncond * Nsite * Naa
-    std::vector<Eigen::MatrixXd> fitness;
+    std::vector<DMatrix> fitness;
 
     double prob_conv_m{0.1};
     double prob_conv_v{0.5};
@@ -277,7 +278,7 @@ class DiffSelSparseModel : public ProbModel {
         fitness_inv_rates = AAProfile(Naa);
         InitUniformDirichlet(fitness_inv_rates);
 
-        fitness = std::vector<Eigen::MatrixXd>(Ncond, Eigen::MatrixXd(Nsite, Naa));
+        fitness = std::vector<DMatrix>(Ncond, Eigen::MatrixXd(Nsite, Naa));
         for (auto& G_k : fitness) {
             for (int i = 0; i < Nsite; i++)
                 for (int aa = 0; aa < Naa; aa++) {

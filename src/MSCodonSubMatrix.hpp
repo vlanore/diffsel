@@ -35,8 +35,8 @@ license and that you accept its terms.*/
 class MGSRFitnessSubMatrix : public MGCodonSubMatrix {
   public:
     MGSRFitnessSubMatrix(const CodonStateSpace* instatespace, const SubMatrix* inNucMatrix,
-                         const Eigen::VectorXd& fitness0, const Eigen::VectorXd& fitness,
-                         const Eigen::Matrix<bool, Eigen::Dynamic, 1>& ind_conv,
+                         Eigen::Ref<Eigen::VectorXd> fitness0, Eigen::Ref<Eigen::VectorXd> fitness,
+                         Eigen::Ref<Eigen::Matrix<bool, Eigen::Dynamic, 1>> ind_conv,
                          bool innormalise = false)
         : SubMatrix(instatespace->GetNstate(), innormalise),
           CodonSubMatrix(instatespace, innormalise),
@@ -56,17 +56,17 @@ class MGSRFitnessSubMatrix : public MGCodonSubMatrix {
     void ComputeArray(int i) const override;
     void ComputeStationary() const override;
     // data members
-    const Eigen::VectorXd& fitness0;
-    const Eigen::VectorXd& fitness;
-    const Eigen::Matrix<bool, Eigen::Dynamic, 1>& ind_conv;
+    Eigen::Ref<Eigen::VectorXd> fitness0;
+    Eigen::Ref<Eigen::VectorXd> fitness;
+    Eigen::Ref<Eigen::Matrix<bool, Eigen::Dynamic, 1>> ind_conv;
 };
 
 // mutation selection
 class MGMSFitnessSubMatrix : public MGCodonSubMatrix {
   public:
     MGMSFitnessSubMatrix(const CodonStateSpace* instatespace, const SubMatrix* inNucMatrix,
-                         const Eigen::VectorXd& fitness0, const Eigen::VectorXd& fitness,
-                         const Eigen::Matrix<bool, Eigen::Dynamic, 1>& ind_conv,
+                         Eigen::Ref<Eigen::VectorXd> fitness0, Eigen::Ref<Eigen::VectorXd> fitness,
+                         Eigen::Ref<Eigen::Matrix<bool, Eigen::Dynamic, 1>> ind_conv,
                          bool innormalise = false)
         : SubMatrix(instatespace->GetNstate(), innormalise),
           CodonSubMatrix(instatespace, innormalise),
@@ -87,9 +87,9 @@ class MGMSFitnessSubMatrix : public MGCodonSubMatrix {
     void ComputeStationary() const override;
 
     // data members
-    const Eigen::VectorXd& fitness0;
-    const Eigen::VectorXd& fitness;
-    const Eigen::Matrix<bool, Eigen::Dynamic, 1>& ind_conv;
+    Eigen::Ref<Eigen::VectorXd> fitness0;
+    Eigen::Ref<Eigen::VectorXd> fitness;
+    Eigen::Ref<Eigen::Matrix<bool, Eigen::Dynamic, 1>> ind_conv;
 };
 
 #endif
