@@ -274,6 +274,7 @@ class DiffSelSparseModel : public ProbModel {
         nucmatrix = new GTRSubMatrix(Nnuc, nucrelrate, nucstat, true);
 
         fitness_shape = Random::sExpo();
+        fitness_inv_rates = AAProfile(Naa);
         InitUniformDirichlet(fitness_inv_rates);
 
         fitness = std::vector<Eigen::MatrixXd>(Ncond, Eigen::MatrixXd(Nsite, Naa));
