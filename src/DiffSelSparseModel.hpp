@@ -106,6 +106,8 @@ class DiffSelSparseModel : public ProbModel {
     // Ncond * Nsite * Naa
     std::vector<Eigen::MatrixXd> fitness;
 
+    double prob_conv_m { 0.1 };
+    double prob_conv_v { 0.5 };
     Eigen::VectorXd prob_conv;  // indexed by condition
     vector<BMatrix> ind_conv;   // indexed by condition * sites * aa;
 
@@ -284,7 +286,7 @@ class DiffSelSparseModel : public ProbModel {
         }
 
         for (int k = 0; k < Ncond; k++) {
-            prob_conv[k] = Random::Beta(0.2, 1.8);
+            prob_conv[k] = Random::BetaMV(prob_conv_m, prob_conv_v);
         }
 
         ind_conv = vector<BMatrix>(Ncond, BMatrix(Nsite, Naa));
@@ -659,7 +661,7 @@ class DiffSelSparseModel : public ProbModel {
                                               fitness[cond](i, aa)) +
                     GetSiteSuffStatLogProb(i);
 
-                double loghastings = 1.;
+                double loghastings = 0.;
 
                 double deltalogprob = loglikelihood_after - loglikelihood_before + loghastings;
 
@@ -679,7 +681,7 @@ class DiffSelSparseModel : public ProbModel {
     double MoveFitnessShape(double tuning) {
         auto partial_gamma_log_density = [](double alpha, double m, double x) {
             double beta = alpha / m;
-            return pow(beta, alpha) / tgamma(alpha) * pow(x, alpha - 1);
+            return alpha * log(beta) - log(tgamma(alpha)) + (alpha - 1) * log(x);
         };
 
         auto fitness_log_density = [&]() {
@@ -699,7 +701,7 @@ class DiffSelSparseModel : public ProbModel {
         fitness_shape *= tuning * exp(Random::Uniform() - 0.5);
         double loglikelihood_after = fitness_log_density();
 
-        double loghastings = 1.;
+        double loghastings = 0.;
         double deltalogprob = loglikelihood_after - loglikelihood_before + loghastings;
 
         bool accepted = (log(Random::Uniform()) < deltalogprob);
@@ -712,7 +714,7 @@ class DiffSelSparseModel : public ProbModel {
     double MoveFitnessInvRates(double tuning) {
         auto partial_gamma_log_density = [](double alpha, double m, double x) {
             double beta = alpha / m;
-            return pow(beta, alpha) * exp(-beta * x);
+            return alpha * log(beta) - beta * x;
         };
 
         auto fitness_log_density = [&]() {
@@ -739,6 +741,50 @@ class DiffSelSparseModel : public ProbModel {
             fitness_inv_rates = bk;
         }
         return static_cast<bool>(accepted);
+    }
+
+    double MoveProbConv(double tuning) {
+        auto partial_beta_log_density = [](double m, double v, double x) {
+            double alpha = m / v;
+            double beta = (1 - m) / v;
+            return (alpha - 1) * log(x) + (beta - 1) * log(1 - x);
+        };
+
+        auto ind_conv_log_density = [&]() {
+            double loglikelihood = 0;
+            for (int k = 1; k < Ncond; k++)
+                for (int i = 0; i < Nsite; i++)
+                    for (int aa = 0; aa < Naa; aa++) {
+                        loglikelihood += (ind_conv[k](i,aa)) ? log(prob_conv[k]) : log(1 - prob_conv[k]);
+                    }
+            return loglikelihood;
+        };
+
+        double ntot = 0, nacc = 0;
+
+        for(int k = 1; k < Ncond; k++) {
+            double bk = prob_conv[k];
+            double loglikelihood_before =
+                ind_conv_log_density()
+                + partial_beta_log_density(prob_conv_m, prob_conv_v, prob_conv[k]);
+
+            prob_conv[k] *= tuning * exp(Random::Uniform() - 0.5);
+            double loghastings = 0.;
+
+            double loglikelihood_after =
+                ind_conv_log_density()
+                + partial_beta_log_density(prob_conv_m, prob_conv_v, prob_conv[k]);
+
+            double deltalogprob = loglikelihood_after - loglikelihood_before + loghastings;
+
+            bool accepted = (log(Random::Uniform()) < deltalogprob);
+            if (!accepted) {
+                prob_conv[k] = bk;
+            }
+            else nacc++;
+            ntot++;
+        }
+        return nacc / ntot;
     }
 
     double MoveRR(double tuning, int n, int nrep) {
