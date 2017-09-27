@@ -788,6 +788,74 @@ class DiffSelSparseModel : public ProbModel {
         return nacc / ntot;
     }
 
+
+    double MoveIndConv(int cond, int nrep) {
+        int ntot = 0, nacc = 0;
+
+        for (int rep = 0; rep < nrep; rep++) {
+            for (int i = 0; i < Nsite; i++) {
+                int aa = Random::Choose(Naa);
+                bool bk = ind_conv[cond](i, aa);
+                double fitness_bk = fitness[cond](i, aa);
+                BackupSite(i);
+
+                if(!bk) {
+                    /* the two partial_beta_log_density terms cancel
+                       out in the metropolis-hastings ratio */
+                    double loglikelihood_before =
+                        log(1 - prob_conv[cond])
+                        // + partial_gamma_log_density(fitness_shape,
+                        //                             fitness_inv_rates[aa],
+                        //                             fitness[k](i,aa))
+                        + GetSiteSuffStatLogProb(i);
+                    double loghastings = 0.;
+                        // - partial_gamma_log_density(fitness_shape,
+                        //                             fitness_inv_rates[aa],
+                        //                             fitness[k](i,aa))
+                    ind_conv[cond](i,aa) = true;
+                    fitness[cond](i,aa) = Random::Gamma(fitness_shape,
+                                                        fitness_shape / fitness_inv_rates[aa]);
+                    UpdateSite(i);
+                    double loglikelihood_after =
+                        log(prob_conv[cond]) + GetSiteSuffStatLogProb(i);
+                    double deltalogprob = loglikelihood_after - loglikelihood_before + loghastings;
+
+                    int accepted = (log(Random::Uniform()) < deltalogprob);
+                    if (accepted) {
+                        nacc++;
+                    } else {
+                        ind_conv[cond](i, aa) = 0;
+                        fitness[cond](i, aa) = fitness_bk;
+                        RestoreSite(i);
+                    }
+                    ntot++;
+                }
+                else {
+                    double loglikelihood_before =
+                        log(prob_conv[cond]) + GetSiteSuffStatLogProb(i);
+                    double loghastings = 0.;
+                    ind_conv[cond](i,aa) = false;
+                    UpdateSite(i);
+                    double loglikelihood_after =
+                        log(1 - prob_conv[cond]) + GetSiteSuffStatLogProb(i);
+                    double deltalogprob = loglikelihood_after - loglikelihood_before + loghastings;
+
+                    int accepted = (log(Random::Uniform()) < deltalogprob);
+                    if (accepted) {
+                        nacc++;
+                    } else {
+                        ind_conv[cond](i, aa) = 0;
+                        RestoreSite(i);
+                    }
+                    ntot++;
+                }
+                
+            }
+        }
+        return nacc / ntot;
+    }
+    
+    
     double MoveRR(double tuning, int n, int nrep) {
         double nacc = 0;
         double ntot = 0;
