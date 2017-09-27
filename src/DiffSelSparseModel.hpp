@@ -286,6 +286,7 @@ class DiffSelSparseModel : public ProbModel {
                 }
         }
 
+        prob_conv = Eigen::VectorXd(Ncond);
         for (int k = 0; k < Ncond; k++) {
             prob_conv[k] = Random::BetaMV(prob_conv_m, prob_conv_v);
         }
