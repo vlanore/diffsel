@@ -106,8 +106,8 @@ class DiffSelSparseModel : public ProbModel {
     // Ncond * Nsite * Naa
     std::vector<Eigen::MatrixXd> fitness;
 
-    double prob_conv_m { 0.1 };
-    double prob_conv_v { 0.5 };
+    double prob_conv_m{0.1};
+    double prob_conv_v{0.5};
     Eigen::VectorXd prob_conv;  // indexed by condition
     vector<BMatrix> ind_conv;   // indexed by condition * sites * aa;
 
@@ -755,33 +755,34 @@ class DiffSelSparseModel : public ProbModel {
             for (int k = 1; k < Ncond; k++)
                 for (int i = 0; i < Nsite; i++)
                     for (int aa = 0; aa < Naa; aa++) {
-                        loglikelihood += (ind_conv[k](i,aa)) ? log(prob_conv[k]) : log(1 - prob_conv[k]);
+                        loglikelihood +=
+                            (ind_conv[k](i, aa)) ? log(prob_conv[k]) : log(1 - prob_conv[k]);
                     }
             return loglikelihood;
         };
 
         double ntot = 0, nacc = 0;
 
-        for(int k = 1; k < Ncond; k++) {
+        for (int k = 1; k < Ncond; k++) {
             double bk = prob_conv[k];
             double loglikelihood_before =
-                ind_conv_log_density()
-                + partial_beta_log_density(prob_conv_m, prob_conv_v, prob_conv[k]);
+                ind_conv_log_density() +
+                partial_beta_log_density(prob_conv_m, prob_conv_v, prob_conv[k]);
 
             prob_conv[k] *= tuning * exp(Random::Uniform() - 0.5);
             double loghastings = 0.;
 
             double loglikelihood_after =
-                ind_conv_log_density()
-                + partial_beta_log_density(prob_conv_m, prob_conv_v, prob_conv[k]);
+                ind_conv_log_density() +
+                partial_beta_log_density(prob_conv_m, prob_conv_v, prob_conv[k]);
 
             double deltalogprob = loglikelihood_after - loglikelihood_before + loghastings;
 
             bool accepted = (log(Random::Uniform()) < deltalogprob);
             if (!accepted) {
                 prob_conv[k] = bk;
-            }
-            else nacc++;
+            } else
+                nacc++;
             ntot++;
         }
         return nacc / ntot;
