@@ -799,7 +799,7 @@ class DiffSelSparseModel : public ProbModel {
                 double fitness_bk = fitness[cond](i, aa);
                 BackupSite(i);
 
-                if(!bk) {
+                if (!bk) {
                     /* the two partial_beta_log_density terms cancel
                        out in the metropolis-hastings ratio */
                     double loglikelihood_before =
@@ -809,15 +809,14 @@ class DiffSelSparseModel : public ProbModel {
                         //                             fitness[k](i,aa))
                         + GetSiteSuffStatLogProb(i);
                     double loghastings = 0.;
-                        // - partial_gamma_log_density(fitness_shape,
-                        //                             fitness_inv_rates[aa],
-                        //                             fitness[k](i,aa))
-                    ind_conv[cond](i,aa) = true;
-                    fitness[cond](i,aa) = Random::Gamma(fitness_shape,
-                                                        fitness_shape / fitness_inv_rates[aa]);
+                    // - partial_gamma_log_density(fitness_shape,
+                    //                             fitness_inv_rates[aa],
+                    //                             fitness[k](i,aa))
+                    ind_conv[cond](i, aa) = true;
+                    fitness[cond](i, aa) =
+                        Random::Gamma(fitness_shape, fitness_shape / fitness_inv_rates[aa]);
                     UpdateSite(i);
-                    double loglikelihood_after =
-                        log(prob_conv[cond]) + GetSiteSuffStatLogProb(i);
+                    double loglikelihood_after = log(prob_conv[cond]) + GetSiteSuffStatLogProb(i);
                     double deltalogprob = loglikelihood_after - loglikelihood_before + loghastings;
 
                     int accepted = (log(Random::Uniform()) < deltalogprob);
@@ -829,12 +828,10 @@ class DiffSelSparseModel : public ProbModel {
                         RestoreSite(i);
                     }
                     ntot++;
-                }
-                else {
-                    double loglikelihood_before =
-                        log(prob_conv[cond]) + GetSiteSuffStatLogProb(i);
+                } else {
+                    double loglikelihood_before = log(prob_conv[cond]) + GetSiteSuffStatLogProb(i);
                     double loghastings = 0.;
-                    ind_conv[cond](i,aa) = false;
+                    ind_conv[cond](i, aa) = false;
                     UpdateSite(i);
                     double loglikelihood_after =
                         log(1 - prob_conv[cond]) + GetSiteSuffStatLogProb(i);
@@ -849,13 +846,12 @@ class DiffSelSparseModel : public ProbModel {
                     }
                     ntot++;
                 }
-                
             }
         }
         return nacc / ntot;
     }
-    
-    
+
+
     double MoveRR(double tuning, int n, int nrep) {
         double nacc = 0;
         double ntot = 0;
