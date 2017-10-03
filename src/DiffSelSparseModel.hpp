@@ -634,6 +634,9 @@ class DiffSelSparseModel : public ProbModel {
             MoveFitnessInvRates(0.15, 5);
             MoveFitnessInvRates(0.15, 10);
 
+            MoveProbConv(1.);
+            MoveProbConv(0.3);
+
             MoveRR(0.1, 1, 10);
             MoveRR(0.03, 3, 10);
             MoveRR(0.01, 3, 10);
