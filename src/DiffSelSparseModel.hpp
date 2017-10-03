@@ -36,6 +36,20 @@ license and that you accept its terms.*/
 const int Nrr = Nnuc * (Nnuc - 1) / 2;
 const int Nstate = 61;
 
+struct AcceptStats {
+    static std::map<std::string, std::vector<double>> d;
+    static void add(std::string k, double v) { d[k].push_back(v); }
+};
+std::map<std::string, std::vector<double>> AcceptStats::d;
+
+template <typename... Args>
+std::string sf(const std::string& format, Args... args) {
+    size_t size = snprintf(nullptr, 0, format.c_str(), args...) + 1;
+    std::unique_ptr<char[]> buf(new char[size]);
+    snprintf(buf.get(), size, format.c_str(), args...);
+    return std::string(buf.get(), buf.get() + size - 1);
+}
+
 using AAProfile = Eigen::Matrix<double, Eigen::Dynamic, 1>;
 using BMatrix = Eigen::Matrix<bool, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
 using DMatrix = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
@@ -602,7 +616,7 @@ class DiffSelSparseModel : public ProbModel {
 
     // move cycle schedule
     // does not yet implement any monitoring (success rates, time spent, etc)
-    double Move() override {
+    double Move() {
         SubMatrix::ResetDiagCount();
 
         int nrep0 = 3;
@@ -611,9 +625,9 @@ class DiffSelSparseModel : public ProbModel {
         for (int rep0 = 0; rep0 < nrep0; rep0++) {
             CollectLengthSuffStat();
 
-            MoveBranchLength();
-            MoveLambda(1.0, 10);
-            MoveLambda(0.3, 10);
+            AcceptStats::add("MoveBranchLength", MoveBranchLength());
+            AcceptStats::add("MoveLambda_1", MoveLambda(1.0, 10));
+            AcceptStats::add("MoveLambda_0.3", MoveLambda(0.3, 10));
 
             CollectSuffStat();
 
@@ -622,31 +636,31 @@ class DiffSelSparseModel : public ProbModel {
             for (int rep = 0; rep < nrep; rep++) {
                 /* ci gisaient movebaseline, movedelta et move varsel*/
                 for (int k = 0; k < Ncond; k++) {
-                    MoveFitness(k, 1., 10);
-                    MoveFitness(k, 0.3, 10);
+                    AcceptStats::add(sf("MoveFitness_1_%d", k), MoveFitness(k, 1., 10));
+                    AcceptStats::add(sf("MoveFitness_0.3_%d", k), MoveFitness(k, 0.3, 10));
                 }
             }
 
-            MoveFitnessShape(1.);
-            MoveFitnessShape(0.3);
+            AcceptStats::add("MoveFitnessShape_1", MoveFitnessShape(1.));
+            AcceptStats::add("MoveFitnessShape_0.3", MoveFitnessShape(0.3));
 
-            MoveFitnessInvRates(0.15, 1);
-            MoveFitnessInvRates(0.15, 5);
-            MoveFitnessInvRates(0.15, 10);
+            AcceptStats::add("MoveFitnessInvRates_0.15_1", MoveFitnessInvRates(0.15, 1));
+            AcceptStats::add("MoveFitnessInvRates_0.15_5", MoveFitnessInvRates(0.15, 5));
+            AcceptStats::add("MoveFitnessInvRates_0.15_10", MoveFitnessInvRates(0.15, 10));
 
-            MoveProbConv(1.);
-            MoveProbConv(0.3);
+            AcceptStats::add("MoveProbConv_1", MoveProbConv(1.));
+            AcceptStats::add("MoveProbConv_0.3", MoveProbConv(0.3));
 
-            for(int k = 0; k < Ncond; k++) {
-                MoveIndConv(k, 10);
+            for (int k = 0; k < Ncond; k++) {
+                AcceptStats::add(sf("MoveIndConv_10_%d", k), MoveIndConv(k, 10));
             }
-            
-            MoveRR(0.1, 1, 10);
-            MoveRR(0.03, 3, 10);
-            MoveRR(0.01, 3, 10);
 
-            MoveNucStat(0.1, 1, 10);
-            MoveNucStat(0.01, 1, 10);
+            AcceptStats::add("Move", MoveRR(0.1, 1, 10));
+            AcceptStats::add("Move", MoveRR(0.03, 3, 10));
+            AcceptStats::add("Move", MoveRR(0.01, 3, 10));
+
+            AcceptStats::add("Move", MoveNucStat(0.1, 1, 10));
+            AcceptStats::add("Move", MoveNucStat(0.01, 1, 10));
         }
 
         UpdateAll();
@@ -656,7 +670,7 @@ class DiffSelSparseModel : public ProbModel {
         double frac = 1;
         phyloprocess->Move(frac);
 
-        return 1.0;
+        return 1.;
     }
 
     double MoveFitness(int cond, double tuning, int nrep) {
