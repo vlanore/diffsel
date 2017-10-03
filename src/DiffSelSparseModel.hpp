@@ -621,7 +621,7 @@ class DiffSelSparseModel : public ProbModel {
 
             for (int rep = 0; rep < nrep; rep++) {
                 /* ci gisaient movebaseline, movedelta et move varsel*/
-                for(int k = 0; k < Ncond; k++) {
+                for (int k = 0; k < Ncond; k++) {
                     MoveFitness(k, 1., 10);
                     MoveFitness(k, 0.3, 10);
                 }
@@ -629,6 +629,10 @@ class DiffSelSparseModel : public ProbModel {
 
             MoveFitnessShape(1.);
             MoveFitnessShape(0.3);
+
+            MoveFitnessInvRates(0.15, 1);
+            MoveFitnessInvRates(0.15, 5);
+            MoveFitnessInvRates(0.15, 10);
 
             MoveRR(0.1, 1, 10);
             MoveRR(0.03, 3, 10);
@@ -721,7 +725,7 @@ class DiffSelSparseModel : public ProbModel {
         return static_cast<bool>(accepted);
     }
 
-    double MoveFitnessInvRates(double tuning) {
+    double MoveFitnessInvRates(double tuning, int n) {
         auto partial_gamma_log_density = [](double alpha, double m, double x) {
             double beta = alpha / m;
             return alpha * log(beta) - beta * x;
@@ -741,7 +745,7 @@ class DiffSelSparseModel : public ProbModel {
         AAProfile bk = fitness_inv_rates;
 
         double loglikelihood_before = fitness_log_density();
-        double loghastings = Random::ProfileProposeMove(fitness_inv_rates, tuning, 0);
+        double loghastings = Random::ProfileProposeMove(fitness_inv_rates, tuning, n);
         double loglikelihood_after = fitness_log_density();
 
         double deltalogprob = loglikelihood_after - loglikelihood_before + loghastings;
