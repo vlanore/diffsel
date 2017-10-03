@@ -637,6 +637,10 @@ class DiffSelSparseModel : public ProbModel {
             MoveProbConv(1.);
             MoveProbConv(0.3);
 
+            for(int k = 0; k < Ncond; k++) {
+                MoveIndConv(k, 10);
+            }
+            
             MoveRR(0.1, 1, 10);
             MoveRR(0.03, 3, 10);
             MoveRR(0.01, 3, 10);
