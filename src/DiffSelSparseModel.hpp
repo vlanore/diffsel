@@ -620,7 +620,11 @@ class DiffSelSparseModel : public ProbModel {
             UpdateAll();
 
             for (int rep = 0; rep < nrep; rep++) {
-                /* ci gissaient movebaseline, movedelta et move varsel*/
+                /* ci gisaient movebaseline, movedelta et move varsel*/
+                for(int k = 0; k < Ncond; k++) {
+                    MoveFitness(k, 1., 10);
+                    MoveFitness(k, 0.3, 10);
+                }
             }
 
             MoveRR(0.1, 1, 10);
@@ -657,7 +661,7 @@ class DiffSelSparseModel : public ProbModel {
                     partial_gamma_log_density(fitness_shape, fitness_inv_rates[aa], bk) +
                     GetSiteSuffStatLogProb(i);
 
-                fitness[cond](i, aa) *= tuning * exp(Random::Uniform() - 0.5);
+                fitness[cond](i, aa) *= exp(tuning * (Random::Uniform() - 0.5));
                 UpdateSite(i);
                 double loglikelihood_after =
                     partial_gamma_log_density(fitness_shape, fitness_inv_rates[aa],
@@ -701,7 +705,7 @@ class DiffSelSparseModel : public ProbModel {
         double bk = fitness_shape;
 
         double loglikelihood_before = fitness_log_density();
-        fitness_shape *= tuning * exp(Random::Uniform() - 0.5);
+        fitness_shape *= exp(tuning * (Random::Uniform() - 0.5));
         double loglikelihood_after = fitness_log_density();
 
         double loghastings = 0.;
@@ -772,7 +776,7 @@ class DiffSelSparseModel : public ProbModel {
                 ind_conv_log_density() +
                 partial_beta_log_density(prob_conv_m, prob_conv_v, prob_conv[k]);
 
-            prob_conv[k] *= tuning * exp(Random::Uniform() - 0.5);
+            prob_conv[k] *= exp(tuning * (Random::Uniform() - 0.5));
             double loghastings = 0.;
 
             double loglikelihood_after =
