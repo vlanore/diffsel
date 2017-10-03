@@ -627,6 +627,9 @@ class DiffSelSparseModel : public ProbModel {
                 }
             }
 
+            MoveFitnessShape(1.);
+            MoveFitnessShape(0.3);
+
             MoveRR(0.1, 1, 10);
             MoveRR(0.03, 3, 10);
             MoveRR(0.01, 3, 10);
