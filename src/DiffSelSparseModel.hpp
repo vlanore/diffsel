@@ -655,12 +655,12 @@ class DiffSelSparseModel : public ProbModel {
                 AcceptStats::add(sf("MoveIndConv_10_%d", k), MoveIndConv(k, 10));
             }
 
-            AcceptStats::add("Move", MoveRR(0.1, 1, 10));
-            AcceptStats::add("Move", MoveRR(0.03, 3, 10));
-            AcceptStats::add("Move", MoveRR(0.01, 3, 10));
+            AcceptStats::add("MoveRR_0.1_1_10", MoveRR(0.1, 1, 10));
+            AcceptStats::add("MoveRR_0.03_3_10", MoveRR(0.03, 3, 10));
+            AcceptStats::add("MoveRR_0.01_3_10", MoveRR(0.01, 3, 10));
 
-            AcceptStats::add("Move", MoveNucStat(0.1, 1, 10));
-            AcceptStats::add("Move", MoveNucStat(0.01, 1, 10));
+            AcceptStats::add("MoveNucStat_0.1_1_10", MoveNucStat(0.1, 1, 10));
+            AcceptStats::add("MoveNucStat_0.01_1_10", MoveNucStat(0.01, 1, 10));
         }
 
         UpdateAll();

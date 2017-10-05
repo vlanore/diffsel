@@ -28,6 +28,7 @@ license and that you accept its terms.*/
 #define DOCTEST_CONFIG_IMPLEMENT
 #include <cmath>
 #include <fstream>
+#include <numeric>
 #include "Chain.hpp"
 #include "DiffSelSparseModel.hpp"
 
@@ -222,5 +223,9 @@ int main(int argc, char* argv[]) {
         cerr << "chain stopped\n";
 
         delete chain;
+    }
+    for (auto p : AcceptStats::d) {
+        cout << p.first << "\t"
+             << accumulate(p.second.begin(), p.second.end(), 0.) / p.second.size() << "\n";
     }
 }
