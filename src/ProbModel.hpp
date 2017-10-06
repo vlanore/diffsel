@@ -64,6 +64,7 @@ class ProbModel {
 
     // save model configuration to stream
     virtual void ToStream(std::ostream &os) = 0;
+    virtual void HeaderToStream(std::ostream &) { exit(42); }
     // get model configuration from stream
     virtual void FromStream(std::istream &is) = 0;
 

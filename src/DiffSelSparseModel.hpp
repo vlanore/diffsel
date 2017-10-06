@@ -1043,19 +1043,48 @@ class DiffSelSparseModel : public ProbModel {
         }
     }
 
-    void ToStream(ostream& os) override {
-        os << lambda << '\n';
+    void HeaderToStream(ostream& os) override {
+        os << "lambda";
         for (int i = 0; i < Nbranch; i++) {
-            os << branchlength[i] << '\t';
+            os << '\t' << "branchlength_" << i;
         }
-        os << '\n';
         for (int i = 0; i < Nrr; i++) {
-            os << nucrelrate[i] << '\t';
+            os << '\t' << "nucrelrate_" << i;
         }
-        os << '\n';
         for (int i = 0; i < Nnuc; i++) {
-            os << nucstat[i] << '\t';
+            os << '\t' << "nucstat_" << i;
         }
+        os << '\t' << fitness_shape;
+        for (int i = 0; i < fitness_inv_rates.size(); i++) {
+            os << '\t' << "fitness_inv_rates_" << i;
+        }
+        for (unsigned int k = 0; k < fitness.size(); k++)
+            for (int i = 0; i < Nsite; i++)
+                for (int aa = 0; aa < Naa; aa++)
+                    os << '\t' << "fitness_" << k << "_" << i << "_" << aa;
+        /* FIXME */
+        os << '\n';
+    }
+
+    void ToStream(ostream& os) override {
+        os << "lambda=" << lambda;
+        for (int i = 0; i < Nbranch; i++) {
+            os << '\t' << branchlength[i];
+        }
+        for (int i = 0; i < Nrr; i++) {
+            os << '\t' << nucrelrate[i];
+        }
+        for (int i = 0; i < Nnuc; i++) {
+            os << '\t' << nucstat[i];
+        }
+        os << '\t' << fitness_shape;
+        for (int i = 0; i < fitness_inv_rates.size(); i++) {
+            os << '\t' << fitness_inv_rates[i];
+        }
+        for (auto& m : fitness)
+            for (int i = 0; i < Nsite; i++)
+                for (int aa = 0; aa < Naa; aa++) os << '\t' << m(i, aa);
+        /* FIXME */
         os << '\n';
     }
 };
