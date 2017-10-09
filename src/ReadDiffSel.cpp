@@ -30,6 +30,8 @@ license and that you accept its terms.*/
 #include "DiffSelModel.hpp"
 #include "Sample.hpp"
 
+using namespace std;
+
 class DiffSelSample : public Sample {
   private:
     // Sample parameters

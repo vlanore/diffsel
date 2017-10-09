@@ -61,12 +61,12 @@ class PhyloProcess {
 
     SubMatrix* GetSubMatrix(const Branch* branch, int site) {
         if (!branch) {
-            cerr << "error in PhyloProcess::GetSubMatrix: called on root\n";
+            std::cerr << "error in PhyloProcess::GetSubMatrix: called on root\n";
             exit(1);
         }
         SubMatrix* tmp = submatrix[branch->GetIndex()][site];
         if (!tmp) {
-            cerr << "error in PhyloProcess::GetSubMatrix: no sub matrix\n";
+            std::cerr << "error in PhyloProcess::GetSubMatrix: no sub matrix\n";
             exit(1);
         }
         return tmp;
@@ -140,14 +140,14 @@ class PhyloProcess {
 
     // various accessors
 
-    bool isMissing(const Node* node, int site) {
+    bool isMissing(const Node* /*node*/, int /*site*/) {
         return false;
-        return missingmap[node][site];
+        // return missingmap[node][site];
     }
 
-    bool isMissing(const Link* link, int site) {
+    bool isMissing(const Link* /*link*/, int /*site*/) {
         return false;
-        return (missingmap[link->GetNode()][site] || missingmap[link->Out()->GetNode()][site]);
+        // return (missingmap[link->GetNode()][site] || missingmap[link->Out()->GetNode()][site]);
     }
 
     void CreateMissingMap();

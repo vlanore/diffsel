@@ -26,7 +26,7 @@ more generally, to use and operate it in the same conditions as regards security
 The fact that you are presently reading this means that you have had knowledge of the CeCILL-C
 license and that you accept its terms.*/
 
-
+#include <fstream>
 #include "CodonSequenceAlignment.hpp"
 #include "CodonSubMatrix.hpp"
 #include "GTRSubMatrix.hpp"
@@ -77,8 +77,8 @@ class MultiGeneSingleOmegaModel : public ProbModel {
     double* bksuffstatlogprob;
 
   public:
-    MultiGeneSingleOmegaModel(string genelistfile, string treefile) {
-        ifstream is(genelistfile.c_str());
+    MultiGeneSingleOmegaModel(std::string genelistfile, std::string treefile) {
+        std::ifstream is(genelistfile.c_str());
         is >> Ngene;
         data = new FileSequenceAlignment*[Ngene];
         codondata = new CodonSequenceAlignment*[Ngene];
@@ -86,7 +86,7 @@ class MultiGeneSingleOmegaModel : public ProbModel {
 
         std::cerr << "-- Number of sites: \n";
         for (int gene = 0; gene < Ngene; gene++) {
-            string datafile;
+            std::string datafile;
             is >> datafile;
             data[gene] = new FileSequenceAlignment(datafile);
             codondata[gene] = new CodonSequenceAlignment(data[gene], true);
@@ -113,14 +113,14 @@ class MultiGeneSingleOmegaModel : public ProbModel {
 
         Allocate();
         for (int gene = 0; gene < Ngene; gene++) {
-            cerr << "-- unfold\n";
+            std::cerr << "-- unfold\n";
             phyloprocess[gene]->Unfold();
             std::cerr << "-- mapping substitutions\n";
             phyloprocess[gene]->ResampleSub();
             std::cerr << "-- collect suffstat\n";
             CollectSuffStat(gene);
         }
-        Trace(cerr);
+        Trace(std::cerr);
     }
 
     void Allocate() {
@@ -399,7 +399,7 @@ class MultiGeneSingleOmegaModel : public ProbModel {
             branchlength[j] =
                 Random::Gamma(1.0 + branchlengthcount[j], lambda + branchlengthbeta[j]);
             if (!branchlength[j]) {
-                cerr << "error: resampled branch length is 0\n";
+                std::cerr << "error: resampled branch length is 0\n";
                 exit(1);
             }
         }
@@ -541,7 +541,7 @@ class MultiGeneSingleOmegaModel : public ProbModel {
         os << "alpha\tbeta\n";
     }
 
-    void Trace(ostream& os) {
+    void Trace(std::ostream& os) {
         os << GetLogPrior() << '\t';
         os << GetLogLikelihood() << '\t';
         os << GetTotalLength() << '\t';
@@ -550,8 +550,8 @@ class MultiGeneSingleOmegaModel : public ProbModel {
         os << alpha << '\t' << beta << '\n';
     }
 
-    void Monitor(ostream&) {}
+    void Monitor(std::ostream&) {}
 
-    void FromStream(istream&) {}
-    void ToStream(ostream&) {}
+    void FromStream(std::istream&) {}
+    void ToStream(std::ostream&) {}
 };

@@ -30,6 +30,8 @@ license and that you accept its terms.*/
 #include <utility>
 #include "ProbModel.hpp"
 
+using namespace std;
+
 Sample::Sample(string filename, int in_burnin, int in_every, int in_until) {
     burnin = in_burnin;
     every = in_every;

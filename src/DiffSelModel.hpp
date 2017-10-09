@@ -142,8 +142,8 @@ class DiffSelModel : public ProbModel {
                  int inNlevel, int infixglob, int infixvar, int incodonmodel, bool sample) {
         fixglob = infixglob;
         if (!fixglob) {
-            cerr << "error: free hyperparameters for baseline (global profile) not yet "
-                    "implemented\n";
+            std::cerr << "error: free hyperparameters for baseline (global profile) not yet "
+                         "implemented\n";
             exit(1);
         }
         fixvar = infixvar;
@@ -202,7 +202,7 @@ class DiffSelModel : public ProbModel {
         delete phyloprocess;
     }
 
-    void ReadFiles(string datafile, string treefile) {
+    void ReadFiles(std::string datafile, std::string treefile) {
         // nucleotide sequence alignment
         data = new FileSequenceAlignment(datafile);
 
@@ -428,7 +428,7 @@ class DiffSelModel : public ProbModel {
         for (int j = 0; j < Nbranch; j++) {
             if ((branchalloc[j] < 0) || (branchalloc[j] >= Ncond)) {
                 std::cerr << "error in make branch allocation\n";
-                cerr << j << '\t' << branchalloc[j] << '\n';
+                std::cerr << j << '\t' << branchalloc[j] << '\n';
                 exit(1);
             }
         }
@@ -521,7 +521,7 @@ class DiffSelModel : public ProbModel {
     }
 
     void Update() override {
-        cerr << "in diffsel update\n";
+        std::cerr << "in diffsel update\n";
         UpdateFitnessProfiles();
         CorruptNucMatrix();
         CorruptCodonMatrices();
@@ -560,8 +560,8 @@ class DiffSelModel : public ProbModel {
         CorruptSiteCodonMatrices(i);
         for (int k = 0; k < Ncond; k++) {
             if (fabs(sitecondsuffstatlogprob[k][i] - SiteCondSuffStatLogProb(i, k)) > 1e-8) {
-                cerr << "error for site " << i << '\n';
-                cerr << sitecondsuffstatlogprob[k][i] << SiteCondSuffStatLogProb(i, k) << '\n';
+                std::cerr << "error for site " << i << '\n';
+                std::cerr << sitecondsuffstatlogprob[k][i] << SiteCondSuffStatLogProb(i, k) << '\n';
                 exit(1);
             }
         }
@@ -986,7 +986,7 @@ class DiffSelModel : public ProbModel {
             branchlength[j] =
                 Random::Gamma(1.0 + branchlengthcount[j], lambda + branchlengthbeta[j]);
             if (!branchlength[j]) {
-                cerr << "error: resampled branch length is 0\n";
+                std::cerr << "error: resampled branch length is 0\n";
                 exit(1);
             }
         }
@@ -1096,7 +1096,7 @@ class DiffSelModel : public ProbModel {
         os << "diag\n";
     }
 
-    void Trace(ostream& os) override {
+    void Trace(std::ostream& os) override {
         os << GetLogPrior() << '\t';
         os << GetLogLikelihood() << '\t';
         os << GetTotalLength() << '\t';
@@ -1109,9 +1109,9 @@ class DiffSelModel : public ProbModel {
         os << SubMatrix::GetDiagCount() << '\n';
     }
 
-    void Monitor(ostream&) override {}
+    void Monitor(std::ostream&) override {}
 
-    void FromStream(istream& is) override {
+    void FromStream(std::istream& is) override {
         is >> lambda;
         for (int i = 0; i < Nbranch; i++) {
             is >> branchlength[i];
@@ -1139,7 +1139,7 @@ class DiffSelModel : public ProbModel {
         }
     }
 
-    void ToStream(ostream& os) override {
+    void ToStream(std::ostream& os) override {
         os << lambda << '\n';
         for (int i = 0; i < Nbranch; i++) {
             os << branchlength[i] << '\t';
