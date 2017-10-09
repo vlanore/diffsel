@@ -83,7 +83,7 @@ class Sample {
     int every{-1};       // subsampling frequency
     int until{-1};       // reading chain until this point
     int currentpoint{-1};
-    ProbModel* model;          // the model
+    ProbModel* model;               // the model
     std::string name{"undefined"};  // the name of the chain in the filesystem
 };
 
