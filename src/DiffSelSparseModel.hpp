@@ -1,6 +1,8 @@
 /*Copyright or © or Copr. Centre National de la Recherche Scientifique (CNRS) (2017-06-14).
 Contributors:
 * Nicolas LARTILLOT - nicolas.lartillot@univ-lyon1.fr
+* Philippe VEBER - philippe.veber@univ-lyon1.fr
+* Vincent LANORE - vincent.lanore@univ-lyon1.fr
 
 This software is a computer program whose purpose is to detect convergent evolution using Bayesian
 phylogenetic codon models.
@@ -45,17 +47,18 @@ std::string sf(const std::string& format, Args... args) {
     return std::string(buf.get(), buf.get() + size - 1);
 }
 
+/*
+=====================================================================
+  Things required to record move success rates
+=====================================================================
+*/
 struct AcceptStats {
     static std::map<std::string, std::vector<double>> d;
     static void add(std::string k, double v) { d[k].push_back(v); }
 };
 std::map<std::string, std::vector<double>> AcceptStats::d;
 
-/*
-=====================================================================
-  Things required to call moves without repeating function name
-=====================================================================
-*/
+
 #define CAR(f, ...) call_and_record(#f, this, &DiffSelSparseModel::f, ## __VA_ARGS__)
 
 class DiffSelSparseModel;
@@ -726,14 +729,16 @@ class DiffSelSparseModel : public ProbModel {
                     partial_gamma_log_density(fitness_shape, fitness_inv_rates[aa], bk) +
                     GetSiteSuffStatLogProb(i);
 
-                fitness[cond](i, aa) *= exp(tuning * (Random::Uniform() - 0.5));
+                double m = tuning * (Random::Uniform() - 0.5);
+
+                fitness[cond](i, aa) *= exp(m);
                 UpdateSite(i);
                 double logprob_after =
                     partial_gamma_log_density(fitness_shape, fitness_inv_rates[aa],
                                               fitness[cond](i, aa)) +
                     GetSiteSuffStatLogProb(i);
 
-                double loghastings = 0.;
+                double loghastings = m;
 
                 double deltalogprob = logprob_after - logprob_before + loghastings;
 
@@ -841,8 +846,9 @@ class DiffSelSparseModel : public ProbModel {
                 ind_conv_log_density() +
                 partial_beta_log_density(prob_conv_m, prob_conv_v, prob_conv[k]);
 
-            prob_conv[k] *= exp(tuning * (Random::Uniform() - 0.5));
-            double loghastings = 0.;
+            double m = tuning * (Random::Uniform() - 0.5);
+            prob_conv[k] *= exp(m);
+            double loghastings = m;
 
             double logprob_after = ind_conv_log_density() +
                                    partial_beta_log_density(prob_conv_m, prob_conv_v, prob_conv[k]);
