@@ -685,20 +685,20 @@ class DiffSelSparseModel : public ProbModel {
                 double bk = fitness[cond](i, aa);
                 BackupSite(i);
 
-                double loglikelihood_before =
+                double logprob_before =
                     partial_gamma_log_density(fitness_shape, fitness_inv_rates[aa], bk) +
                     GetSiteSuffStatLogProb(i);
 
                 fitness[cond](i, aa) *= exp(tuning * (Random::Uniform() - 0.5));
                 UpdateSite(i);
-                double loglikelihood_after =
+                double logprob_after =
                     partial_gamma_log_density(fitness_shape, fitness_inv_rates[aa],
                                               fitness[cond](i, aa)) +
                     GetSiteSuffStatLogProb(i);
 
                 double loghastings = 0.;
 
-                double deltalogprob = loglikelihood_after - loglikelihood_before + loghastings;
+                double deltalogprob = logprob_after - logprob_before + loghastings;
 
                 int accepted = (log(Random::Uniform()) < deltalogprob);
                 if (accepted) {
@@ -720,30 +720,31 @@ class DiffSelSparseModel : public ProbModel {
         };
 
         auto fitness_log_density = [&]() {
-            double loglikelihood = -fitness_shape;
-            for (auto& G_k : fitness)
+            double logprob = -fitness_shape;
+            for (int k = 0; k < Ncond; k++)
                 for (int i = 0; i < Nsite; i++)
-                    for (int aa = 0; aa < Naa; aa++) {
-                        loglikelihood += partial_gamma_log_density(
-                            fitness_shape, fitness_inv_rates[aa], G_k(i, aa));
-                    }
-            return loglikelihood;
+                    for (int aa = 0; aa < Naa; aa++)
+                        logprob += ind_conv[k](i, aa) *
+                                   partial_gamma_log_density(fitness_shape, fitness_inv_rates[aa],
+                                                             fitness[k](i, aa));
+            return logprob;
         };
 
         double bk = fitness_shape;
 
-        double loglikelihood_before = fitness_log_density();
-        fitness_shape *= exp(tuning * (Random::Uniform() - 0.5));
-        double loglikelihood_after = fitness_log_density();
+        double logprob_before = fitness_log_density();
+        double m = tuning * (Random::Uniform() - 0.5);
+        fitness_shape *= exp(m);
+        double logprob_after = fitness_log_density();
 
-        double loghastings = 0.;
-        double deltalogprob = loglikelihood_after - loglikelihood_before + loghastings;
+        double loghastings = m;
+        double deltalogprob = logprob_after - logprob_before + loghastings;
 
         bool accepted = (log(Random::Uniform()) < deltalogprob);
         if (!accepted) {
             fitness_shape = bk;
         }
-        return static_cast<bool>(accepted);
+        return static_cast<double>(accepted);
     }
 
     double MoveFitnessInvRates(double tuning, int n) {
@@ -753,29 +754,29 @@ class DiffSelSparseModel : public ProbModel {
         };
 
         auto fitness_log_density = [&]() {
-            double loglikelihood = 0;
-            for (auto& G_k : fitness)
+            double logprob = 0;
+            for (int k = 0; k < Ncond; k++)
                 for (int i = 0; i < Nsite; i++)
-                    for (int aa = 0; aa < Naa; aa++) {
-                        loglikelihood += partial_gamma_log_density(
-                            fitness_shape, fitness_inv_rates[aa], G_k(i, aa));
-                    }
-            return loglikelihood;
+                    for (int aa = 0; aa < Naa; aa++)
+                        logprob += ind_conv[k](i, aa) *
+                                   partial_gamma_log_density(fitness_shape, fitness_inv_rates[aa],
+                                                             fitness[k](i, aa));
+            return logprob;
         };
 
         AAProfile bk = fitness_inv_rates;
 
-        double loglikelihood_before = fitness_log_density();
+        double logprob_before = fitness_log_density();
         double loghastings = Random::ProfileProposeMove(fitness_inv_rates, tuning, n);
-        double loglikelihood_after = fitness_log_density();
+        double logprob_after = fitness_log_density();
 
-        double deltalogprob = loglikelihood_after - loglikelihood_before + loghastings;
+        double deltalogprob = logprob_after - logprob_before + loghastings;
 
         bool accepted = (log(Random::Uniform()) < deltalogprob);
         if (!accepted) {
             fitness_inv_rates = bk;
         }
-        return static_cast<bool>(accepted);
+        return static_cast<double>(accepted);
     }
 
     double MoveProbConv(double tuning) {
@@ -786,32 +787,30 @@ class DiffSelSparseModel : public ProbModel {
         };
 
         auto ind_conv_log_density = [&]() {
-            double loglikelihood = 0;
+            double logprob = 0;
             for (int k = 1; k < Ncond; k++)
                 for (int i = 0; i < Nsite; i++)
                     for (int aa = 0; aa < Naa; aa++) {
-                        loglikelihood +=
-                            (ind_conv[k](i, aa)) ? log(prob_conv[k]) : log(1 - prob_conv[k]);
+                        logprob += (ind_conv[k](i, aa)) ? log(prob_conv[k]) : log(1 - prob_conv[k]);
                     }
-            return loglikelihood;
+            return logprob;
         };
 
         double ntot = 0, nacc = 0;
 
         for (int k = 1; k < Ncond; k++) {
             double bk = prob_conv[k];
-            double loglikelihood_before =
+            double logprob_before =
                 ind_conv_log_density() +
                 partial_beta_log_density(prob_conv_m, prob_conv_v, prob_conv[k]);
 
             prob_conv[k] *= exp(tuning * (Random::Uniform() - 0.5));
             double loghastings = 0.;
 
-            double loglikelihood_after =
-                ind_conv_log_density() +
-                partial_beta_log_density(prob_conv_m, prob_conv_v, prob_conv[k]);
+            double logprob_after = ind_conv_log_density() +
+                                   partial_beta_log_density(prob_conv_m, prob_conv_v, prob_conv[k]);
 
-            double deltalogprob = loglikelihood_after - loglikelihood_before + loghastings;
+            double deltalogprob = logprob_after - logprob_before + loghastings;
 
             bool accepted = (log(Random::Uniform()) < deltalogprob);
             if (!accepted) {
@@ -831,18 +830,17 @@ class DiffSelSparseModel : public ProbModel {
             for (int i = 0; i < Nsite; i++) {
                 int aa = Random::Choose(Naa);
                 bool bk = ind_conv[cond](i, aa);
-                double fitness_bk = fitness[cond](i, aa);
+                // double fitness_bk = fitness[cond](i, aa);
                 BackupSite(i);
 
                 if (!bk) {
                     /* the two partial_beta_log_density terms cancel
                        out in the metropolis-hastings ratio */
-                    double loglikelihood_before =
-                        log(1 - prob_conv[cond])
-                        // + partial_gamma_log_density(fitness_shape,
-                        //                             fitness_inv_rates[aa],
-                        //                             fitness[k](i,aa))
-                        + GetSiteSuffStatLogProb(i);
+                    double logprob_before = log(1 - prob_conv[cond])
+                                            // + partial_gamma_log_density(fitness_shape,
+                                            //                             fitness_inv_rates[aa],
+                                            //                             fitness[k](i,aa))
+                                            + GetSiteSuffStatLogProb(i);
                     double loghastings = 0.;
                     // - partial_gamma_log_density(fitness_shape,
                     //                             fitness_inv_rates[aa],
@@ -851,32 +849,31 @@ class DiffSelSparseModel : public ProbModel {
                     fitness[cond](i, aa) =
                         Random::Gamma(fitness_shape, fitness_shape / fitness_inv_rates[aa]);
                     UpdateSite(i);
-                    double loglikelihood_after = log(prob_conv[cond]) + GetSiteSuffStatLogProb(i);
-                    double deltalogprob = loglikelihood_after - loglikelihood_before + loghastings;
+                    double logprob_after = log(prob_conv[cond]) + GetSiteSuffStatLogProb(i);
+                    double deltalogprob = logprob_after - logprob_before + loghastings;
 
                     int accepted = (log(Random::Uniform()) < deltalogprob);
                     if (accepted) {
                         nacc++;
                     } else {
-                        ind_conv[cond](i, aa) = 0;
-                        fitness[cond](i, aa) = fitness_bk;
+                        ind_conv[cond](i, aa) = false;
+                        // fitness[cond](i, aa) = fitness_bk;
                         RestoreSite(i);
                     }
                     ntot++;
                 } else {
-                    double loglikelihood_before = log(prob_conv[cond]) + GetSiteSuffStatLogProb(i);
+                    double logprob_before = log(prob_conv[cond]) + GetSiteSuffStatLogProb(i);
                     double loghastings = 0.;
                     ind_conv[cond](i, aa) = false;
                     UpdateSite(i);
-                    double loglikelihood_after =
-                        log(1 - prob_conv[cond]) + GetSiteSuffStatLogProb(i);
-                    double deltalogprob = loglikelihood_after - loglikelihood_before + loghastings;
+                    double logprob_after = log(1 - prob_conv[cond]) + GetSiteSuffStatLogProb(i);
+                    double deltalogprob = logprob_after - logprob_before + loghastings;
 
                     int accepted = (log(Random::Uniform()) < deltalogprob);
                     if (accepted) {
                         nacc++;
                     } else {
-                        ind_conv[cond](i, aa) = 0;
+                        ind_conv[cond](i, aa) = true;
                         RestoreSite(i);
                     }
                     ntot++;
