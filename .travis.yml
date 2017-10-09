@@ -52,7 +52,8 @@ matrix:
         - NONREG=true
 
 before_install:
-  - pip3 install progressbar2
+  - export PATH=$HOME/.local/bin:$PATH
+  - pip3 install progressbar2 --user `whoami`
 
 before_script:
   - export CXX=$COMPILER
