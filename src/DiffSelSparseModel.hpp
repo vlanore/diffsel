@@ -26,6 +26,7 @@ The fact that you are presently reading this means that you have had knowledge o
 license and that you accept its terms.*/
 
 
+#include <memory>
 #include "CodonSequenceAlignment.hpp"
 #include "GTRSubMatrix.hpp"
 #include "MSCodonSubMatrix.hpp"
@@ -36,11 +37,43 @@ license and that you accept its terms.*/
 const int Nrr = Nnuc * (Nnuc - 1) / 2;
 const int Nstate = 61;
 
+
 struct AcceptStats {
     static std::map<std::string, std::vector<double>> d;
     static void add(std::string k, double v) { d[k].push_back(v); }
 };
 std::map<std::string, std::vector<double>> AcceptStats::d;
+
+/*
+=====================================================================
+  Things required to call moves without repeating function name
+=====================================================================
+*/
+#define CAR(f, ...) call_and_record(#f, this, &DiffSelSparseModel::f, ## __VA_ARGS__)
+
+class DiffSelSparseModel;
+
+string args_to_string() {
+    return "";
+}
+
+template <class Arg>
+string args_to_string(Arg arg) {
+    return to_string(arg);
+}
+
+template <class Arg, class... Args>
+string args_to_string(Arg arg, Args... args) {
+    return to_string(arg) + "_" + args_to_string(args...);
+}
+
+template <class... Args>
+void call_and_record(const string& s, DiffSelSparseModel* instance, double (DiffSelSparseModel::*f)(Args...), Args... args) {
+    AcceptStats::add(s + '_' + args_to_string(args...), (instance->*f)(args...));
+}
+/*
+=====================================================================
+*/
 
 template <typename... Args>
 std::string sf(const std::string& format, Args... args) {
@@ -616,7 +649,7 @@ class DiffSelSparseModel : public ProbModel {
 
     // move cycle schedule
     // does not yet implement any monitoring (success rates, time spent, etc)
-    double Move() {
+    double Move() override {
         SubMatrix::ResetDiagCount();
 
         int nrep0 = 3;
@@ -625,9 +658,9 @@ class DiffSelSparseModel : public ProbModel {
         for (int rep0 = 0; rep0 < nrep0; rep0++) {
             CollectLengthSuffStat();
 
-            AcceptStats::add("MoveBranchLength", MoveBranchLength());
-            AcceptStats::add("MoveLambda_1", MoveLambda(1.0, 10));
-            AcceptStats::add("MoveLambda_0.3", MoveLambda(0.3, 10));
+            CAR(MoveBranchLength);
+            CAR(MoveLambda, 1.0, 10);
+            CAR(MoveLambda, 0.3, 10);
 
             CollectSuffStat();
 
@@ -636,31 +669,31 @@ class DiffSelSparseModel : public ProbModel {
             for (int rep = 0; rep < nrep; rep++) {
                 /* ci gisaient movebaseline, movedelta et move varsel*/
                 for (int k = 0; k < Ncond; k++) {
-                    AcceptStats::add(sf("MoveFitness_1_%d", k), MoveFitness(k, 1., 10));
-                    AcceptStats::add(sf("MoveFitness_0.3_%d", k), MoveFitness(k, 0.3, 10));
+                    CAR(MoveFitness, k, 1., 10);
+                    CAR(MoveFitness, k, 0.3, 10);
                 }
             }
 
-            AcceptStats::add("MoveFitnessShape_1", MoveFitnessShape(1.));
-            AcceptStats::add("MoveFitnessShape_0.3", MoveFitnessShape(0.3));
+            CAR(MoveFitnessShape, 1.);
+            CAR(MoveFitnessShape, 0.3);
 
-            AcceptStats::add("MoveFitnessInvRates_0.15_1", MoveFitnessInvRates(0.15, 1));
-            AcceptStats::add("MoveFitnessInvRates_0.15_5", MoveFitnessInvRates(0.15, 5));
-            AcceptStats::add("MoveFitnessInvRates_0.15_10", MoveFitnessInvRates(0.15, 10));
+            CAR(MoveFitnessInvRates, 0.15, 1);
+            CAR(MoveFitnessInvRates, 0.15, 5);
+            CAR(MoveFitnessInvRates, 0.15, 10);
 
-            AcceptStats::add("MoveProbConv_1", MoveProbConv(1.));
-            AcceptStats::add("MoveProbConv_0.3", MoveProbConv(0.3));
+            CAR(MoveProbConv, 1.);
+            CAR(MoveProbConv, 0.3);
 
             for (int k = 0; k < Ncond; k++) {
-                AcceptStats::add(sf("MoveIndConv_10_%d", k), MoveIndConv(k, 10));
+                CAR(MoveIndConv, k, 10);
             }
 
-            AcceptStats::add("MoveRR_0.1_1_10", MoveRR(0.1, 1, 10));
-            AcceptStats::add("MoveRR_0.03_3_10", MoveRR(0.03, 3, 10));
-            AcceptStats::add("MoveRR_0.01_3_10", MoveRR(0.01, 3, 10));
+            CAR(MoveRR, 0.1, 1, 10);
+            CAR(MoveRR, 0.03, 3, 10);
+            CAR(MoveRR, 0.01, 3, 10);
 
-            AcceptStats::add("MoveNucStat_0.1_1_10", MoveNucStat(0.1, 1, 10));
-            AcceptStats::add("MoveNucStat_0.01_1_10", MoveNucStat(0.01, 1, 10));
+            CAR(MoveNucStat, 0.1, 1, 10);
+            CAR(MoveNucStat, 0.01, 1, 10);
         }
 
         UpdateAll();

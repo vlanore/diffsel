@@ -225,7 +225,7 @@ int main(int argc, char* argv[]) {
         delete chain;
     }
     for (auto p : AcceptStats::d) {
-        cout << p.first << "\t"
-             << accumulate(p.second.begin(), p.second.end(), 0.) / p.second.size() << "\n";
+        cout << setw(40) << p.first << " -> "
+             << 100. * accumulate(p.second.begin(), p.second.end(), 0.) / p.second.size() << "%\n";
     }
 }
