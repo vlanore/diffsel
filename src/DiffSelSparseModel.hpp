@@ -37,6 +37,13 @@ license and that you accept its terms.*/
 const int Nrr = Nnuc * (Nnuc - 1) / 2;
 const int Nstate = 61;
 
+template <typename... Args>
+std::string sf(const std::string& format, Args... args) {
+    size_t size = snprintf(nullptr, 0, format.c_str(), args...) + 1;
+    std::unique_ptr<char[]> buf(new char[size]);
+    snprintf(buf.get(), size, format.c_str(), args...);
+    return std::string(buf.get(), buf.get() + size - 1);
+}
 
 struct AcceptStats {
     static std::map<std::string, std::vector<double>> d;
@@ -57,6 +64,10 @@ string args_to_string() {
     return "";
 }
 
+string args_to_string(double d) {
+    return sf("%.2f", d);
+}
+
 template <class Arg>
 string args_to_string(Arg arg) {
     return to_string(arg);
@@ -64,24 +75,17 @@ string args_to_string(Arg arg) {
 
 template <class Arg, class... Args>
 string args_to_string(Arg arg, Args... args) {
-    return to_string(arg) + "_" + args_to_string(args...);
+    return args_to_string(arg) + ", " + args_to_string(args...);
 }
 
 template <class... Args>
 void call_and_record(const string& s, DiffSelSparseModel* instance, double (DiffSelSparseModel::*f)(Args...), Args... args) {
-    AcceptStats::add(s + '_' + args_to_string(args...), (instance->*f)(args...));
+    AcceptStats::add(s + '(' + args_to_string(args...) + ')', (instance->*f)(args...));
 }
 /*
 =====================================================================
 */
 
-template <typename... Args>
-std::string sf(const std::string& format, Args... args) {
-    size_t size = snprintf(nullptr, 0, format.c_str(), args...) + 1;
-    std::unique_ptr<char[]> buf(new char[size]);
-    snprintf(buf.get(), size, format.c_str(), args...);
-    return std::string(buf.get(), buf.get() + size - 1);
-}
 
 using AAProfile = Eigen::Matrix<double, Eigen::Dynamic, 1>;
 using BMatrix = Eigen::Matrix<bool, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
