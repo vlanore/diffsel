@@ -46,7 +46,7 @@ for col in cols:
         pos = [c.index(col) for c in categories]
         print("-- Column "+param(col)+" exists in traces at positions "+", ".join([data(p) for p in pos])+" respectively")
     else:
-        print("-- "+error("Error")+": column "+param(col)+" does not exist in all traces!")
+        print(failure("column "+param(col)+" does not exist in all traces!"))
         print("\tColumns that exist in all traces are: "+", ".join([data(s) for s in reduce(set.intersection, [set(c) for c in categories])]))
         exit(1)
 
