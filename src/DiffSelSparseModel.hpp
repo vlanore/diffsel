@@ -63,22 +63,22 @@ std::map<std::string, std::vector<double>> AcceptStats::d;
 
 class DiffSelSparseModel;
 
-string args_to_string() { return ""; }
+std::string args_to_string() { return ""; }
 
-string args_to_string(double d) { return sf("%.2f", d); }
+std::string args_to_string(double d) { return sf("%.2f", d); }
 
 template <class Arg>
-string args_to_string(Arg arg) {
-    return to_string(arg);
+std::string args_to_string(Arg arg) {
+    return std::to_string(arg);
 }
 
 template <class Arg, class... Args>
-string args_to_string(Arg arg, Args... args) {
+std::string args_to_string(Arg arg, Args... args) {
     return args_to_string(arg) + ", " + args_to_string(args...);
 }
 
 template <class... Args>
-void call_and_record(const string& s, DiffSelSparseModel* instance,
+void call_and_record(const std::string& s, DiffSelSparseModel* instance,
                      double (DiffSelSparseModel::*f)(Args...), Args... args) {
     AcceptStats::add(s + '(' + args_to_string(args...) + ')', (instance->*f)(args...));
 }
@@ -161,7 +161,7 @@ class DiffSelSparseModel : public ProbModel {
     double prob_conv_m{0.1};
     double prob_conv_v{0.5};
     Eigen::VectorXd prob_conv;  // indexed by condition
-    vector<BMatrix> ind_conv;   // indexed by condition * sites * aa;
+    std::vector<BMatrix> ind_conv;   // indexed by condition * sites * aa;
 
 
     // codon substitution matrices
@@ -193,7 +193,7 @@ class DiffSelSparseModel : public ProbModel {
         : Ncond(Ncond) {
         fixglob = infixglob;
         if (!fixglob) {
-            cerr << "error: free hyperparameters for baseline (global profile) not yet "
+            std::cerr << "error: free hyperparameters for baseline (global profile) not yet "
                     "implemented\n";
             exit(1);
         }
@@ -247,7 +247,7 @@ class DiffSelSparseModel : public ProbModel {
         delete phyloprocess;
     }
 
-    void ReadFiles(string datafile, string treefile) {
+    void ReadFiles(std::string datafile, std::string treefile) {
         // nucleotide sequence alignment
         data = new FileSequenceAlignment(datafile);
 
@@ -343,7 +343,7 @@ class DiffSelSparseModel : public ProbModel {
             prob_conv[k] = Random::BetaMV(prob_conv_m, prob_conv_v);
         }
 
-        ind_conv = vector<BMatrix>(Ncond, BMatrix(Nsite, Naa));
+        ind_conv = std::vector<BMatrix>(Ncond, BMatrix(Nsite, Naa));
         for (int k = 0; k < Ncond; k++)
             for (int i = 0; i < Nsite; i++)
                 for (int aa = 0; aa < Naa; aa++) {
@@ -427,7 +427,7 @@ class DiffSelSparseModel : public ProbModel {
         for (int j = 0; j < Nbranch; j++) {
             if ((branchalloc[j] < 0) || (branchalloc[j] >= Ncond)) {
                 std::cerr << "error in make branch allocation\n";
-                cerr << j << '\t' << branchalloc[j] << '\n';
+                std::cerr << j << '\t' << branchalloc[j] << '\n';
                 exit(1);
             }
         }
@@ -469,7 +469,7 @@ class DiffSelSparseModel : public ProbModel {
     }
 
     void Update() override {
-        cerr << "in diffsel update\n";
+        std::cerr << "in diffsel update\n";
         CorruptNucMatrix();
         CorruptCodonMatrices();
         phyloprocess->GetLogProb();
@@ -505,8 +505,8 @@ class DiffSelSparseModel : public ProbModel {
         CorruptSiteCodonMatrices(i);
         for (int k = 0; k < Ncond; k++) {
             if (fabs(sitecondsuffstatlogprob[k][i] - SiteCondSuffStatLogProb(i, k)) > 1e-8) {
-                cerr << "error for site " << i << '\n';
-                cerr << sitecondsuffstatlogprob[k][i] << SiteCondSuffStatLogProb(i, k) << '\n';
+                std::cerr << "error for site " << i << '\n';
+                std::cerr << sitecondsuffstatlogprob[k][i] << SiteCondSuffStatLogProb(i, k) << '\n';
                 exit(1);
             }
         }
@@ -1000,7 +1000,7 @@ class DiffSelSparseModel : public ProbModel {
             branchlength[j] =
                 Random::Gamma(1.0 + branchlengthcount[j], lambda + branchlengthbeta[j]);
             if (!branchlength[j]) {
-                cerr << "error: resampled branch length is 0\n";
+                std::cerr << "error: resampled branch length is 0\n";
                 exit(1);
             }
         }
@@ -1058,16 +1058,16 @@ class DiffSelSparseModel : public ProbModel {
         os << "diag\n";
     }
 
-    void Trace(ostream& os) override {
+    void Trace(std::ostream& os) override {
         os << GetTotalLength() << '\t';
         os << GetEntropy(nucstat, Nnuc) << '\t';
         os << GetEntropy(nucrelrate, Nrr) << '\t';
         os << SubMatrix::GetDiagCount() << '\n';
     }
 
-    void Monitor(ostream&) override {}
+    void Monitor(std::ostream&) override {}
 
-    void FromStream(istream& is) override {
+    void FromStream(std::istream& is) override {
         is >> lambda;
         for (int i = 0; i < Nbranch; i++) {
             is >> branchlength[i];
@@ -1080,7 +1080,7 @@ class DiffSelSparseModel : public ProbModel {
         }
     }
 
-    void HeaderToStream(ostream& os) override {
+    void HeaderToStream(std::ostream& os) override {
         os << "lambda";
         for (int i = 0; i < Nbranch; i++) {
             os << '\t' << "branchlength_" << i;
@@ -1119,7 +1119,7 @@ class DiffSelSparseModel : public ProbModel {
         os << '\n';
     }
 
-    void ToStream(ostream& os) override {
+    void ToStream(std::ostream& os) override {
         os << lambda;
         for (int i = 0; i < Nbranch; i++) {
             os << '\t' << branchlength[i];
