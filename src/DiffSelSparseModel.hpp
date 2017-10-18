@@ -59,17 +59,13 @@ struct AcceptStats {
 std::map<std::string, std::vector<double>> AcceptStats::d;
 
 
-#define CAR(f, ...) call_and_record(#f, this, &DiffSelSparseModel::f, ## __VA_ARGS__)
+#define CAR(f, ...) call_and_record(#f, this, &DiffSelSparseModel::f, ##__VA_ARGS__)
 
 class DiffSelSparseModel;
 
-string args_to_string() {
-    return "";
-}
+string args_to_string() { return ""; }
 
-string args_to_string(double d) {
-    return sf("%.2f", d);
-}
+string args_to_string(double d) { return sf("%.2f", d); }
 
 template <class Arg>
 string args_to_string(Arg arg) {
@@ -82,7 +78,8 @@ string args_to_string(Arg arg, Args... args) {
 }
 
 template <class... Args>
-void call_and_record(const string& s, DiffSelSparseModel* instance, double (DiffSelSparseModel::*f)(Args...), Args... args) {
+void call_and_record(const string& s, DiffSelSparseModel* instance,
+                     double (DiffSelSparseModel::*f)(Args...), Args... args) {
     AcceptStats::add(s + '(' + args_to_string(args...) + ')', (instance->*f)(args...));
 }
 /*
@@ -1094,6 +1091,7 @@ class DiffSelSparseModel : public ProbModel {
         for (int i = 0; i < Nnuc; i++) {
             os << '\t' << "nucstat_" << i;
         }
+        // nucmatrix
         os << '\t' << fitness_shape;
         for (int i = 0; i < fitness_inv_rates.size(); i++) {
             os << '\t' << "fitness_inv_rates_" << i;
@@ -1103,11 +1101,26 @@ class DiffSelSparseModel : public ProbModel {
                 for (int aa = 0; aa < Naa; aa++)
                     os << '\t' << "fitness_" << k << "_" << i << "_" << aa;
         /* FIXME */
+        for (int i = 0; i < prob_conv.size(); i++) {
+            os << '\t' << "prob_conv_" << i;
+        }
+        for (unsigned int k = 0; k < ind_conv.size(); k++) {
+            for (int i= 0; i<Nsite; i++) {
+                for (int aa=0; aa<Naa; aa++) {
+                    os << '\t' << "ind_conv_" << k << '_' << i << "_" << aa;
+                }
+            }
+        }
+        // condsubmatrixarray
+        // phylosubmatrix
+        // rootsubmatrix
+        // suffstatarray
+        // sitecondsuffstatlogprob
         os << '\n';
     }
 
     void ToStream(ostream& os) override {
-        os << "lambda=" << lambda;
+        os << lambda;
         for (int i = 0; i < Nbranch; i++) {
             os << '\t' << branchlength[i];
         }
@@ -1117,14 +1130,33 @@ class DiffSelSparseModel : public ProbModel {
         for (int i = 0; i < Nnuc; i++) {
             os << '\t' << nucstat[i];
         }
+        // nucmatrix
         os << '\t' << fitness_shape;
         for (int i = 0; i < fitness_inv_rates.size(); i++) {
             os << '\t' << fitness_inv_rates[i];
         }
-        for (auto& m : fitness)
-            for (int i = 0; i < Nsite; i++)
-                for (int aa = 0; aa < Naa; aa++) os << '\t' << m(i, aa);
-        /* FIXME */
+        for (auto& m : fitness) {
+            for (int i = 0; i < Nsite; i++) {
+                for (int aa = 0; aa < Naa; aa++) {
+                    os << '\t' << m(i, aa);
+                }
+            }
+        }
+        for (int i = 0; i < prob_conv.size(); i++) {
+            os << '\t' << prob_conv[i];
+        }
+        for (auto& m : ind_conv) {
+            for (int i= 0; i<Nsite; i++) {
+                for (int aa=0; aa<Naa; aa++) {
+                    os << '\t' << m(i, aa);
+                }
+            }
+        }
+        // condsubmatrixarray
+        // phylosubmatrix
+        // rootsubmatrix
+        // suffstatarray
+        // sitecondsuffstatlogprob
         os << '\n';
     }
 };
