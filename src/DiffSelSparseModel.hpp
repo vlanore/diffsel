@@ -673,8 +673,8 @@ class DiffSelSparseModel : public ProbModel {
             for (int rep = 0; rep < nrep; rep++) {
                 /* ci gisaient movebaseline, movedelta et move varsel*/
                 for (int k = 0; k < Ncond; k++) {
-                    CAR(MoveFitness, k, 1., 10);
-                    CAR(MoveFitness, k, 0.3, 10);
+                    CAR(MoveFitness, k, 0.05, 10);
+                    CAR(MoveFitness, k, 0.1, 10);
                 }
             }
 
@@ -688,7 +688,7 @@ class DiffSelSparseModel : public ProbModel {
             CAR(MoveProbConv, 1.);
             CAR(MoveProbConv, 0.3);
 
-            for (int k = 0; k < Ncond; k++) {
+            for (int k = 1; k < Ncond; k++) {
                 CAR(MoveIndConv, k, 10);
             }
 
@@ -1092,7 +1092,7 @@ class DiffSelSparseModel : public ProbModel {
             os << '\t' << "nucstat_" << i;
         }
         // nucmatrix
-        os << '\t' << fitness_shape;
+        os << '\t' << "fitness_shape";
         for (int i = 0; i < fitness_inv_rates.size(); i++) {
             os << '\t' << "fitness_inv_rates_" << i;
         }
@@ -1100,8 +1100,7 @@ class DiffSelSparseModel : public ProbModel {
             for (int i = 0; i < Nsite; i++)
                 for (int aa = 0; aa < Naa; aa++)
                     os << '\t' << "fitness_" << k << "_" << i << "_" << aa;
-        /* FIXME */
-        for (int i = 0; i < prob_conv.size(); i++) {
+        for (int i = 1; i < prob_conv.size(); i++) {
             os << '\t' << "prob_conv_" << i;
         }
         for (unsigned int k = 0; k < ind_conv.size(); k++) {
@@ -1142,7 +1141,7 @@ class DiffSelSparseModel : public ProbModel {
                 }
             }
         }
-        for (int i = 0; i < prob_conv.size(); i++) {
+        for (int i = 1; i < prob_conv.size(); i++) {
             os << '\t' << prob_conv[i];
         }
         for (auto& m : ind_conv) {
