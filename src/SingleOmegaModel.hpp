@@ -1,6 +1,7 @@
 /*Copyright or © or Copr. Centre National de la Recherche Scientifique (CNRS) (2017-06-14).
 Contributors:
 * Nicolas LARTILLOT - nicolas.lartillot@univ-lyon1.fr
+* Vincent LANORE - vincent.lanore@univ-lyon1.fr
 
 This software is a computer program whose purpose is to detect convergent evolution using Bayesian
 phylogenetic codon models.
@@ -25,7 +26,7 @@ more generally, to use and operate it in the same conditions as regards security
 The fact that you are presently reading this means that you have had knowledge of the CeCILL-C
 license and that you accept its terms.*/
 
-
+#include <fstream>
 #include "CodonSequenceAlignment.hpp"
 #include "CodonSubMatrix.hpp"
 #include "GTRSubMatrix.hpp"
@@ -68,7 +69,7 @@ class SingleOmegaModel : public ProbModel {
     double bksuffstatlogprob;
 
   public:
-    SingleOmegaModel(string datafile, string treefile) {
+    SingleOmegaModel(std::string datafile, std::string treefile) {
         data = new FileSequenceAlignment(datafile);
         codondata = new CodonSequenceAlignment(data, true);
 
@@ -93,14 +94,14 @@ class SingleOmegaModel : public ProbModel {
         std::cerr << "-- Tree and data fit together\n";
 
         Allocate();
-        cerr << "-- unfold\n";
+        std::cerr << "-- unfold\n";
         phyloprocess->Unfold();
-        cerr << phyloprocess->GetLogProb() << '\n';
+        std::cerr << phyloprocess->GetLogProb() << '\n';
         std::cerr << "-- mapping substitutions\n";
         phyloprocess->ResampleSub();
         std::cerr << "-- collect suffstat\n";
         CollectSuffStat();
-        Trace(cerr);
+        Trace(std::cerr);
     }
 
     void Allocate() {
@@ -321,7 +322,7 @@ class SingleOmegaModel : public ProbModel {
             branchlength[j] =
                 Random::Gamma(1.0 + branchlengthcount[j], lambda + branchlengthbeta[j]);
             if (!branchlength[j]) {
-                cerr << "error: resampled branch length is 0\n";
+                std::cerr << "error: resampled branch length is 0\n";
                 exit(1);
             }
         }
@@ -408,7 +409,7 @@ class SingleOmegaModel : public ProbModel {
         os << "rrent\n";
     }
 
-    void Trace(ostream& os) {
+    void Trace(std::ostream& os) {
         os << GetLogPrior() << '\t';
         os << GetLogLikelihood() << '\t';
         os << GetTotalLength() << '\t';
@@ -418,8 +419,8 @@ class SingleOmegaModel : public ProbModel {
         os << GetEntropy(nucrelrate, Nrr) << '\n';
     }
 
-    void Monitor(ostream&) {}
+    void Monitor(std::ostream&) {}
 
-    void FromStream(istream&) {}
-    void ToStream(ostream&) {}
+    void FromStream(std::istream&) {}
+    void ToStream(std::ostream&) {}
 };

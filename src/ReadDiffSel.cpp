@@ -1,6 +1,7 @@
 /*Copyright or © or Copr. Centre National de la Recherche Scientifique (CNRS) (2017-06-14).
 Contributors:
 * Nicolas LARTILLOT - nicolas.lartillot@univ-lyon1.fr
+* Vincent LANORE - vincent.lanore@univ-lyon1.fr
 
 This software is a computer program whose purpose is to detect convergent evolution using Bayesian
 phylogenetic codon models.
@@ -28,6 +29,8 @@ license and that you accept its terms.*/
 #define DOCTEST_CONFIG_IMPLEMENT
 #include "DiffSelModel.hpp"
 #include "Sample.hpp"
+
+using namespace std;
 
 class DiffSelSample : public Sample {
   private:

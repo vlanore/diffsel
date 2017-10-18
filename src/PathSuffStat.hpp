@@ -1,6 +1,7 @@
 /*Copyright or © or Copr. Centre National de la Recherche Scientifique (CNRS) (2017-06-14).
 Contributors:
 * Nicolas LARTILLOT - nicolas.lartillot@univ-lyon1.fr
+* Vincent LANORE - vincent.lanore@univ-lyon1.fr
 
 This software is a computer program whose purpose is to detect convergent evolution using Bayesian
 phylogenetic codon models.
@@ -25,12 +26,10 @@ more generally, to use and operate it in the same conditions as regards security
 The fact that you are presently reading this means that you have had knowledge of the CeCILL-C
 license and that you accept its terms.*/
 
-
 #ifndef PATHSUFFSTAT_H
 #define PATHSUFFSTAT_H
 
 #include <map>
-using namespace std;
 
 class PathSuffStat {
   public:
@@ -43,10 +42,9 @@ class PathSuffStat {
         waitingtime.clear();
     }
 
-    map<int, int> rootcount;
-    map<pair<int, int>, int> paircount;
-    map<int, double> waitingtime;
+    std::map<int, int> rootcount;
+    std::map<std::pair<int, int>, int> paircount;
+    std::map<int, double> waitingtime;
 };
-
 
 #endif
