@@ -1,0 +1,60 @@
+#data <- readDiscreteCharacterData("data/samhd1.fasta")
+data <- readDiscreteCharacterData("data/samhd1.fasta")
+
+taxa <- data.taxa()
+topology <- readBranchLengthTrees("data/samhd1.tree")[1]
+#topology <- readBranchLengthTrees("tmp_newtestOK.tree")[1]
+
+print(topology.ntips())
+print(topology.names())
+
+nspecies <- data.ntaxa()
+nbranch <- 2 * nspecies - 3
+nsites <- data.nchar() / 3
+
+mvi = 0
+mni = 0
+
+lambda ~ dnExponential(10)
+moves[++mvi] = mvScale(lambda)
+
+for(i in 1:nbranch) {
+  omega[i] ~ dnExponential(lambda)
+  moves[++mvi] = mvScale(omega[i])
+}
+
+psi ~ dnUniformTopology(taxa, rooted=TRUE)
+psi.setValue(topology)
+
+tree := treeAssembly(psi, omega)
+
+rho ~ dnDirichlet([1,1,1,1,1,1])
+pi ~ dnDirichlet([1,1,1,1])
+Q := fnGTR(rho, pi)
+
+
+fitnessShape ~ dnExp(1.0)
+fitnessInvRates ~ dnDirichlet(rep(1,20))
+
+for (cod in 1:nsites) {
+    for(aa in 1:20) {
+           fitness[cod][aa] ~ dnGamma(fitnessShape, fitnessShape/fitnessInvRates[aa])
+           moves[++mvi] = mvScale(fitness[cod][aa])
+    }
+}
+
+
+
+
+
+
+# Building the matrix
+for (codi in 1:61) {
+    for (codj in 1:61) {
+        
+    }
+}
+
+R := fnFreeK()
+
+    
