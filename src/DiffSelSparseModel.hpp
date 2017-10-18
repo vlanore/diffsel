@@ -160,8 +160,8 @@ class DiffSelSparseModel : public ProbModel {
 
     double prob_conv_m{0.1};
     double prob_conv_v{0.5};
-    Eigen::VectorXd prob_conv;  // indexed by condition
-    std::vector<BMatrix> ind_conv;   // indexed by condition * sites * aa;
+    Eigen::VectorXd prob_conv;      // indexed by condition
+    std::vector<BMatrix> ind_conv;  // indexed by condition * sites * aa;
 
 
     // codon substitution matrices
@@ -194,7 +194,7 @@ class DiffSelSparseModel : public ProbModel {
         fixglob = infixglob;
         if (!fixglob) {
             std::cerr << "error: free hyperparameters for baseline (global profile) not yet "
-                    "implemented\n";
+                         "implemented\n";
             exit(1);
         }
         fixvar = infixvar;
@@ -1105,8 +1105,8 @@ class DiffSelSparseModel : public ProbModel {
             os << '\t' << "prob_conv_" << i;
         }
         for (unsigned int k = 0; k < ind_conv.size(); k++) {
-            for (int i= 0; i<Nsite; i++) {
-                for (int aa=0; aa<Naa; aa++) {
+            for (int i = 0; i < Nsite; i++) {
+                for (int aa = 0; aa < Naa; aa++) {
                     os << '\t' << "ind_conv_" << k << '_' << i << "_" << aa;
                 }
             }
@@ -1146,8 +1146,8 @@ class DiffSelSparseModel : public ProbModel {
             os << '\t' << prob_conv[i];
         }
         for (auto& m : ind_conv) {
-            for (int i= 0; i<Nsite; i++) {
-                for (int aa=0; aa<Naa; aa++) {
+            for (int i = 0; i < Nsite; i++) {
+                for (int aa = 0; aa < Naa; aa++) {
                     os << '\t' << m(i, aa);
                 }
             }
