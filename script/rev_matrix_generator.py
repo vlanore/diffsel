@@ -6,8 +6,10 @@ codon_table = dict(zip(codons, amino_acids))
 
 reverse_bases = dict(zip(bases, range(4)))
 short_aa_table = "FFLLSSSSYYCCWLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG"
-aas = "".join(sorted("FSYCWLPHQRIMTNKRVADEG"))
-reverse_aas = dict(zip(aas, range(21)))
+#aas = "".join(sorted("FSYCWLPHQRIMTNKRVADEG")) # Je corrige, il y a 2 fois R...
+#reverse_aas = dict(zip(aas, range(21)))
+aas = "".join(sorted("FSYCWLPHQRIMTNKVADEG")) # Je corrige, il y a 2 fois R...
+reverse_aas = dict(zip(aas, range(20)))
 
 def cno_to_nuc(cno):
     if (cno <10):
@@ -36,16 +38,16 @@ def case(c1, c2):
         a = 1
         #print("\tQcodons[cod][%d][%d] := 0" % (c1, c2))
     elif synonym(c1, c2):
-        print("\tQcodons[cod][%d][%d] := Q[%d][%d]" % (c1+1, c2+1, reverse_bases[d[0][0]]+1, reverse_bases[d[0][1]]+1))
+        print("\tQcodons[cod][%d][%d] := abs(Q[%d][%d])" % (c1+1, c2+1, reverse_bases[d[0][0]]+1, reverse_bases[d[0][1]]+1))
     else:
-        print("\tQcodons[cod][%d][%d] := Q[%d][%d] * sqrt(fitness[cod][%d]/fitness[cod][%d])" %
+        print("\tQcodons[cod][%d][%d] := abs(Q[%d][%d] * sqrt(fitness[cod][%d]/fitness[cod][%d]))" %
               (c1+1, c2+1, reverse_bases[d[0][0]]+1, reverse_bases[d[0][1]]+1, reverse_aas[short_aa_table[c2]]+1, reverse_aas[short_aa_table[c1]]+1))
 
 def print_all():
     print("for (cod in 1:nsites) {")
     print("  for (i in 1:64) {")
     print("    for (j in 1:64) {")
-    print("      Qcodons[cod][i][j] := 0")
+    print("      Qcodons[cod][i][j] := abs(0)")
     print("    }")
     print("  }")
     print("}")
