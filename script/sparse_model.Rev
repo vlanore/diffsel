@@ -1,10 +1,19 @@
-#data <- readDiscreteCharacterData("data/samhd1.fasta")
+#############
+# useful variables
+
+outputFolder = "output"
+radical = "test"
+
+
+#############
+# Reading the data
+
 data <- readDiscreteCharacterData("data/samhd1.fasta")
-
 taxa <- data.taxa()
-topology <- readBranchLengthTrees("data/samhd1.tree")[1]
-#topology <- readBranchLengthTrees("tmp_newtestOK.tree")[1]
+# Subsampling:
+data.excludeCharacter(range(7,1629))
 
+topology <- readBranchLengthTrees("data/samhd1.tree")[1]
 print(topology.ntips())
 print(topology.names())
 
@@ -28,6 +37,11 @@ psi.setValue(topology)
 
 tree := treeAssembly(psi, omega)
 
+
+
+#############
+# Building the substitution matrices
+
 rho ~ dnDirichlet([1,1,1,1,1,1])
 pi ~ dnDirichlet([1,1,1,1])
 Q := fnGTR(rho, pi)
@@ -43,18 +57,64 @@ for (cod in 1:nsites) {
     }
 }
 
+# Building the matrices
+print("Building the matrices")
+
+#for (cod in 1:nsites) {
+#  for (codi in 1:64) {
+#      for (codj in 1:64) {
+#            Qcodons[codi][codj] := 0
+#      }
+#  }
+#  R[cod] := fnFreeK(Qcodons)
+#}
+
+source("script/build_subst_matrices.Rev")
 
 
 
 
+#print(R)
+#print("\n\t\tR transition probabilities for a branch of length 1.0: ")
+#print(R.getTransitionProbabilities(1))
 
-# Building the matrix
-for (codi in 1:61) {
-    for (codj in 1:61) {
-        
-    }
-}
 
-R := fnFreeK()
+#############
+# phyloCTMC and handle on the model
 
-    
+seq ~ dnPhyloCTMC(tree=tree, Q=R, type="Codon")
+#seq.clamp(data)
+
+mymodel = model(R)
+
+
+print("HEHE")
+
+#############
+# MONITORS
+
+monitors[++mni] = mnModel(filename=outputFolder+"/"+radical+"_posterior.log",printgen=1, separator = TAB)
+monitors[++mni] = mnFile(filename=outputFolder+"/"+radical+"_posterior.trees",printgen=1, separator = TAB, psi)
+monitors[++mni] = mnScreen(printgen=100)
+
+
+print("HEHE 2")
+
+#############
+# MCMC
+
+mymcmc = mcmc(mymodel, monitors, moves, nruns=2)
+mymcmc.burnin(generations=500,tuningInterval=500)
+mymcmc.run(generations=4000)
+
+print("HEHE 3")
+
+
+#############
+# summarize trees
+
+treetrace = readTreeTrace(outputFolder+"/"+radical+"_posterior.trees",treetype="non-clock")
+treetrace.summarize()
+maptree = mapTree(treetrace,outputFolder+"/"+radical+"_MAPtree.tree")
+
+quit()
