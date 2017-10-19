@@ -34,7 +34,7 @@ def case(c1, c2):
     d = diff(c1, c2)
     if (len(d) != 1):
         a = 1
-        print("\tQcodons[%d][%d] := 0" % (c1, c2))
+        print("\tQcodons[cod][%d][%d] := 0" % (c1, c2))
     elif synonym(c1, c2):
         print("\tQcodons[cod][%d][%d] := Q[%d][%d]" % (c1+1, c2+1, reverse_bases[d[0][0]]+1, reverse_bases[d[0][1]]+1))
     else:
