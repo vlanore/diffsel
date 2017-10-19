@@ -80,8 +80,6 @@ print("Building the matrices")
 source("script/build_subst_matrices.Rev")
 
 
-
-
 #print(R[1])
 #print("\n\t\tR[1] transition probabilities for a branch of length 1.0: ")
 #print(R[1].getTransitionProbabilities(1))
@@ -90,11 +88,11 @@ source("script/build_subst_matrices.Rev")
 #############
 # phyloCTMC and handle on the model
 for (cod in 1:nsites) {
-seq[cod] ~ dnPhyloCTMC(tree=tree, Q=R[cod], type="Codon")
-#seq.clamp(data[cod])
+  seq[cod] ~ dnPhyloCTMC(tree=tree, Q=R[cod], type="Codon")
+  #seq.clamp(data[cod])
 }
 
-mymodel = model(R)
+mymodel = model(lambda)
 
 
 print("HEHE")
