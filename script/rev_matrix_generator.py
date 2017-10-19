@@ -34,7 +34,7 @@ def case(c1, c2):
     d = diff(c1, c2)
     if (len(d) != 1):
         a = 1
-        print("\tQcodons[cod][%d][%d] := 0" % (c1, c2))
+        #print("\tQcodons[cod][%d][%d] := 0" % (c1, c2))
     elif synonym(c1, c2):
         print("\tQcodons[cod][%d][%d] := Q[%d][%d]" % (c1+1, c2+1, reverse_bases[d[0][0]]+1, reverse_bases[d[0][1]]+1))
     else:
@@ -42,6 +42,13 @@ def case(c1, c2):
               (c1+1, c2+1, reverse_bases[d[0][0]]+1, reverse_bases[d[0][1]]+1, reverse_aas[short_aa_table[c2]]+1, reverse_aas[short_aa_table[c1]]+1))
 
 def print_all():
+    print("for (cod in 1:nsites) {")
+    print("  for (i in 1:64) {")
+    print("    for (j in 1:64) {")
+    print("      Qcodons[cod][i][j] := 0")
+    print("    }")
+    print("  }")
+    print("}")
     print("for (cod in 1:nsites) {")
     for cno in range(61):
         for cno2 in range(61):
