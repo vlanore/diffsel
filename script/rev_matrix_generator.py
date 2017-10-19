@@ -34,18 +34,19 @@ def case(c1, c2):
     d = diff(c1, c2)
     if (len(d) != 1):
         a = 1
-        # print("R[%d][%d] = 0" % (c1, c2))
+        # print("Qcodons[%d][%d] = 0" % (c1, c2))
     elif synonym(c1, c2):
-        print("\tR[i][%d][%d] := Q[%d][%d]" % (c1, c2, reverse_bases[d[0][0]], reverse_bases[d[0][1]]))
+        print("\tQcodons[cod][%d][%d] := Q[%d][%d]" % (c1+1, c2+1, reverse_bases[d[0][0]]+1, reverse_bases[d[0][1]]+1))
     else:
-        print("\tR[i][%d][%d] := Q[%d][%d] * sqrt(fitness[i][%d]/fitness[i][%d])" %
-              (c1, c2, reverse_bases[d[0][0]], reverse_bases[d[0][1]], reverse_aas[short_aa_table[c2]], reverse_aas[short_aa_table[c1]]))
+        print("\tQcodons[cod][%d][%d] := Q[%d][%d] * sqrt(fitness[cod][%d]/fitness[cod][%d])" %
+              (c1+1, c2+1, reverse_bases[d[0][0]]+1, reverse_bases[d[0][1]]+1, reverse_aas[short_aa_table[c2]]+1, reverse_aas[short_aa_table[c1]]+1))
 
 def print_all():
-    print("for (i in i:nsites) {")
+    print("for (cod in 1:nsites) {")
     for cno in range(61):
         for cno2 in range(61):
             case(cno, cno2)
+    print("\tR[cod] := fnFreeK(Qcodons[cod])")
     print("}")
 
 print_all()
