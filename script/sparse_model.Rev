@@ -10,6 +10,8 @@ radical = "test"
 
 data <- readDiscreteCharacterData("data/samhd1.fasta")
 taxa <- data.taxa()
+# Subsampling:
+data.excludeCharacter(range(7,1629))
 
 topology <- readBranchLengthTrees("data/samhd1.tree")[1]
 print(topology.ntips())
@@ -38,7 +40,7 @@ tree := treeAssembly(psi, omega)
 
 
 #############
-# Building the substitution matrix
+# Building the substitution matrices
 
 rho ~ dnDirichlet([1,1,1,1,1,1])
 pi ~ dnDirichlet([1,1,1,1])
@@ -55,16 +57,22 @@ for (cod in 1:nsites) {
     }
 }
 
-# Building the matrix
+# Building the matrices
+print("Building the matrices")
 
-for (cod in 1:nsites) {
-  for (codi in 1:64) {
-      for (codj in 1:64) {
-            Qcodons[codi][codj] := abs(Q[1][1])*(fitness[cod][1]+fitness[cod][2]+fitness[cod][3]+fitness[cod][4]+fitness[cod][5]+fitness[cod][6]+fitness[cod][7]+fitness[cod][8]+fitness[cod][9]+fitness[cod][10]+fitness[cod][11]+fitness[cod][12]+fitness[cod][13]+fitness[cod][14]+fitness[cod][15]+fitness[cod][16]+fitness[cod][17]+fitness[cod][18]+fitness[cod][19]+fitness[cod][20])
-      }
-  }
-  R[cod] := fnFreeK(Qcodons)
-}
+#for (cod in 1:nsites) {
+#  for (codi in 1:64) {
+#      for (codj in 1:64) {
+#            Qcodons[codi][codj] := 0
+#      }
+#  }
+#  R[cod] := fnFreeK(Qcodons)
+#}
+
+source("script/build_subst_matrices.Rev")
+
+
+
 
 #print(R)
 #print("\n\t\tR transition probabilities for a branch of length 1.0: ")
