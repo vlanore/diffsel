@@ -8,18 +8,26 @@ radical = "test"
 #############
 # Reading the data
 
-data <- readDiscreteCharacterData("data/samhd1.fasta")
-taxa <- data.taxa()
+aln <- readDiscreteCharacterData("data/samhd1.fasta")
+taxa <- aln.taxa()
 # Subsampling:
-data.excludeCharacter(range(7,1629))
+aln.excludeCharacter(range(7,1629))
+
+nsites <- aln.nchar() / 3
+
+# Partitioning by codon
+for (cod in 1:nsites) {
+  data[cod] <- aln
+  data[cod].excludeAll()
+  data[cod].includeCharacter(((cod-1)*3+1):((cod)*3))
+}
 
 topology <- readBranchLengthTrees("data/samhd1.tree")[1]
 print(topology.ntips())
 print(topology.names())
 
-nspecies <- data.ntaxa()
+nspecies <- aln.ntaxa()
 nbranch <- 2 * nspecies - 3
-nsites <- data.nchar() / 3
 
 mvi = 0
 mni = 0
@@ -74,16 +82,17 @@ source("script/build_subst_matrices.Rev")
 
 
 
-#print(R)
-#print("\n\t\tR transition probabilities for a branch of length 1.0: ")
-#print(R.getTransitionProbabilities(1))
+#print(R[1])
+#print("\n\t\tR[1] transition probabilities for a branch of length 1.0: ")
+#print(R[1].getTransitionProbabilities(1))
 
 
 #############
 # phyloCTMC and handle on the model
-
-seq ~ dnPhyloCTMC(tree=tree, Q=R, type="Codon")
-#seq.clamp(data)
+for (cod in 1:nsites) {
+seq[cod] ~ dnPhyloCTMC(tree=tree, Q=R[cod], type="Codon")
+#seq.clamp(data[cod])
+}
 
 mymodel = model(R)
 
