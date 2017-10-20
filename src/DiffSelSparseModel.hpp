@@ -167,6 +167,7 @@ class DiffSelSparseModel : public ProbModel {
     // codon substitution matrices
     // across conditions and across sites
     // Ncond * Nsite
+    std::vector<std::vector<SparseFitness>> fitness_proxies;
     CodonSubMatrix*** condsubmatrixarray;
 
     // branch- and site-pointers over substitution matrices (for phyloprocess)
@@ -352,18 +353,18 @@ class DiffSelSparseModel : public ProbModel {
 
         // codon matrices
         // per condition and per site
+        fitness_proxies = std::vector<std::vector<SparseFitness>>(Ncond, std::vector<SparseFitness>());
         condsubmatrixarray = new CodonSubMatrix**[Ncond];
         for (int k = 0; k < Ncond; k++) {
             condsubmatrixarray[k] = new CodonSubMatrix*[Nsite];
             for (int i = 0; i < Nsite; i++) {
+                fitness_proxies[k].emplace_back(fitness[0].row(i), fitness[k].row(i), ind_conv[k].row(i));
                 if (codonmodel == 0) {
                     condsubmatrixarray[k][i] = new MGSRFitnessSubMatrix(
-                        (CodonStateSpace*)codondata->GetStateSpace(), nucmatrix, fitness[0].row(i),
-                        fitness[k].row(i), ind_conv[k].row(i), false);
+                        (CodonStateSpace*)codondata->GetStateSpace(), nucmatrix, fitness_proxies[k][i], false);
                 } else {
                     condsubmatrixarray[k][i] = new MGMSFitnessSubMatrix(
-                        (CodonStateSpace*)codondata->GetStateSpace(), nucmatrix, fitness[0].row(i),
-                        fitness[k].row(i), ind_conv[k].row(i), false);
+                        (CodonStateSpace*)codondata->GetStateSpace(), nucmatrix, fitness_proxies[k][i], false);
                 }
             }
         }
