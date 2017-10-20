@@ -217,7 +217,7 @@ int main(int argc, char* argv[]) {
         }
         DiffSelChain* chain = new DiffSelChain(datafile, treefile, ncond, nlevel, every, until,
                                                fixglob, fixvar, codonmodel, name, true);
-        cerr << "start\n";
+        cerr << "start new chain\n";
         chain->Start();
         cerr << "chain stopped\n";
 

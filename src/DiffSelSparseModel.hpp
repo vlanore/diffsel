@@ -353,18 +353,23 @@ class DiffSelSparseModel : public ProbModel {
 
         // codon matrices
         // per condition and per site
-        fitness_proxies = std::vector<std::vector<SparseFitness>>(Ncond, std::vector<SparseFitness>());
+        fitness_proxies =
+            std::vector<std::vector<SparseFitness>>(Ncond, std::vector<SparseFitness>());
         condsubmatrixarray = new CodonSubMatrix**[Ncond];
         for (int k = 0; k < Ncond; k++) {
             condsubmatrixarray[k] = new CodonSubMatrix*[Nsite];
             for (int i = 0; i < Nsite; i++) {
-                fitness_proxies[k].emplace_back(fitness[0].row(i), fitness[k].row(i), ind_conv[k].row(i));
+                fitness_proxies[k].reserve(Nsite);
+                fitness_proxies[k].emplace_back(fitness[0].row(i), fitness[k].row(i),
+                                                ind_conv[k].row(i));
                 if (codonmodel == 0) {
-                    condsubmatrixarray[k][i] = new MGSRFitnessSubMatrix(
-                        (CodonStateSpace*)codondata->GetStateSpace(), nucmatrix, fitness_proxies[k][i], false);
+                    condsubmatrixarray[k][i] =
+                        new MGSRFitnessSubMatrix((CodonStateSpace*)codondata->GetStateSpace(),
+                                                 nucmatrix, fitness_proxies[k][i], false);
                 } else {
-                    condsubmatrixarray[k][i] = new MGMSFitnessSubMatrix(
-                        (CodonStateSpace*)codondata->GetStateSpace(), nucmatrix, fitness_proxies[k][i], false);
+                    condsubmatrixarray[k][i] =
+                        new MGMSFitnessSubMatrix((CodonStateSpace*)codondata->GetStateSpace(),
+                                                 nucmatrix, fitness_proxies[k][i], false);
                 }
             }
         }

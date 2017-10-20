@@ -47,9 +47,9 @@ target_link_libraries(diffselsparse diffsel_lib)
 target_compile_features(diffselsparse PRIVATE ${CXX_FEATURES})
 
 # ReadDiffSel
-# add_executable(readdiffsel "src/ReadDiffSel.cpp")
-# target_link_libraries(readdiffsel diffsel_lib)
-# target_compile_features(readdiffsel PRIVATE ${CXX_FEATURES})
+add_executable(readdiffsel "src/ReadDiffSel.cpp")
+target_link_libraries(readdiffsel diffsel_lib)
+target_compile_features(readdiffsel PRIVATE ${CXX_FEATURES})
 
 # SingleOmega
 add_executable(singleomega "src/SingleOmega.cpp")

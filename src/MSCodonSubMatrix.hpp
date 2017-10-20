@@ -39,7 +39,7 @@ struct FitnessProxy {
 class FitnessFromArray : public FitnessProxy {
     double* fitness;
 
-public:
+  public:
     explicit FitnessFromArray(double* fitness) : fitness(fitness) {}
     double GetFitness(int aastate) const final { return fitness[aastate]; }
 };
@@ -70,7 +70,11 @@ class MGSRFitnessSubMatrix : public MGCodonSubMatrix {
           proxy(proxy) {}
 
   private:
-    double GetFitness(int aastate) const { return proxy.GetFitness(aastate); }
+    double GetFitness(int aastate) const {
+        std::cerr << "Inside fitness proxy!" << std::endl;
+        exit(37);
+        return proxy.GetFitness(aastate);
+    }
 
     void ComputeArray(int i) const override;
     void ComputeStationary() const override;

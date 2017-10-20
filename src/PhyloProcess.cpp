@@ -474,6 +474,7 @@ void PhyloProcess::ResampleSub() {
             }
         }
     }
+
 #if DEBUG > 1
     timer.print<2>("ResampleSub - state. ");
 #endif

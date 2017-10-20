@@ -332,20 +332,22 @@ class DiffSelModel : public ProbModel {
 
         // codon matrices
         // per condition and per site
-        fitness_proxies = std::vector<std::vector<FitnessFromArray>>(Ncond, std::vector<FitnessFromArray>());
+        fitness_proxies =
+            std::vector<std::vector<FitnessFromArray>>(Ncond, std::vector<FitnessFromArray>());
         condsubmatrixarray = new CodonSubMatrix**[Ncond];
         for (int k = 0; k < Ncond; k++) {
             condsubmatrixarray[k] = new CodonSubMatrix*[Nsite];
             for (int i = 0; i < Nsite; i++) {
-                fitness_proxies[k].emplace_back(fitnessprofile[k][i]);
+                fitness_proxies.reserve(Nsite);
+                fitness_proxies.at(k).emplace_back(fitnessprofile[k][i]);
                 if (codonmodel == 0) {
                     condsubmatrixarray[k][i] =
                         new MGSRFitnessSubMatrix((CodonStateSpace*)codondata->GetStateSpace(),
-                                                 nucmatrix, fitness_proxies[k][i], false);
+                                                 nucmatrix, fitness_proxies.at(k).at(i), false);
                 } else {
                     condsubmatrixarray[k][i] =
                         new MGMSFitnessSubMatrix((CodonStateSpace*)codondata->GetStateSpace(),
-                                                 nucmatrix, fitness_proxies[k][i], false);
+                                                 nucmatrix, fitness_proxies.at(k).at(i), false);
                 }
             }
         }
