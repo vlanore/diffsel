@@ -64,4 +64,4 @@ script:
   - make
   - make short-tests
   - make test
-  - if [ "$NONREG" = "true" ]; then make nonreg; fi
+  # - if [ "$NONREG" = "true" ]; then make nonreg; fi
