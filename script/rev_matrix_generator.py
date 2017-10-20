@@ -36,14 +36,17 @@ def diff(cno1, cno2):
 def case(c1, c2):
     d = diff(c1, c2)
     if (len(d) != 1):
-<<<<<<< b10459504dc9d172d322b53d09b6fcef0db5da23
-        a = 1
-        #print("\tQcodons[cod][%d][%d] := 0" % (c1, c2))
+        pass
+        # print("\tQcodons[cod][%d][%d] := 0" % (c1, c2))
     elif synonym(c1, c2):
-        print("\tQcodons[cod][%d][%d] := abs(Q[%d][%d])" % (c1+1, c2+1, reverse_bases[d[0][0]]+1, reverse_bases[d[0][1]]+1))
+        print("\tQcodons[cod][%d][%d] := Q[%d][%d]" % (c1+1, c2+1, reverse_bases[d[0][0]]+1, reverse_bases[d[0][1]]+1))
+    elif (amino_acids[c1] == '*' or amino_acids[c2] == '*'):
+        pass
+        # print("\tQcodons[cod][%d][%d] := 0" % (c1, c2))
     else:
-        print("\tQcodons[cod][%d][%d] := abs(Q[%d][%d] * sqrt(fitness[cod][%d]/fitness[cod][%d]))" %
-              (c1+1, c2+1, reverse_bases[d[0][0]]+1, reverse_bases[d[0][1]]+1, reverse_aas[short_aa_table[c2]]+1, reverse_aas[short_aa_table[c1]]+1))
+        print("\tQcodons[cod][%d][%d] := Q[%d][%d] * sqrt(fitness[cod][%d]/fitness[cod][%d])" %
+              (c1+1, c2+1, reverse_bases[d[0][0]]+1, reverse_bases[d[0][1]]+1, reverse_aas[amino_acids[c2]]+1, reverse_aas[amino_acids[c1]]+1))
+
 
 def print_all():
     print("for (cod in 1:nsites) {")
@@ -54,23 +57,8 @@ def print_all():
     print("  }")
     print("}")
     print("for (cod in 1:nsites) {")
-    for cno in range(61):
-        for cno2 in range(61):
-=======
-        print("\tQcodons[cod][%d][%d] := 0" % (c1, c2))
-    elif synonym(c1, c2):
-        print("\tQcodons[cod][%d][%d] := Q[%d][%d]" % (c1+1, c2+1, reverse_bases[d[0][0]]+1, reverse_bases[d[0][1]]+1))
-    elif (amino_acids[c1] == '*' or amino_acids[c2] == '*'):
-        print("\tQcodons[cod][%d][%d] := 0" % (c1, c2))
-    else:
-        print("\tQcodons[cod][%d][%d] := Q[%d][%d] * sqrt(fitness[cod][%d]/fitness[cod][%d])" %
-              (c1+1, c2+1, reverse_bases[d[0][0]]+1, reverse_bases[d[0][1]]+1, reverse_aas[amino_acids[c2]]+1, reverse_aas[amino_acids[c1]]+1))
-
-def print_all():
-    print("for (cod in 1:nsites) {")
     for cno in range(64):
         for cno2 in range(64):
->>>>>>> script: rev gen now uses base 64
             case(cno, cno2)
     print("\tR[cod] := fnFreeK(Qcodons[cod])")
     print("}")
