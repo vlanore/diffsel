@@ -36,6 +36,14 @@ struct FitnessProxy {
     virtual double GetFitness(int) const = 0;
 };
 
+class FitnessFromArray : public FitnessProxy {
+    double* fitness;
+
+public:
+    explicit FitnessFromArray(double* fitness) : fitness(fitness) {}
+    double GetFitness(int aastate) const final { return fitness[aastate]; }
+};
+
 class SparseFitness : public FitnessProxy {
     Eigen::Ref<Eigen::VectorXd> fitness0;
     Eigen::Ref<Eigen::VectorXd> fitness;
