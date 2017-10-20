@@ -338,7 +338,7 @@ class DiffSelModel : public ProbModel {
         for (int k = 0; k < Ncond; k++) {
             condsubmatrixarray[k] = new CodonSubMatrix*[Nsite];
             for (int i = 0; i < Nsite; i++) {
-                fitness_proxies.reserve(Nsite);
+                fitness_proxies.at(k).reserve(Nsite);
                 fitness_proxies.at(k).emplace_back(fitnessprofile[k][i]);
                 if (codonmodel == 0) {
                     condsubmatrixarray[k][i] =
