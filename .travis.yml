@@ -63,5 +63,5 @@ before_script:
 script:
   - make
   - make short-tests
-  - make test
+  - travis_wait 25 make test
   # - if [ "$NONREG" = "true" ]; then make nonreg; fi
