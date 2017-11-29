@@ -679,8 +679,9 @@ class DiffSelSparseModel : public ProbModel {
             for (int rep = 0; rep < nrep; rep++) {
                 /* ci gisaient movebaseline, movedelta et move varsel*/
                 for (int k = 0; k < Ncond; k++) {
-                    CAR(MoveFitness, k, 0.05, 10);
-                    CAR(MoveFitness, k, 0.1, 10);
+                    CAR(MoveFitness, k, 1.0, 10);
+                    CAR(MoveFitness, k, 3.0, 10);
+                    CAR(MoveFitness, k, 10.0, 10);
                 }
             }
 
@@ -717,7 +718,7 @@ class DiffSelSparseModel : public ProbModel {
     }
 
     double MoveFitness(int cond, double tuning, int nrep) {
-        int ntot = 0, nacc = 0;
+        double ntot = 0, nacc = 0;
         auto partial_gamma_log_density = [](double alpha, double m, double x) {
             return (alpha - 1.) * log(x) - alpha / m * x;
         };
@@ -725,37 +726,39 @@ class DiffSelSparseModel : public ProbModel {
         for (int rep = 0; rep < nrep; rep++) {
             for (int i = 0; i < Nsite; i++) {
                 int aa = Random::Choose(Naa);
-                double bk = fitness[cond](i, aa);
-                BackupSite(i);
+                if (cond == 0 or ind_conv[cond](i, aa) != 0) {
+                    double bk = fitness[cond](i, aa);
+                    BackupSite(i);
 
-                double logprob_before =
-                    partial_gamma_log_density(fitness_shape, fitness_inv_rates[aa], bk) +
-                    GetSiteSuffStatLogProb(i);
+                    double logprob_before =
+                        partial_gamma_log_density(fitness_shape, fitness_inv_rates[aa], bk) +
+                        GetSiteSuffStatLogProb(i);
 
-                double m = tuning * (Random::Uniform() - 0.5);
+                    double m = tuning * (Random::Uniform() - 0.5);
 
-                fitness[cond](i, aa) *= exp(m);
-                UpdateSite(i);
-                double logprob_after =
-                    partial_gamma_log_density(fitness_shape, fitness_inv_rates[aa],
-                                              fitness[cond](i, aa)) +
-                    GetSiteSuffStatLogProb(i);
+                    fitness[cond](i, aa) *= exp(m);
+                    UpdateSite(i);
+                    double logprob_after =
+                        partial_gamma_log_density(fitness_shape, fitness_inv_rates[aa],
+                                                  fitness[cond](i, aa)) +
+                        GetSiteSuffStatLogProb(i);
 
-                double loghastings = m;
+                    double loghastings = m;
 
-                double deltalogprob = logprob_after - logprob_before + loghastings;
+                    double deltalogprob = logprob_after - logprob_before + loghastings;
 
-                int accepted = (log(Random::Uniform()) < deltalogprob);
-                if (accepted) {
-                    nacc++;
-                } else {
-                    fitness[cond](i, aa) = bk;
-                    RestoreSite(i);
+                    int accepted = (log(Random::Uniform()) < deltalogprob);
+                    if (accepted) {
+                        nacc++;
+                    } else {
+                        fitness[cond](i, aa) = bk;
+                        RestoreSite(i);
+                    }
+                    ntot++;
                 }
-                ntot++;
             }
         }
-        return nacc / ntot;
+        return (ntot == 0) ? 0 : (double(nacc) / double(ntot));
     }
 
     double MoveFitnessShape(double tuning) {
@@ -870,7 +873,7 @@ class DiffSelSparseModel : public ProbModel {
 
 
     double MoveIndConv(int cond, int nrep) {
-        int ntot = 0, nacc = 0;
+        double ntot = 0, nacc = 0;
 
         for (int rep = 0; rep < nrep; rep++) {
             for (int i = 0; i < Nsite; i++) {
