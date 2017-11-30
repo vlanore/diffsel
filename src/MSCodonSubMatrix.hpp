@@ -32,49 +32,72 @@ license and that you accept its terms.*/
 #include <iostream>
 #include "CodonSubMatrix.hpp"
 
+struct FitnessProxy {
+    virtual double GetFitness(int) const = 0;
+};
+
+class FitnessFromArray : public FitnessProxy {
+    double* fitness;
+
+  public:
+    explicit FitnessFromArray(double* fitness) : fitness(fitness) {}
+    double GetFitness(int aastate) const final { return fitness[aastate]; }
+};
+
+class SparseFitness : public FitnessProxy {
+    Eigen::Ref<Eigen::VectorXd> fitness0;
+    Eigen::Ref<Eigen::VectorXd> fitness;
+    Eigen::Ref<Eigen::Matrix<bool, Eigen::Dynamic, 1>> ind_conv;
+
+  public:
+    SparseFitness(Eigen::Ref<Eigen::VectorXd> fitness0, Eigen::Ref<Eigen::VectorXd> fitness,
+                  Eigen::Ref<Eigen::Matrix<bool, Eigen::Dynamic, 1>> ind_conv)
+        : fitness0(fitness0), fitness(fitness), ind_conv(ind_conv) {}
+
+    double GetFitness(int aastate) const final {
+        return (ind_conv[aastate] ? fitness[aastate] : fitness0[aastate]) + 1e-6;
+    }
+};
+
 // square root
 class MGSRFitnessSubMatrix : public MGCodonSubMatrix {
   public:
-    MGSRFitnessSubMatrix(const CodonStateSpace *instatespace, const SubMatrix *inNucMatrix,
-                         const double *infitness, bool innormalise = false)
+    MGSRFitnessSubMatrix(const CodonStateSpace* instatespace, const SubMatrix* inNucMatrix,
+                         FitnessProxy& proxy, bool innormalise = false)
         : SubMatrix(instatespace->GetNstate(), innormalise),
           CodonSubMatrix(instatespace, innormalise),
           MGCodonSubMatrix(instatespace, inNucMatrix, innormalise),
-          fitness(infitness) {}
+          proxy(proxy) {}
 
-    double GetFitness(int aastate) const { return fitness[aastate] + 1e-6; }
-
-  protected:
-    // look at how ComputeArray and ComputeStationary are implemented in
-    // CodonSubMatrix.cpp
+  private:
+    double GetFitness(int aastate) const {
+        std::cerr << "Inside fitness proxy!" << std::endl;
+        exit(37);
+        return proxy.GetFitness(aastate);
+    }
 
     void ComputeArray(int i) const override;
     void ComputeStationary() const override;
-    // data members
-    const double *fitness;
+    FitnessProxy& proxy;
 };
 
 // mutation selection
 class MGMSFitnessSubMatrix : public MGCodonSubMatrix {
   public:
-    MGMSFitnessSubMatrix(const CodonStateSpace *instatespace, const SubMatrix *inNucMatrix,
-                         const double *infitness, bool innormalise = false)
+    MGMSFitnessSubMatrix(const CodonStateSpace* instatespace, const SubMatrix* inNucMatrix,
+                         FitnessProxy& proxy, bool innormalise = false)
         : SubMatrix(instatespace->GetNstate(), innormalise),
           CodonSubMatrix(instatespace, innormalise),
           MGCodonSubMatrix(instatespace, inNucMatrix, innormalise),
-          fitness(infitness) {}
+          proxy(proxy) {}
 
-    double GetFitness(int aastate) const { return fitness[aastate] + 1e-6; }
-
-  protected:
-    // look at how ComputeArray and ComputeStationary are implemented in
-    // CodonSubMatrix.cpp
+  private:
+    double GetFitness(int aastate) const { return proxy.GetFitness(aastate); }
 
     void ComputeArray(int i) const override;
     void ComputeStationary() const override;
 
-    // data members
-    const double *fitness;
+    FitnessProxy& proxy;
 };
 
 #endif

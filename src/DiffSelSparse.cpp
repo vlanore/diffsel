@@ -1,7 +1,6 @@
 /*Copyright or © or Copr. Centre National de la Recherche Scientifique (CNRS) (2017-06-14).
 Contributors:
 * Nicolas LARTILLOT - nicolas.lartillot@univ-lyon1.fr
-* Vincent LANORE - vincent.lanore@univ-lyon1.fr
 
 This software is a computer program whose purpose is to detect convergent evolution using Bayesian
 phylogenetic codon models.
@@ -29,8 +28,10 @@ license and that you accept its terms.*/
 #define DOCTEST_CONFIG_IMPLEMENT
 #include <cmath>
 #include <fstream>
+#include <numeric>
 #include "Chain.hpp"
-#include "DiffSelModel.hpp"
+#include "DiffSelSparseModel.hpp"
+
 using namespace std;
 
 
@@ -41,7 +42,7 @@ class DiffSelChain : public Chain {
     int codonmodel, category, level, fixglob, fixvar;
 
   public:
-    DiffSelModel* GetModel() { return static_cast<DiffSelModel*>(model.get()); }
+    DiffSelSparseModel* GetModel() { return static_cast<DiffSelSparseModel*>(model.get()); }
 
     string GetModelType() override { return modeltype; }
 
@@ -69,8 +70,8 @@ class DiffSelChain : public Chain {
     }
 
     void New(int force) override {
-        model = std::unique_ptr<DiffSelModel>(new DiffSelModel(datafile, treefile, category, level,
-                                                               fixglob, fixvar, codonmodel, true));
+        model = std::unique_ptr<DiffSelSparseModel>(new DiffSelSparseModel(
+            datafile, treefile, category, level, fixglob, fixvar, codonmodel, true));
         cerr << "-- Reset" << endl;
         Reset(force);
         cerr << "-- New ok\n";
@@ -95,7 +96,7 @@ class DiffSelChain : public Chain {
         is >> every >> until >> size;
 
         if (modeltype == "DIFFSEL") {
-            model = std::unique_ptr<DiffSelModel>(new DiffSelModel(
+            model = std::unique_ptr<DiffSelSparseModel>(new DiffSelSparseModel(
                 datafile, treefile, category, level, fixglob, fixvar, codonmodel, true));
         } else {
             cerr << "-- Error when opening file " << name
@@ -217,10 +218,14 @@ int main(int argc, char* argv[]) {
         }
         DiffSelChain* chain = new DiffSelChain(datafile, treefile, ncond, nlevel, every, until,
                                                fixglob, fixvar, codonmodel, name, true);
-        cerr << "start new chain\n";
+        cerr << "start\n";
         chain->Start();
         cerr << "chain stopped\n";
 
         delete chain;
+    }
+    for (auto p : AcceptStats::d) {
+        cout << setw(35) << p.first << " -> "
+             << 100. * accumulate(p.second.begin(), p.second.end(), 0.) / p.second.size() << "%\n";
     }
 }

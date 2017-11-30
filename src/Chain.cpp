@@ -83,6 +83,9 @@ void Chain::Move() {
 }
 
 void Chain::Start() {
+    ofstream chain_os((name + ".chain").c_str());
+    model->HeaderToStream(chain_os);
+    chain_os.close();
     ofstream run_os((name + ".run").c_str());
     run_os << 1 << '\n';
     run_os.close();

@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.1.0 FATAL_ERROR)
 project(diffsel CXX)
 
 # Compilation options
-set(CMAKE_CXX_FLAGS "-O3 -Wall -Wextra -Wpedantic") # normal mode
+set(CMAKE_CXX_FLAGS "-O3 -Wall -Wextra") # normal mode
 if (CMAKE_BUILD_TYPE MATCHES COVERAGE)
   message(STATUS "Compiling in coverage measurement mode")
   set(CMAKE_CXX_FLAGS "-O0 -fprofile-arcs -ftest-coverage")
@@ -40,6 +40,11 @@ target_compile_features(diffsel_lib PUBLIC ${CXX_FEATURES})
 add_executable(diffsel "src/DiffSel.cpp")
 target_link_libraries(diffsel diffsel_lib)
 target_compile_features(diffsel PRIVATE ${CXX_FEATURES})
+
+# DiffselSparse
+add_executable(diffselsparse "src/DiffSelSparse.cpp")
+target_link_libraries(diffselsparse diffsel_lib)
+target_compile_features(diffselsparse PRIVATE ${CXX_FEATURES})
 
 # ReadDiffSel
 add_executable(readdiffsel "src/ReadDiffSel.cpp")

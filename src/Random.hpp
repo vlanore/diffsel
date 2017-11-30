@@ -29,6 +29,7 @@ license and that you accept its terms.*/
 #ifndef RANDOM_H
 #define RANDOM_H
 
+#include <Eigen/Dense>
 #include <vector>
 
 #define MT_LEN 624  // (VL) required for magic
@@ -49,6 +50,8 @@ class Random {
     static int ApproxBinomial(int N, double p);
     static int Poisson(double mu);
     static double Gamma(double alpha, double beta);
+    static double Beta(double alpha, double beta);
+    static double BetaMV(double m, double v);
     static double sNormal();
     static double sExpo();
     static double sGamma(double);
@@ -64,6 +67,7 @@ class Random {
     static double logMultivariateGamma(double a, int p);
 
     static double ProfileProposeMove(double *profile, int dim, double tuning, int n);
+    static double ProfileProposeMove(Eigen::VectorXd &profile, double tuning, int n);
     static double RealVectorProposeMove(double *x, int dim, double tuning, int n);
 
   private:

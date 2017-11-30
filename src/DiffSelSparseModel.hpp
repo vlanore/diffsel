@@ -1,6 +1,7 @@
 /*Copyright or © or Copr. Centre National de la Recherche Scientifique (CNRS) (2017-06-14).
 Contributors:
 * Nicolas LARTILLOT - nicolas.lartillot@univ-lyon1.fr
+* Philippe VEBER - philippe.veber@univ-lyon1.fr
 * Vincent LANORE - vincent.lanore@univ-lyon1.fr
 
 This software is a computer program whose purpose is to detect convergent evolution using Bayesian
@@ -27,6 +28,7 @@ The fact that you are presently reading this means that you have had knowledge o
 license and that you accept its terms.*/
 
 
+#include <memory>
 #include "CodonSequenceAlignment.hpp"
 #include "GTRSubMatrix.hpp"
 #include "MSCodonSubMatrix.hpp"
@@ -37,7 +39,70 @@ license and that you accept its terms.*/
 const int Nrr = Nnuc * (Nnuc - 1) / 2;
 const int Nstate = 61;
 
-class DiffSelModel : public ProbModel {
+template <typename... Args>
+std::string sf(const std::string& format, Args... args) {
+    size_t size = snprintf(nullptr, 0, format.c_str(), args...) + 1;
+    std::unique_ptr<char[]> buf(new char[size]);
+    snprintf(buf.get(), size, format.c_str(), args...);
+    return std::string(buf.get(), buf.get() + size - 1);
+}
+
+/*
+=====================================================================
+  Things required to record move success rates
+=====================================================================
+*/
+struct AcceptStats {
+    static std::map<std::string, std::vector<double>> d;
+    static void add(std::string k, double v) { d[k].push_back(v); }
+};
+std::map<std::string, std::vector<double>> AcceptStats::d;
+
+
+#define CAR(f, ...) call_and_record(#f, this, &DiffSelSparseModel::f, ##__VA_ARGS__)
+
+class DiffSelSparseModel;
+
+std::string args_to_string() { return ""; }
+
+std::string args_to_string(double d) { return sf("%.2f", d); }
+
+template <class Arg>
+std::string args_to_string(Arg arg) {
+    return std::to_string(arg);
+}
+
+template <class Arg, class... Args>
+std::string args_to_string(Arg arg, Args... args) {
+    return args_to_string(arg) + ", " + args_to_string(args...);
+}
+
+template <class... Args>
+void call_and_record(const std::string& s, DiffSelSparseModel* instance,
+                     double (DiffSelSparseModel::*f)(Args...), Args... args) {
+    AcceptStats::add(s + '(' + args_to_string(args...) + ')', (instance->*f)(args...));
+}
+/*
+=====================================================================
+*/
+
+
+using AAProfile = Eigen::Matrix<double, Eigen::Dynamic, 1>;
+using BMatrix = Eigen::Matrix<bool, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
+using DMatrix = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
+
+void InitUniformDirichlet(Eigen::VectorXd& v) {
+    double tot = 0.;
+    for (int i = 0; i < v.size(); i++) {
+        v[i] = Random::sExpo();
+        tot += v[i];
+    }
+    for (int i = 0; i < v.size(); i++) {
+        v[i] /= tot;
+    }
+}
+
+class DiffSelSparseModel : public ProbModel {
     // -----
     // model selectors
     // -----
@@ -64,10 +129,6 @@ class DiffSelModel : public ProbModel {
     int Ncond;
 
     // number of levels of the model
-    // with 2 levels, structure of the model is as follows:
-    // baseline (condition 0)
-    // baseline  * exp(*delta1) (condition 1)
-    // baseline * exp(delta1 + deltak) (for condition k=2..Ncond)
     int Nlevel;
 
     // -----
@@ -90,28 +151,23 @@ class DiffSelModel : public ProbModel {
     double* nucstat;
     GTRSubMatrix* nucmatrix;
 
-    // baseline (global) fitness profiles across sites
-    // Nsite * Naa
-    double** baseline;
 
+    double fitness_shape;
+    AAProfile fitness_inv_rates;
     // differential selection factors across conditions k=1..Ncond and across sites
-    // by convention, delta[0] == baseline
     // Ncond * Nsite * Naa
-    double*** delta;
+    std::vector<DMatrix> fitness;
 
-    // variance parameters (across conditions k=1..Ncond)
-    // Ncond
-    double* varsel;
+    double prob_conv_m{0.1};
+    double prob_conv_v{0.5};
+    Eigen::VectorXd prob_conv;      // indexed by condition
+    std::vector<BMatrix> ind_conv;  // indexed by condition * sites * aa;
 
-    // fitness profiles (combinations of baseline and delta)
-    // across conditions k=0..Ncond and across sites
-    // Ncond * Nsite * Naa
-    double*** fitnessprofile;
 
     // codon substitution matrices
     // across conditions and across sites
     // Ncond * Nsite
-    std::vector<std::vector<FitnessFromArray>> fitness_proxies;
+    std::vector<std::vector<SparseFitness>> fitness_proxies;
     CodonSubMatrix*** condsubmatrixarray;
 
     // branch- and site-pointers over substitution matrices (for phyloprocess)
@@ -130,17 +186,12 @@ class DiffSelModel : public ProbModel {
     double** sitecondsuffstatlogprob;
     double** bksitecondsuffstatlogprob;
 
-    // auxiliary array
-    // condalloc[k][l] is 1 iff condition l should recompute its fitness profiles whenever delta[k]
-    // has changed
-    // bool ?
-    int** condalloc;
-
     PhyloProcess* phyloprocess;
 
   public:
-    DiffSelModel(const std::string& datafile, const std::string& treefile, int inNcond,
-                 int inNlevel, int infixglob, int infixvar, int incodonmodel, bool sample) {
+    DiffSelSparseModel(const std::string& datafile, const std::string& treefile, int Ncond,
+                       int inNlevel, int infixglob, int infixvar, int incodonmodel, bool sample)
+        : Ncond(Ncond) {
         fixglob = infixglob;
         if (!fixglob) {
             std::cerr << "error: free hyperparameters for baseline (global profile) not yet "
@@ -149,7 +200,6 @@ class DiffSelModel : public ProbModel {
         }
         fixvar = infixvar;
         codonmodel = incodonmodel;
-        Ncond = inNcond;
 
         Nlevel = inNlevel;
         if (Nlevel != 2) {
@@ -178,9 +228,9 @@ class DiffSelModel : public ProbModel {
         }
     }
 
-    DiffSelModel(const DiffSelModel&) = delete;
+    DiffSelSparseModel(const DiffSelSparseModel&) = delete;
 
-    ~DiffSelModel() {
+    ~DiffSelSparseModel() {
         // delete tree;
         delete[] branchlength;
         delete[] branchlengthcount;
@@ -189,17 +239,12 @@ class DiffSelModel : public ProbModel {
         delete[] nucrelrate;
         delete[] nucstat;
         delete nucmatrix;
-        delete[] baseline;
-        delete[] delta;
-        delete[] varsel;
-        delete[] fitnessprofile;
         delete[] condsubmatrixarray;
         delete[] phylosubmatrix;
         delete[] rootsubmatrix;
         delete[] suffstatarray;
         delete[] sitecondsuffstatlogprob;
         delete[] bksitecondsuffstatlogprob;
-        delete[] condalloc;
         delete phyloprocess;
     }
 
@@ -281,73 +326,50 @@ class DiffSelModel : public ProbModel {
         // normalized (true) GTR nucleotide substitution matrix
         nucmatrix = new GTRSubMatrix(Nnuc, nucrelrate, nucstat, true);
 
-        // baseline (global) profile
-        // uniform Dirichlet distributed
-        baseline = new double*[Nsite];
-        for (int i = 0; i < Nsite; i++) {
-            baseline[i] = new double[Naa];
-            double tot = 0;
-            for (int l = 0; l < Naa; l++) {
-                baseline[i][l] = Random::sExpo();
-                tot += baseline[i][l];
-            }
-            for (int l = 0; l < Naa; l++) {
-                baseline[i][l] /= tot;
-            }
-        }
+        fitness_shape = Random::sExpo();
+        fitness_inv_rates = AAProfile(Naa);
+        InitUniformDirichlet(fitness_inv_rates);
 
-        // variance parameters (one for each condition, 1..Ncond)
-        varsel = new double[Ncond];
-        for (int k = 1; k < Ncond; k++) {
-            varsel[k] = 1.0;
-        }
-
-        // differential selection effects
-        // normally distributed
-        delta = new double**[Ncond];
-
-        // by convention, delta[0] == baseline
-        delta[0] = baseline;
-        for (int k = 1; k < Ncond; k++) {
-            delta[k] = new double*[Nsite];
-            for (int i = 0; i < Nsite; i++) {
-                delta[k][i] = new double[Naa];
-                for (int l = 0; l < Naa; l++) {
-                    delta[k][i][l] = sqrt(varsel[k]) * Random::sNormal();
+        fitness = std::vector<DMatrix>(Ncond, Eigen::MatrixXd(Nsite, Naa));
+        for (auto& G_k : fitness) {
+            for (int i = 0; i < Nsite; i++)
+                for (int aa = 0; aa < Naa; aa++) {
+                    G_k(i, aa) =
+                        Random::Gamma(fitness_shape, fitness_shape / fitness_inv_rates[aa]);
                 }
-            }
         }
 
-        // fitnessprofiles...
-        fitnessprofile = new double**[Ncond];
-        fitnessprofile[0] = baseline;
-        for (int k = 1; k < Ncond; k++) {
-            fitnessprofile[k] = new double*[Nsite];
-            for (int i = 0; i < Nsite; i++) {
-                fitnessprofile[k][i] = new double[Naa];
-            }
+        prob_conv = Eigen::VectorXd(Ncond);
+        for (int k = 0; k < Ncond; k++) {
+            prob_conv[k] = Random::BetaMV(prob_conv_m, prob_conv_v);
         }
 
-        UpdateFitnessProfiles();
+        ind_conv = std::vector<BMatrix>(Ncond, BMatrix(Nsite, Naa));
+        for (int k = 0; k < Ncond; k++)
+            for (int i = 0; i < Nsite; i++)
+                for (int aa = 0; aa < Naa; aa++) {
+                    ind_conv[k](i, aa) = (Random::Uniform() < prob_conv[k]);
+                }
 
         // codon matrices
         // per condition and per site
         fitness_proxies =
-            std::vector<std::vector<FitnessFromArray>>(Ncond, std::vector<FitnessFromArray>());
+            std::vector<std::vector<SparseFitness>>(Ncond, std::vector<SparseFitness>());
         condsubmatrixarray = new CodonSubMatrix**[Ncond];
         for (int k = 0; k < Ncond; k++) {
             condsubmatrixarray[k] = new CodonSubMatrix*[Nsite];
             for (int i = 0; i < Nsite; i++) {
-                fitness_proxies.at(k).reserve(Nsite);
-                fitness_proxies.at(k).emplace_back(fitnessprofile[k][i]);
+                fitness_proxies[k].reserve(Nsite);
+                fitness_proxies[k].emplace_back(fitness[0].row(i), fitness[k].row(i),
+                                                ind_conv[k].row(i));
                 if (codonmodel == 0) {
                     condsubmatrixarray[k][i] =
                         new MGSRFitnessSubMatrix((CodonStateSpace*)codondata->GetStateSpace(),
-                                                 nucmatrix, fitness_proxies.at(k).at(i), false);
+                                                 nucmatrix, fitness_proxies[k][i], false);
                 } else {
                     condsubmatrixarray[k][i] =
                         new MGMSFitnessSubMatrix((CodonStateSpace*)codondata->GetStateSpace(),
-                                                 nucmatrix, fitness_proxies.at(k).at(i), false);
+                                                 nucmatrix, fitness_proxies[k][i], false);
                 }
             }
         }
@@ -390,28 +412,6 @@ class DiffSelModel : public ProbModel {
         bksitecondsuffstatlogprob = new double*[Ncond];
         for (int k = 0; k < Ncond; k++) {
             bksitecondsuffstatlogprob[k] = new double[Nsite];
-        }
-
-        // flagging conditions to be updated
-        // condalloc[k][l] is 1 iff condition l should recompute its fitness profiles whenever
-        // delta[k] has changed
-        condalloc = new int*[Ncond];
-        for (int k = 0; k < Ncond; k++) {
-            condalloc[k] = new int[Ncond];
-            for (int l = 0; l < Ncond; l++) {
-                condalloc[k][l] = 0;
-            }
-        }
-        for (int l = 0; l < Ncond; l++) {
-            condalloc[0][l] = 1;
-        }
-        if (Nlevel == 2) {
-            for (int l = 1; l < Ncond; l++) {
-                condalloc[1][l] = 1;
-            }
-        }
-        for (int l = Nlevel; l < Ncond; l++) {
-            condalloc[l][l] = 1;
         }
     }
 
@@ -457,49 +457,6 @@ class DiffSelModel : public ProbModel {
         }
     }
 
-    // ------------------
-    // Update system
-    // ------------------
-
-    void UpdateFitnessProfiles() {
-        for (int i = 0; i < Nsite; i++) {
-            UpdateSiteFitnessProfiles(i);
-        }
-    }
-
-    void UpdateSiteFitnessProfiles(int i) {
-        for (int k = 1; k < Ncond; k++) {
-            UpdateSiteCondFitnessProfile(i, k);
-        }
-    }
-
-    void UpdateSiteFlaggedFitnessProfiles(int i, int condflag) {
-        for (int k = 1; k < Ncond; k++) {
-            if (condalloc[condflag][k]) {
-                UpdateSiteCondFitnessProfile(i, k);
-            }
-        }
-    }
-
-    void UpdateSiteCondFitnessProfile(int i, int k) {
-        double total = 0;
-        for (int a = 0; a < Naa; a++) {
-            double b = baseline[i][a];
-            double d = 0;
-            if (Nlevel == 2) {
-                d += delta[1][i][a];
-            }
-            if (k >= Nlevel) {
-                d += delta[k][i][a];
-            }
-            fitnessprofile[k][i][a] = b * exp(d);
-            total += fitnessprofile[k][i][a];
-        }
-        for (int a = 0; a < Naa; a++) {
-            fitnessprofile[k][i][a] /= total;
-        }
-    }
-
     void CorruptNucMatrix() {
         nucmatrix->CopyStationary(nucstat);
         nucmatrix->CorruptMatrix();
@@ -517,17 +474,8 @@ class DiffSelModel : public ProbModel {
         }
     }
 
-    void CorruptSiteFlaggedCodonMatrices(int i, int condflag) {
-        for (int k = 0; k < Ncond; k++) {
-            if (condalloc[condflag][k]) {
-                condsubmatrixarray[k][i]->CorruptMatrix();
-            }
-        }
-    }
-
     void Update() override {
         std::cerr << "in diffsel update\n";
-        UpdateFitnessProfiles();
         CorruptNucMatrix();
         CorruptCodonMatrices();
         phyloprocess->GetLogProb();
@@ -553,7 +501,6 @@ class DiffSelModel : public ProbModel {
     }
 
     void UpdateSite(int i) {
-        UpdateSiteFitnessProfiles(i);
         CorruptSiteCodonMatrices(i);
         for (int k = 0; k < Ncond; k++) {
             sitecondsuffstatlogprob[k][i] = SiteCondSuffStatLogProb(i, k);
@@ -561,7 +508,6 @@ class DiffSelModel : public ProbModel {
     }
 
     void CheckSite(int i) {
-        UpdateSiteFitnessProfiles(i);
         CorruptSiteCodonMatrices(i);
         for (int k = 0; k < Ncond; k++) {
             if (fabs(sitecondsuffstatlogprob[k][i] - SiteCondSuffStatLogProb(i, k)) > 1e-8) {
@@ -591,16 +537,6 @@ class DiffSelModel : public ProbModel {
         }
     }
 
-
-    void UpdateSiteFlagged(int i, int condflag) {
-        UpdateSiteFlaggedFitnessProfiles(i, condflag);
-        CorruptSiteFlaggedCodonMatrices(i, condflag);
-        for (int k = 0; k < Ncond; k++) {
-            if (condalloc[condflag][k]) {
-                sitecondsuffstatlogprob[k][i] = SiteCondSuffStatLogProb(i, k);
-            }
-        }
-    }
 
     // ---------------
     // suff stat log probs
@@ -642,48 +578,6 @@ class DiffSelModel : public ProbModel {
         */
     }
 
-    double SiteGlobalProfileLogProb(int) { return 0; }
-
-    double ProfileLogProb() {
-        double total = 0;
-        for (int k = 1; k < Ncond; k++) {
-            total += CondProfileLogProb(k);
-        }
-        return total;
-    }
-
-    double CondProfileLogProb(int k) {
-        double total = 0;
-        for (int i = 0; i < Nsite; i++) {
-            total += SiteCondProfileLogProb(i, k);
-        }
-        total -= 0.5 * Nsite * Naa * log(2 * Pi * varsel[k]);
-        return total;
-    }
-
-    double SiteCondProfileLogProb(int i, int k) {
-        if (k == 0) {
-            return 0;
-        }
-        double sum2 = 0;
-        for (int a = 0; a < Naa; a++) {
-            sum2 += delta[k][i][a] * delta[k][i][a];
-        }
-        return -0.5 * sum2 / varsel[k];
-    }
-
-    double VarSelLogProb() {
-        double total = 0;
-        for (int k = 1; k < Ncond; k++) {
-            total += CondVarSelLogProb(k);
-        }
-        return total;
-    }
-
-    double CondVarSelLogProb(int k) {
-        // exponential of mean 1
-        return -varsel[k];
-    }
 
     double LambdaLogProb() { return -log(10.0) - lambda / 10; }
 
@@ -774,36 +668,43 @@ class DiffSelModel : public ProbModel {
         for (int rep0 = 0; rep0 < nrep0; rep0++) {
             CollectLengthSuffStat();
 
-            MoveBranchLength();
-            MoveLambda(1.0, 10);
-            MoveLambda(0.3, 10);
+            CAR(MoveBranchLength);
+            CAR(MoveLambda, 1.0, 10);
+            CAR(MoveLambda, 0.3, 10);
 
             CollectSuffStat();
 
             UpdateAll();
 
             for (int rep = 0; rep < nrep; rep++) {
-                MoveBaseline(0.15, 10, 1);
-
-                for (int k = 1; k < Ncond; k++) {
-                    MoveDelta(k, 5, 1, 10);
-                    MoveDelta(k, 3, 5, 10);
-                    MoveDelta(k, 1, 10, 10);
-                    MoveDelta(k, 1, 20, 10);
-                }
-
-                if (!fixvar) {
-                    MoveVarSel(1.0, 10);
-                    MoveVarSel(0.3, 10);
+                /* ci gisaient movebaseline, movedelta et move varsel*/
+                for (int k = 0; k < Ncond; k++) {
+                    CAR(MoveFitness, k, 1.0, 10);
+                    CAR(MoveFitness, k, 3.0, 10);
+                    CAR(MoveFitness, k, 10.0, 10);
                 }
             }
 
-            MoveRR(0.1, 1, 10);
-            MoveRR(0.03, 3, 10);
-            MoveRR(0.01, 3, 10);
+            CAR(MoveFitnessShape, 1.);
+            CAR(MoveFitnessShape, 0.3);
 
-            MoveNucStat(0.1, 1, 10);
-            MoveNucStat(0.01, 1, 10);
+            CAR(MoveFitnessInvRates, 0.15, 1);
+            CAR(MoveFitnessInvRates, 0.15, 5);
+            CAR(MoveFitnessInvRates, 0.15, 10);
+
+            CAR(MoveProbConv, 1.);
+            CAR(MoveProbConv, 0.3);
+
+            for (int k = 1; k < Ncond; k++) {
+                CAR(MoveIndConv, k, 10);
+            }
+
+            CAR(MoveRR, 0.1, 1, 10);
+            CAR(MoveRR, 0.03, 3, 10);
+            CAR(MoveRR, 0.01, 3, 10);
+
+            CAR(MoveNucStat, 0.1, 1, 10);
+            CAR(MoveNucStat, 0.01, 1, 10);
         }
 
         UpdateAll();
@@ -813,84 +714,224 @@ class DiffSelModel : public ProbModel {
         double frac = 1;
         phyloprocess->Move(frac);
 
-        return 1.0;
+        return 1.;
+    }
+
+    double MoveFitness(int cond, double tuning, int nrep) {
+        double ntot = 0, nacc = 0;
+        auto partial_gamma_log_density = [](double alpha, double m, double x) {
+            return (alpha - 1.) * log(x) - alpha / m * x;
+        };
+
+        for (int rep = 0; rep < nrep; rep++) {
+            for (int i = 0; i < Nsite; i++) {
+                int aa = Random::Choose(Naa);
+                if (cond == 0 or ind_conv[cond](i, aa) != 0) {
+                    double bk = fitness[cond](i, aa);
+                    BackupSite(i);
+
+                    double logprob_before =
+                        partial_gamma_log_density(fitness_shape, fitness_inv_rates[aa], bk) +
+                        GetSiteSuffStatLogProb(i);
+
+                    double m = tuning * (Random::Uniform() - 0.5);
+
+                    fitness[cond](i, aa) *= exp(m);
+                    UpdateSite(i);
+                    double logprob_after =
+                        partial_gamma_log_density(fitness_shape, fitness_inv_rates[aa],
+                                                  fitness[cond](i, aa)) +
+                        GetSiteSuffStatLogProb(i);
+
+                    double loghastings = m;
+
+                    double deltalogprob = logprob_after - logprob_before + loghastings;
+
+                    int accepted = (log(Random::Uniform()) < deltalogprob);
+                    if (accepted) {
+                        nacc++;
+                    } else {
+                        fitness[cond](i, aa) = bk;
+                        RestoreSite(i);
+                    }
+                    ntot++;
+                }
+            }
+        }
+        return (ntot == 0) ? 0 : (double(nacc) / double(ntot));
+    }
+
+    double MoveFitnessShape(double tuning) {
+        auto partial_gamma_log_density = [](double alpha, double m, double x) {
+            double beta = alpha / m;
+            return alpha * log(beta) - log(tgamma(alpha)) + (alpha - 1) * log(x);
+        };
+
+        auto fitness_log_density = [&]() {
+            double logprob = -fitness_shape;
+            for (int k = 0; k < Ncond; k++)
+                for (int i = 0; i < Nsite; i++)
+                    for (int aa = 0; aa < Naa; aa++)
+                        logprob += ind_conv[k](i, aa) *
+                                   partial_gamma_log_density(fitness_shape, fitness_inv_rates[aa],
+                                                             fitness[k](i, aa));
+            return logprob;
+        };
+
+        double bk = fitness_shape;
+
+        double logprob_before = fitness_log_density();
+        double m = tuning * (Random::Uniform() - 0.5);
+        fitness_shape *= exp(m);
+        double logprob_after = fitness_log_density();
+
+        double loghastings = m;
+        double deltalogprob = logprob_after - logprob_before + loghastings;
+
+        bool accepted = (log(Random::Uniform()) < deltalogprob);
+        if (!accepted) {
+            fitness_shape = bk;
+        }
+        return static_cast<double>(accepted);
+    }
+
+    double MoveFitnessInvRates(double tuning, int n) {
+        auto partial_gamma_log_density = [](double alpha, double m, double x) {
+            double beta = alpha / m;
+            return alpha * log(beta) - beta * x;
+        };
+
+        auto fitness_log_density = [&]() {
+            double logprob = 0;
+            for (int k = 0; k < Ncond; k++)
+                for (int i = 0; i < Nsite; i++)
+                    for (int aa = 0; aa < Naa; aa++)
+                        logprob += ind_conv[k](i, aa) *
+                                   partial_gamma_log_density(fitness_shape, fitness_inv_rates[aa],
+                                                             fitness[k](i, aa));
+            return logprob;
+        };
+
+        AAProfile bk = fitness_inv_rates;
+
+        double logprob_before = fitness_log_density();
+        double loghastings = Random::ProfileProposeMove(fitness_inv_rates, tuning, n);
+        double logprob_after = fitness_log_density();
+
+        double deltalogprob = logprob_after - logprob_before + loghastings;
+
+        bool accepted = (log(Random::Uniform()) < deltalogprob);
+        if (!accepted) {
+            fitness_inv_rates = bk;
+        }
+        return static_cast<double>(accepted);
+    }
+
+    double MoveProbConv(double tuning) {
+        auto partial_beta_log_density = [](double m, double v, double x) {
+            double alpha = m / v;
+            double beta = (1 - m) / v;
+            return (alpha - 1) * log(x) + (beta - 1) * log(1 - x);
+        };
+
+        auto ind_conv_log_density = [&]() {
+            double logprob = 0;
+            for (int k = 1; k < Ncond; k++)
+                for (int i = 0; i < Nsite; i++)
+                    for (int aa = 0; aa < Naa; aa++) {
+                        logprob += (ind_conv[k](i, aa)) ? log(prob_conv[k]) : log(1 - prob_conv[k]);
+                    }
+            return logprob;
+        };
+
+        double ntot = 0, nacc = 0;
+
+        for (int k = 1; k < Ncond; k++) {
+            double bk = prob_conv[k];
+            double logprob_before =
+                ind_conv_log_density() +
+                partial_beta_log_density(prob_conv_m, prob_conv_v, prob_conv[k]);
+
+            double m = tuning * (Random::Uniform() - 0.5);
+            prob_conv[k] *= exp(m);
+            double loghastings = m;
+
+            double logprob_after = ind_conv_log_density() +
+                                   partial_beta_log_density(prob_conv_m, prob_conv_v, prob_conv[k]);
+
+            double deltalogprob = logprob_after - logprob_before + loghastings;
+
+            bool accepted = (log(Random::Uniform()) < deltalogprob);
+            if (!accepted) {
+                prob_conv[k] = bk;
+            } else
+                nacc++;
+            ntot++;
+        }
+        return nacc / ntot;
     }
 
 
-    double MoveBaseline(double tuning, int n, int nrep) {
-        double nacc = 0;
-        double ntot = 0;
-        double bk[Naa];
+    double MoveIndConv(int cond, int nrep) {
+        double ntot = 0, nacc = 0;
+
         for (int rep = 0; rep < nrep; rep++) {
             for (int i = 0; i < Nsite; i++) {
-                // CheckSite(i);
-
-                for (int a = 0; a < Naa; a++) {
-                    bk[a] = baseline[i][a];
-                }
+                int aa = Random::Choose(Naa);
+                bool bk = ind_conv[cond](i, aa);
+                // double fitness_bk = fitness[cond](i, aa);
                 BackupSite(i);
 
-                double deltalogprob = -SiteGlobalProfileLogProb(i) - GetSiteSuffStatLogProb(i);
-                double loghastings = Random::ProfileProposeMove(baseline[i], Naa, tuning, n);
-                deltalogprob += loghastings;
+                if (!bk) {
+                    /* the two partial_beta_log_density terms cancel
+                       out in the metropolis-hastings ratio */
+                    double logprob_before = log(1 - prob_conv[cond])
+                                            // + partial_gamma_log_density(fitness_shape,
+                                            //                             fitness_inv_rates[aa],
+                                            //                             fitness[k](i,aa))
+                                            + GetSiteSuffStatLogProb(i);
+                    double loghastings = 0.;
+                    // - partial_gamma_log_density(fitness_shape,
+                    //                             fitness_inv_rates[aa],
+                    //                             fitness[k](i,aa))
+                    ind_conv[cond](i, aa) = true;
+                    fitness[cond](i, aa) =
+                        Random::Gamma(fitness_shape, fitness_shape / fitness_inv_rates[aa]);
+                    UpdateSite(i);
+                    double logprob_after = log(prob_conv[cond]) + GetSiteSuffStatLogProb(i);
+                    double deltalogprob = logprob_after - logprob_before + loghastings;
 
-                UpdateSite(i);
-
-                deltalogprob += SiteGlobalProfileLogProb(i) + GetSiteSuffStatLogProb(i);
-
-                int accepted = (log(Random::Uniform()) < deltalogprob);
-                if (accepted) {
-                    nacc++;
-                } else {
-                    for (int a = 0; a < Naa; a++) {
-                        baseline[i][a] = bk[a];
+                    int accepted = (log(Random::Uniform()) < deltalogprob);
+                    if (accepted) {
+                        nacc++;
+                    } else {
+                        ind_conv[cond](i, aa) = false;
+                        // fitness[cond](i, aa) = fitness_bk;
+                        RestoreSite(i);
                     }
-                    RestoreSite(i);
+                    ntot++;
+                } else {
+                    double logprob_before = log(prob_conv[cond]) + GetSiteSuffStatLogProb(i);
+                    double loghastings = 0.;
+                    ind_conv[cond](i, aa) = false;
+                    UpdateSite(i);
+                    double logprob_after = log(1 - prob_conv[cond]) + GetSiteSuffStatLogProb(i);
+                    double deltalogprob = logprob_after - logprob_before + loghastings;
+
+                    int accepted = (log(Random::Uniform()) < deltalogprob);
+                    if (accepted) {
+                        nacc++;
+                    } else {
+                        ind_conv[cond](i, aa) = true;
+                        RestoreSite(i);
+                    }
+                    ntot++;
                 }
-                ntot++;
-                // CheckSite(i);
             }
         }
         return nacc / ntot;
     }
 
-    double MoveDelta(int k, double tuning, int n, int nrep) {
-        double nacc = 0;
-        double ntot = 0;
-        double bk[Naa];
-        for (int rep = 0; rep < nrep; rep++) {
-            for (int i = 0; i < Nsite; i++) {
-                // CheckSite(i);
-
-                for (int a = 0; a < Naa; a++) {
-                    bk[a] = delta[k][i][a];
-                }
-                BackupSite(i);
-
-                double deltalogprob = -SiteCondProfileLogProb(i, k) - GetSiteSuffStatLogProb(i);
-                double loghastings = Random::RealVectorProposeMove(delta[k][i], Naa, tuning, n);
-                deltalogprob += loghastings;
-
-                // UpdateSite(i);
-                UpdateSiteFlagged(i, k);
-
-                deltalogprob += SiteCondProfileLogProb(i, k) + GetSiteSuffStatLogProb(i);
-
-                int accepted = (log(Random::Uniform()) < deltalogprob);
-                if (accepted) {
-                    nacc++;
-                } else {
-                    for (int a = 0; a < Naa; a++) {
-                        delta[k][i][a] = bk[a];
-                    }
-                    RestoreSite(i);
-                }
-                ntot++;
-                // CheckSite(i);
-            }
-        }
-        return nacc / ntot;
-    }
 
     double MoveRR(double tuning, int n, int nrep) {
         double nacc = 0;
@@ -963,29 +1004,6 @@ class DiffSelModel : public ProbModel {
     }
 
 
-    double MoveVarSel(double tuning, int nrep) {
-        double nacc = 0;
-        double ntot = 0;
-        for (int rep = 0; rep < nrep; rep++) {
-            for (int k = 1; k < Ncond; k++) {
-                double deltalogprob = -CondVarSelLogProb(k) - CondProfileLogProb(k);
-                double m = tuning * (Random::Uniform() - 0.5);
-                double e = exp(m);
-                varsel[k] *= e;
-                deltalogprob += CondVarSelLogProb(k) + CondProfileLogProb(k);
-                deltalogprob += m;
-                int accepted = (log(Random::Uniform()) < deltalogprob);
-                if (accepted) {
-                    nacc++;
-                } else {
-                    varsel[k] /= e;
-                }
-                ntot++;
-            }
-        }
-        return nacc / ntot;
-    }
-
     double MoveBranchLength() {
         for (int j = 0; j < Nbranch; j++) {
             branchlength[j] =
@@ -1024,7 +1042,6 @@ class DiffSelModel : public ProbModel {
 
     int GetNsite() { return Nsite; }
     int GetNcond() { return Ncond; }
-    double* GetDelta(int k, int i) { return delta[k][i]; }
 
     double GetEntropy(double* profile, int dim) {
         double tot = 0;
@@ -1042,73 +1059,16 @@ class DiffSelModel : public ProbModel {
         return tot;
     }
 
-    double GetMeanBaselineEntropy() {
-        double mean = 0;
-        for (int i = 0; i < Nsite; i++) {
-            mean += GetEntropy(baseline[i], Naa);
-        }
-        mean /= Nsite;
-        return mean;
-    }
-
-    double GetMeanVar(int k) {
-        double totvar = 0;
-        for (int i = 0; i < Nsite; i++) {
-            double var = 0;
-            for (int j = 0; j < Naa; j++) {
-                double tmp = delta[k][i][j];
-                var += tmp * tmp;
-            }
-            var /= Naa;
-            totvar += var;
-        }
-        return totvar / Nsite;
-    }
-
-    double GetLogPrior() {
-        double total = 0;
-
-        // branchlengths
-        total += LambdaLogProb();
-        total += LengthLogProb();
-
-        // uniform on relrates and nucstat
-        total += Random::logGamma((double)Nnuc);
-        total += Random::logGamma((double)Nrr);
-
-        // uniform on baseline
-        total += GlobalProfileLogProb();
-
-        // variance parameters
-        total += VarSelLogProb();
-
-        // differential selection effects
-        total += ProfileLogProb();
-
-        return total;
-    }
-
-    double GetLogLikelihood() { return phyloprocess->GetFastLogProb(); }
 
     void TraceHeader(std::ostream& os) override {
-        os << "#logprior\tlnL\tlength\t";
-        os << "globent\t";
-        for (int k = 1; k < Ncond; k++) {
-            os << "selvar" << k << '\t';
-        }
+        os << "length\t";
         os << "statent\t";
         os << "rrent\t";
         os << "diag\n";
     }
 
     void Trace(std::ostream& os) override {
-        os << GetLogPrior() << '\t';
-        os << GetLogLikelihood() << '\t';
         os << GetTotalLength() << '\t';
-        os << GetMeanBaselineEntropy() << '\t';
-        for (int k = 1; k < Ncond; k++) {
-            os << GetMeanVar(k) << '\t';
-        }
         os << GetEntropy(nucstat, Nnuc) << '\t';
         os << GetEntropy(nucrelrate, Nrr) << '\t';
         os << SubMatrix::GetDiagCount() << '\n';
@@ -1127,53 +1087,84 @@ class DiffSelModel : public ProbModel {
         for (int i = 0; i < Nnuc; i++) {
             is >> nucstat[i];
         }
-        for (int i = 0; i < Nsite; i++) {
-            for (int a = 0; a < Naa; a++) {
-                is >> baseline[i][a];
-            }
+    }
+
+    void HeaderToStream(std::ostream& os) override {
+        os << "lambda";
+        for (int i = 0; i < Nbranch; i++) {
+            os << '\t' << "branchlength_" << i;
         }
-        for (int k = 1; k < Ncond; k++) {
-            is >> varsel[k];
+        for (int i = 0; i < Nrr; i++) {
+            os << '\t' << "nucrelrate_" << i;
         }
-        for (int k = 1; k < Ncond; k++) {
+        for (int i = 0; i < Nnuc; i++) {
+            os << '\t' << "nucstat_" << i;
+        }
+        // nucmatrix
+        os << '\t' << "fitness_shape";
+        for (int i = 0; i < fitness_inv_rates.size(); i++) {
+            os << '\t' << "fitness_inv_rates_" << i;
+        }
+        for (unsigned int k = 0; k < fitness.size(); k++)
+            for (int i = 0; i < Nsite; i++)
+                for (int aa = 0; aa < Naa; aa++)
+                    os << '\t' << "fitness_" << k << "_" << i << "_" << aa;
+        for (int i = 1; i < prob_conv.size(); i++) {
+            os << '\t' << "prob_conv_" << i;
+        }
+        for (unsigned int k = 0; k < ind_conv.size(); k++) {
             for (int i = 0; i < Nsite; i++) {
-                for (int a = 0; a < Naa; a++) {
-                    is >> delta[k][i][a];
+                for (int aa = 0; aa < Naa; aa++) {
+                    os << '\t' << "ind_conv_" << k << '_' << i << "_" << aa;
                 }
             }
         }
+        // condsubmatrixarray
+        // phylosubmatrix
+        // rootsubmatrix
+        // suffstatarray
+        // sitecondsuffstatlogprob
+        os << '\n';
     }
 
     void ToStream(std::ostream& os) override {
-        os << lambda << '\n';
+        os << lambda;
         for (int i = 0; i < Nbranch; i++) {
-            os << branchlength[i] << '\t';
+            os << '\t' << branchlength[i];
         }
-        os << '\n';
         for (int i = 0; i < Nrr; i++) {
-            os << nucrelrate[i] << '\t';
+            os << '\t' << nucrelrate[i];
         }
-        os << '\n';
         for (int i = 0; i < Nnuc; i++) {
-            os << nucstat[i] << '\t';
+            os << '\t' << nucstat[i];
         }
-        os << '\n';
-        for (int i = 0; i < Nsite; i++) {
-            for (int a = 0; a < Naa; a++) {
-                os << baseline[i][a] << '\t';
-            }
-            os << '\n';
+        // nucmatrix
+        os << '\t' << fitness_shape;
+        for (int i = 0; i < fitness_inv_rates.size(); i++) {
+            os << '\t' << fitness_inv_rates[i];
         }
-        for (int k = 1; k < Ncond; k++) {
-            os << varsel[k] << '\n';
-        }
-        for (int k = 1; k < Ncond; k++) {
+        for (auto& m : fitness) {
             for (int i = 0; i < Nsite; i++) {
-                for (int a = 0; a < Naa; a++) {
-                    os << delta[k][i][a] << '\t';
+                for (int aa = 0; aa < Naa; aa++) {
+                    os << '\t' << m(i, aa);
                 }
-                os << '\n';
             }
         }
+        for (int i = 1; i < prob_conv.size(); i++) {
+            os << '\t' << prob_conv[i];
+        }
+        for (auto& m : ind_conv) {
+            for (int i = 0; i < Nsite; i++) {
+                for (int aa = 0; aa < Naa; aa++) {
+                    os << '\t' << m(i, aa);
+                }
+            }
+        }
+        // condsubmatrixarray
+        // phylosubmatrix
+        // rootsubmatrix
+        // suffstatarray
+        // sitecondsuffstatlogprob
+        os << '\n';
     }
 };
