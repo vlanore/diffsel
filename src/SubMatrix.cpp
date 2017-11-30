@@ -1,10 +1,37 @@
+/*Copyright or © or Copr. Centre National de la Recherche Scientifique (CNRS) (2017-06-14).
+Contributors:
+* Nicolas LARTILLOT - nicolas.lartillot@univ-lyon1.fr
+* Vincent LANORE - vincent.lanore@univ-lyon1.fr
+
+This software is a computer program whose purpose is to detect convergent evolution using Bayesian
+phylogenetic codon models.
+
+This software is governed by the CeCILL-C license under French law and abiding by the rules of
+distribution of free software. You can use, modify and/ or redistribute the software under the terms
+of the CeCILL-C license as circulated by CEA, CNRS and INRIA at the following URL
+"http://www.cecill.info".
+
+As a counterpart to the access to the source code and rights to copy, modify and redistribute
+granted by the license, users are provided only with a limited warranty and the software's author,
+the holder of the economic rights, and the successive licensors have only limited liability.
+
+In this respect, the user's attention is drawn to the risks associated with loading, using,
+modifying and/or developing or reproducing the software by the user in light of its specific status
+of free software, that may mean that it is complicated to manipulate, and that also therefore means
+that it is reserved for developers and experienced professionals having in-depth computer knowledge.
+Users are therefore encouraged to load and test the software's suitability as regards their
+requirements in conditions enabling the security of their systems and/or data to be ensured and,
+more generally, to use and operate it in the same conditions as regards security.
+
+The fact that you are presently reading this means that you have had knowledge of the CeCILL-C
+license and that you accept its terms.*/
+
 #include "SubMatrix.hpp"
 #include <cmath>
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
-#include "linalg.hpp"
-// #include "linalg2.hpp"
+// #include "linalg.hpp"
 using namespace std;
 
 int SubMatrix::nuni = 0;
@@ -16,38 +43,35 @@ double SubMatrix::nz = 0;
 double SubMatrix::meanz = 0;
 double SubMatrix::maxz = 0;
 
-// ---------------------------------------------------------------------------
-//     SubMatrix()
-// ---------------------------------------------------------------------------
-SubMatrix::SubMatrix(int inNstate, bool innormalise) : Nstate(inNstate), normalise(innormalise) {
-    ndiagfailed = 0;
-    // discn = 10;
-    Create();
-}
-
 void SubMatrix::Create() {
-    Q = new double *[Nstate];
-    for (int i = 0; i < Nstate; i++) {
-        Q[i] = new double[Nstate];
-    }
+    // Q = new double *[Nstate];
+    // for (int i = 0; i < Nstate; i++) {
+    //     Q[i] = new double[Nstate];
+    // }
+    Q = EMatrix(Nstate, Nstate);
 
-    u = new double *[Nstate];
-    for (int i = 0; i < Nstate; i++) {
-        u[i] = new double[Nstate];
-    }
+    u = EMatrix(Nstate, Nstate);
+    // u = new double *[Nstate];
+    // for (int i = 0; i < Nstate; i++) {
+    //     u[i] = new double[Nstate];
+    // }
 
-    invu = new double *[Nstate];
-    for (int i = 0; i < Nstate; i++) {
-        invu[i] = new double[Nstate];
-    }
+    invu = EMatrix(Nstate, Nstate);
+    // invu = new double *[Nstate];
+    // for (int i = 0; i < Nstate; i++) {
+    //     invu[i] = new double[Nstate];
+    // }
 
-    v = new double[Nstate];
-    vi = new double[Nstate];
+    v = EVector(Nstate);
+    vi = EVector(Nstate);
+    // v = new double[Nstate];
+    // vi = new double[Nstate];
 
-    mStationary = new double[Nstate];
+    mStationary = EVector(Nstate);
+    oldStationary = new double[Nstate];
 
     UniMu = 1;
-    mPow = new double **[UniSubNmax];
+    mPow = new double**[UniSubNmax];
     for (int n = 0; n < UniSubNmax; n++) {
         mPow[n] = nullptr;
     }
@@ -60,10 +84,10 @@ void SubMatrix::Create() {
     }
     powflag = false;
 
-    aux = new double *[Nstate];
-    for (int i = 0; i < Nstate; i++) {
-        aux[i] = new double[Nstate];
-    }
+    // aux = new double *[Nstate];
+    // for (int i = 0; i < Nstate; i++) {
+    //     aux[i] = new double[Nstate];
+    // }
 }
 
 // ---------------------------------------------------------------------------
@@ -72,14 +96,14 @@ void SubMatrix::Create() {
 
 SubMatrix::~SubMatrix() {
     for (int i = 0; i < Nstate; i++) {
-        delete[] Q[i];
-        delete[] u[i];
-        delete[] invu[i];
-        delete[] aux[i];
+        // delete[] Q[i];
+        // delete[] u[i];
+        // delete[] invu[i];
+        // delete[] aux[i];
     }
-    delete[] Q;
-    delete[] u;
-    delete[] invu;
+    // delete[] Q;
+    // delete[] u;
+    // delete[] invu;
 
     if (mPow != nullptr) {
         for (int n = 0; n < UniSubNmax; n++) {
@@ -92,18 +116,18 @@ SubMatrix::~SubMatrix() {
         }
         delete[] mPow;
     }
-    delete[] mStationary;
+    // delete[] mStationary;
+    delete[] oldStationary;
     delete[] flagarray;
-    delete[] v;
-    delete[] vi;
+    // delete[] v;
+    // delete[] vi;
 
-    delete[] aux;
+    // delete[] aux;
 }
 
 // ---------------------------------------------------------------------------
 //     void ScalarMul()
 // ---------------------------------------------------------------------------
-
 void SubMatrix::ScalarMul(double e) {
     for (int i = 0; i < Nstate; i++) {
         v[i] *= e;
@@ -115,73 +139,45 @@ void SubMatrix::ScalarMul(double e) {
 // ---------------------------------------------------------------------------
 //     Diagonalise()
 // ---------------------------------------------------------------------------
-
 int SubMatrix::Diagonalise() const {
     if (!ArrayUpdated()) {
         UpdateMatrix();
     }
 
     diagcount++;
+    auto& stat = GetStationary();
 
-    int nmax = 1000;
-    double epsilon = 1e-20;
-    int n = LinAlg::DiagonalizeRateMatrix(Q, mStationary, Nstate, v, u, invu, nmax, epsilon);
-    bool failed = (n == nmax);
-    if (failed) {
-        cerr << "in submatrix: diag failed\n";
-        cerr << "n : " << n << '\t' << nmax << '\n';
-        ofstream os("mat");
-        ToStream(os);
-        exit(1);
+    EMatrix a(Nstate, Nstate);
+
+    for (int i = 0; i < Nstate; i++) {
+        for (int j = 0; j < Nstate; j++) {
+            a(i, j) = Q(i, j) * sqrt(stat[i] / stat[j]);
+        }
     }
+
+    solver.compute(a);
+    v = solver.eigenvalues().real();
+    vi = solver.eigenvalues().imag();
+    u = solver.eigenvectors().real();
+
+    for (int i = 0; i < Nstate; i++) {
+        for (int j = 0; j < Nstate; j++) {
+            invu(i, j) = u(j, i) * sqrt(stat[j]);
+        }
+    }
+    for (int i = 0; i < Nstate; i++) {
+        for (int j = 0; j < Nstate; j++) {
+            u(i, j) /= sqrt(stat[i]);
+        }
+    }
+
     diagflag = true;
-    return static_cast<int>(failed);
+    return 0;
 }
-
-/*
-int SubMatrix::Diagonalise() const {
-    if (!ArrayUpdated()) {
-        UpdateMatrix();
-    }
-
-        // copy Q into aux
-        for (int i=0; i<Nstate; i++)	{
-                for (int j=0; j<Nstate; j++)	{
-                        aux[i][j] = Q[i][j];
-                }
-        }
-
-        double * w = new double[Nstate];
-        int* iw = new int[Nstate];
-
-        // diagonalise a into v and u
-    cerr << "diag\n";
-        int success = EigenRealGeneral(Nstate, aux, v, vi, u, iw, w);
-    cerr << "diag ok\n";
-    cerr << success << '\n';
-
-        // copy u into aux
-        for (int i=0; i<Nstate; i++)	{
-                for (int j=0; j<Nstate; j++)	{
-                        aux[i][j] = u[i][j];
-                }
-        }
-
-        // invert a into invu
-        InvertMatrix(aux, Nstate, w, iw, invu);
-
-        // CheckDiag();
-
-        delete[] w;
-        delete[] iw;
-        return success;
-}
-*/
 
 // ---------------------------------------------------------------------------
 //     ComputeRate()
 // ---------------------------------------------------------------------------
-
 double SubMatrix::GetRate() const {
     if (!ArrayUpdated()) {
         UpdateStationary();
@@ -195,27 +191,27 @@ double SubMatrix::GetRate() const {
     double norm = 0;
     for (int i = 0; i < Nstate - 1; i++) {
         for (int j = i + 1; j < Nstate; j++) {
-            norm += mStationary[i] * Q[i][j];
+            norm += mStationary[i] * Q(i, j);
         }
     }
     return 2 * norm;
 }
 
-double *SubMatrix::GetEigenVal() const {
+const EVector& SubMatrix::GetEigenVal() const {
     if (!diagflag) {
         Diagonalise();
     }
     return v;
 }
 
-double **SubMatrix::GetEigenVect() const {
+const EMatrix& SubMatrix::GetEigenVect() const {
     if (!diagflag) {
         Diagonalise();
     }
     return u;
 }
 
-double **SubMatrix::GetInvEigenVect() const {
+const EMatrix& SubMatrix::GetInvEigenVect() const {
     if (!diagflag) {
         Diagonalise();
     }
@@ -248,7 +244,7 @@ void SubMatrix::Normalise() const {
     double norm = GetRate();
     for (int i = 0; i < Nstate; i++) {
         for (int j = 0; j < Nstate; j++) {
-            Q[i][j] /= norm;
+            Q(i, j) /= norm;
         }
     }
 }
@@ -258,7 +254,6 @@ void SubMatrix::Normalise() const {
 //     Powers
 // ---------------------------------------------------------------------------
 // ---------------------------------------------------------------------------
-
 void SubMatrix::ActivatePowers() const {
     if (!powflag) {
         if (!ArrayUpdated()) {
@@ -267,8 +262,8 @@ void SubMatrix::ActivatePowers() const {
 
         UniMu = 0;
         for (int i = 0; i < Nstate; i++) {
-            if (UniMu < fabs(Q[i][i])) {
-                UniMu = fabs(Q[i][i]);
+            if (UniMu < fabs(Q(i, i))) {
+                UniMu = fabs(Q(i, i));
             }
         }
 
@@ -283,7 +278,7 @@ void SubMatrix::ActivatePowers() const {
         }
         for (int i = 0; i < Nstate; i++) {
             for (int j = 0; j < Nstate; j++) {
-                mPow[0][i][j] += Q[i][j] / UniMu;
+                mPow[0][i][j] += Q(i, j) / UniMu;
                 if (mPow[0][i][j] < 0) {
                     cerr << "error in SubMatrix::ComputePowers: negative prob : ";
                     cerr << i << '\t' << j << '\t' << mPow[0][i][j] << '\n';
@@ -318,7 +313,7 @@ void SubMatrix::InactivatePowers() const {
 
 void SubMatrix::CreatePowers(int n) const {
     if (mPow[n] == nullptr) {
-        mPow[n] = new double *[Nstate];
+        mPow[n] = new double*[Nstate];
         for (int i = 0; i < Nstate; i++) {
             mPow[n][i] = new double[Nstate];
         }
@@ -357,7 +352,7 @@ void SubMatrix::ComputePowers(int N) const {
             CreatePowers(n);
             for (int i = 0; i < Nstate; i++) {
                 for (int j = 0; j < Nstate; j++) {
-                    double &t = mPow[n][i][j];
+                    double& t = mPow[n][i][j];
                     t = 0;
                     for (int k = 0; k < Nstate; k++) {
                         t += mPow[n - 1][i][k] * mPow[0][k][j];
@@ -369,18 +364,18 @@ void SubMatrix::ComputePowers(int N) const {
     }
 }
 
-void SubMatrix::ToStream(ostream &os) const {
+void SubMatrix::ToStream(ostream& os) const {
     os << GetNstate() << '\n';
-    os << "stationaries: \n";
+    os << "stationaries:\n";
     for (int i = 0; i < GetNstate(); i++) {
         os << Stationary(i) << '\t';
     }
     os << '\n';
 
-    os << "rate matrix\n";
+    os << "rate matrix:\n";
     for (int i = 0; i < GetNstate(); i++) {
         for (int j = 0; j < GetNstate(); j++) {
-            os << Q[i][j] << '\t';
+            os << Q(i, j) << '\t';
         }
         os << '\n';
     }
@@ -392,185 +387,17 @@ void SubMatrix::ToStream(ostream &os) const {
     os << '\n';
 }
 
-void SubMatrix::CheckReversibility() const {
-    double max = 0;
-    int imax = 0;
-    int jmax = 0;
-    for (int i = 0; i < GetNstate(); i++) {
-        for (int j = i + 1; j < GetNstate(); j++) {
-            double tmp = fabs(Stationary(i) * Q[i][j] - Stationary(j) * Q[j][i]);
-            if (max < tmp) {
-                max = tmp;
-                imax = i;
-                jmax = j;
-            }
-        }
-    }
-    if (max > 1e-6) {
-        cerr << "max irreversibility: " << max << '\n';
-        cerr << imax << '\t' << jmax << '\t' << Stationary(imax) << '\t' << Q[imax][jmax] << '\t'
-             << Stationary(jmax) << '\t' << Q[jmax][imax] << '\n';
-        exit(1);
-    }
-}
-
-void SubMatrix::ComputeExponential(double range, double **expo) const {
-    Diagonalise();
-
-    for (int i = 0; i < Nstate; i++) {
-        double tot = 0;
-        for (int j = 0; j < Nstate; j++) {
-            tot += Q[i][j];
-        }
-        if (fabs(tot) > 1e-8) {
-            cerr << "error : row does not sum to 0\n";
-            exit(1);
-        }
-
-        tot = 0;
-        for (int j = 0; j < Nstate; j++) {
-            double tmp = 0;
-            for (int k = 0; k < Nstate; k++) {
-                tmp += u[i][k] * invu[k][j] * exp(v[k] * range);
-            }
-            expo[i][j] = tmp;
-            tot += tmp;
-        }
-        if (fabs(tot - 1) > 1e-8) {
-            cerr << "error : row does not sum to 1\n";
-            cerr << "range : " << range << endl;
-            // exit(1);
-            throw 1;
-        }
-    }
-}
-
-void SubMatrix::ApproachExponential(double range, double **expo, int /*unused*/) const {
-    for (int i = 0; i < Nstate; i++) {
-        if (!flagarray[i]) {
-            UpdateRow(i);
-        }
-    }
-
-    for (int i = 0; i < GetNstate(); i++) {
-        double tot = 0;
-        for (int j = 0; j < GetNstate(); j++) {
-            tot += Q[i][j];
-        }
-        if (fabs(tot) > 10e-6) {
-            cerr << "Error in approachExp : row does not sum to 0 " << endl;
-            cerr << "Sum : " << tot;
-            cerr << Q[i][0] << " " << Q[i][1] << " " << Q[i][2] << " " << Q[i][3] << endl;
-            exit(1);
-        }
-    }
-
-    int z = 1;
-
-    double maxdiag = 0;  // Max of diagonal coefficients
-    for (int i = 0; i < GetNstate(); i++) {
-        if (maxdiag < fabs(Q[i][i]) * range) {
-            maxdiag = fabs(Q[i][i]) * range;
-        }
-    }
-
-    if (maxdiag > 300) {
-        const double *stat = GetStationary();
-        // exp(range Q) = stat(Q)
-        for (int i = 0; i < GetNstate(); i++) {
-            for (int j = 0; j < GetNstate(); j++) {
-                expo[i][j] = stat[j];
-            }
-        }
-    }
-
-    else {
-        double precision = 0.01;
-
-        while (z < 1024 && maxdiag > z * precision) {
-            z *= 2;
-        }
-
-        nz++;
-        meanz += z;
-        if (maxz < z) {
-            maxz = z;
-        }
-
-        for (int i = 0; i < GetNstate(); i++) {
-            for (int j = 0; j < GetNstate(); j++) {
-                expo[i][j] = range * Q[i][j] / z + (i == j ? 1 : 0);
-            }
-        }
-        // y is now an approximation of exp(Q/z)
-
-        this->PowerOf2(expo, z);
-    }
-
-    for (int i = 0; i < GetNstate(); i++) {
-        double tot = 0;
-        for (int j = 0; j < GetNstate(); j++) {
-            tot += expo[i][j];
-        }
-        if (fabs(tot - 1) > 10e-6) {
-            cerr << "Error in approachExp : row does not sum to 1 " << endl;
-            cerr << "Sum : " << tot << endl;
-            for (int a = 0; a < GetNstate(); a++) {
-                for (int b = 0; b < GetNstate(); b++) {
-                    cerr << Q[a][b] << '\t';
-                }
-                cerr << '\n';
-            }
-            cerr << '\n';
-            cerr << maxdiag << '\t' << range << '\t' << z << '\n';
-            cerr << '\n';
-            for (int a = 0; a < GetNstate(); a++) {
-                for (int b = 0; b < GetNstate(); b++) {
-                    cerr << range * Q[a][b] / z << '\t';
-                }
-                cerr << '\n';
-            }
-            cerr << '\n';
-
-            exit(1);
-        }
-    }
-}
-
-void SubMatrix::PowerOf2(double **y, int z) const {
-    if (z == 1) {
-        return;
-    }
-    for (int i = 0; i < GetNstate(); i++) {
-        for (int j = 0; j < GetNstate(); j++) {
-            aux[i][j] = 0;
-            for (int k = 0; k < GetNstate(); k++) {
-                aux[i][j] += y[i][k] * y[k][j];
-            }
-        }
-    }
-    for (int i = 0; i < GetNstate(); i++) {
-        for (int j = 0; j < GetNstate(); j++) {
-            y[i][j] = aux[i][j];
-        }
-    }
-    PowerOf2(y, z / 2);
-}
-
-double SubMatrix::SuffStatLogProb(PathSuffStat *suffstat) {
+double SubMatrix::SuffStatLogProb(PathSuffStat* suffstat) {
     double total = 0;
-    const double *stat = GetStationary();
-    for (map<int, int>::iterator i = suffstat->rootcount.begin(); i != suffstat->rootcount.end();
-         i++) {
-        total += i->second * log(stat[i->first]);
+    auto& stat = GetStationary();
+    for (auto i : suffstat->rootcount) {
+        total += i.second * log(stat[i.first]);
     }
-    for (map<int, double>::iterator i = suffstat->waitingtime.begin();
-         i != suffstat->waitingtime.end(); i++) {
-        total += i->second * (*this)(i->first, i->first);
+    for (auto i : suffstat->waitingtime) {
+        total += i.second * (*this)(i.first, i.first);
     }
-    for (map<pair<int, int>, int>::iterator i = suffstat->paircount.begin();
-         i != suffstat->paircount.end(); i++) {
-        total += i->second * log((*this)(i->first.first, i->first.second));
+    for (auto i : suffstat->paircount) {
+        total += i.second * log((*this)(i.first.first, i.first.second));
     }
     return total;
 }

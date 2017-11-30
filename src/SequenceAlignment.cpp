@@ -1,3 +1,31 @@
+/*Copyright or © or Copr. Centre National de la Recherche Scientifique (CNRS) (2017-06-14).
+Contributors:
+* Nicolas LARTILLOT - nicolas.lartillot@univ-lyon1.fr
+* Vincent LANORE - vincent.lanore@univ-lyon1.fr
+
+This software is a computer program whose purpose is to detect convergent evolution using Bayesian
+phylogenetic codon models.
+
+This software is governed by the CeCILL-C license under French law and abiding by the rules of
+distribution of free software. You can use, modify and/ or redistribute the software under the terms
+of the CeCILL-C license as circulated by CEA, CNRS and INRIA at the following URL
+"http://www.cecill.info".
+
+As a counterpart to the access to the source code and rights to copy, modify and redistribute
+granted by the license, users are provided only with a limited warranty and the software's author,
+the holder of the economic rights, and the successive licensors have only limited liability.
+
+In this respect, the user's attention is drawn to the risks associated with loading, using,
+modifying and/or developing or reproducing the software by the user in light of its specific status
+of free software, that may mean that it is complicated to manipulate, and that also therefore means
+that it is reserved for developers and experienced professionals having in-depth computer knowledge.
+Users are therefore encouraged to load and test the software's suitability as regards their
+requirements in conditions enabling the security of their systems and/or data to be ensured and,
+more generally, to use and operate it in the same conditions as regards security.
+
+The fact that you are presently reading this means that you have had knowledge of the CeCILL-C
+license and that you accept its terms.*/
+
 #include "SequenceAlignment.hpp"
 #include <fstream>
 #include <sstream>
@@ -107,6 +135,16 @@ int FileSequenceAlignment::ReadDataFromFile(string filespec, int forceinterleave
     return 1;
 }
 
+void FileSequenceAlignment::FailFormat() {
+    cerr << "error when reading data\n"
+         << "data should be formatted as follows:\n"
+         << "#taxa #sites\n"
+         << "name1 seq1.....\n"
+         << "name2 seq2.....\n"
+         << "...\n\n";
+    exit(1);
+}
+
 // ---------------------------------------------------------------------------
 //     ReadPhylip()
 // ---------------------------------------------------------------------------
@@ -116,26 +154,12 @@ int FileSequenceAlignment::TestPhylipSequential(string filespec) {
         string temp;
         theStream >> temp;
         if (IsInt(temp) == 0) {
-            cerr << "error when reading data\n";
-            cerr << "data should be formatted as follows:\n";
-            cerr << "#taxa #sites\n";
-            cerr << "name1 seq1.....\n";
-            cerr << "name2 seq2.....\n";
-            cerr << "...\n";
-            cerr << '\n';
-            exit(1);
+            FailFormat();
         }
         Ntaxa = atoi(temp.c_str());
         theStream >> temp;
         if (IsInt(temp) == 0) {
-            cerr << "error when reading data\n";
-            cerr << "data should be formatted as follows:\n";
-            cerr << "#taxa #sites\n";
-            cerr << "name1 seq1.....\n";
-            cerr << "name2 seq2.....\n";
-            cerr << "...\n";
-            cerr << '\n';
-            exit(1);
+            FailFormat();
         }
         Nsite = atoi(temp.c_str());
 
@@ -227,26 +251,12 @@ void FileSequenceAlignment::ReadPhylipSequential(string filespec) {
         string temp;
         theStream >> temp;
         if (IsInt(temp) == 0) {
-            cerr << "error when reading data\n";
-            cerr << "data should be formatted as follows:\n";
-            cerr << "#taxa #sites\n";
-            cerr << "name1 seq1.....\n";
-            cerr << "name2 seq2.....\n";
-            cerr << "...\n";
-            cerr << '\n';
-            exit(1);
+            FailFormat();
         }
         Ntaxa = Int(temp);
         theStream >> temp;
         if (IsInt(temp) == 0) {
-            cerr << "error when reading data\n";
-            cerr << "data should be formatted as follows:\n";
-            cerr << "#taxa #sites\n";
-            cerr << "name1 seq1.....\n";
-            cerr << "name2 seq2.....\n";
-            cerr << "...\n";
-            cerr << '\n';
-            exit(1);
+            FailFormat();
         }
         Nsite = Int(temp);
 
@@ -297,26 +307,12 @@ int FileSequenceAlignment::TestPhylip(string filespec, int repeattaxa) {
         string temp;
         theStream >> temp;
         if (IsInt(temp) == 0) {
-            cerr << "error when reading data\n";
-            cerr << "data should be formatted as follows:\n";
-            cerr << "#taxa #sites\n";
-            cerr << "name1 seq1.....\n";
-            cerr << "name2 seq2.....\n";
-            cerr << "...\n";
-            cerr << '\n';
-            exit(1);
+            FailFormat();
         }
         Ntaxa = Int(temp);
         theStream >> temp;
         if (IsInt(temp) == 0) {
-            cerr << "error when reading data\n";
-            cerr << "data should be formatted as follows:\n";
-            cerr << "#taxa #sites\n";
-            cerr << "name1 seq1.....\n";
-            cerr << "name2 seq2.....\n";
-            cerr << "...\n";
-            cerr << '\n';
-            exit(1);
+            FailFormat();
         }
         Nsite = Int(temp);
 
@@ -455,26 +451,12 @@ void FileSequenceAlignment::ReadPhylip(string filespec, int repeattaxa) {
         string temp;
         theStream >> temp;
         if (IsInt(temp) == 0) {
-            cerr << "error when reading data\n";
-            cerr << "data should be formatted as follows:\n";
-            cerr << "#taxa #sites\n";
-            cerr << "name1 seq1.....\n";
-            cerr << "name2 seq2.....\n";
-            cerr << "...\n";
-            cerr << '\n';
-            exit(1);
+            FailFormat();
         }
         Ntaxa = Int(temp);
         theStream >> temp;
         if (IsInt(temp) == 0) {
-            cerr << "error when reading data\n";
-            cerr << "data should be formatted as follows:\n";
-            cerr << "#taxa #sites\n";
-            cerr << "name1 seq1.....\n";
-            cerr << "name2 seq2.....\n";
-            cerr << "...\n";
-            cerr << '\n';
-            exit(1);
+            FailFormat();
         }
         Nsite = Int(temp);
         // cerr << Ntaxa << '\t' << Nsite << '\n';

@@ -1,140 +1,86 @@
+/*Copyright or © or Copr. Centre National de la Recherche Scientifique (CNRS) (2017-06-14).
+Contributors:
+* Nicolas LARTILLOT - nicolas.lartillot@univ-lyon1.fr
+* Vincent LANORE - vincent.lanore@univ-lyon1.fr
+
+This software is a computer program whose purpose is to detect convergent evolution using Bayesian
+phylogenetic codon models.
+
+This software is governed by the CeCILL-C license under French law and abiding by the rules of
+distribution of free software. You can use, modify and/ or redistribute the software under the terms
+of the CeCILL-C license as circulated by CEA, CNRS and INRIA at the following URL
+"http://www.cecill.info".
+
+As a counterpart to the access to the source code and rights to copy, modify and redistribute
+granted by the license, users are provided only with a limited warranty and the software's author,
+the holder of the economic rights, and the successive licensors have only limited liability.
+
+In this respect, the user's attention is drawn to the risks associated with loading, using,
+modifying and/or developing or reproducing the software by the user in light of its specific status
+of free software, that may mean that it is complicated to manipulate, and that also therefore means
+that it is reserved for developers and experienced professionals having in-depth computer knowledge.
+Users are therefore encouraged to load and test the software's suitability as regards their
+requirements in conditions enabling the security of their systems and/or data to be ensured and,
+more generally, to use and operate it in the same conditions as regards security.
+
+The fact that you are presently reading this means that you have had knowledge of the CeCILL-C
+license and that you accept its terms.*/
+
 #ifndef BIOLOGICALSEQUENCES_H
 #define BIOLOGICALSEQUENCES_H
 
 #include <iostream>
 #include <vector>
 
-static const std::string Path = "";
-
-enum DataType { DNA = 0, RNA = 1, Protein = 2, Other = 3 };
-
-const int RYN = 2;
-const std::vector<char> RYset{'R', 'Y'};
-
-const std::vector<char> AAset{'A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'P',
-                              'Q', 'R', 'S', 'T', 'V', 'W', 'Y', 'a', 'c', 'd', 'e', 'f', 'g',
-                              'h', 'i', 'k', 'l', 'm', 'n', 'p', 'q', 'r', 's', 't', 'v', 'w',
-                              'y', '-', '?', '$', '.', 'B', 'Z', '*', 'X', 'x'};
 const int AAN = 49;
 const int DNAN = 38;
 const int RNAN = 38;
-const std::vector<char> DNAset{'A', 'C', 'G', 'T', 'a', 'c', 'g', 't', 'B', 'D', 'H', 'K', 'M',
-                               'N', 'R', 'S', 'V', 'W', 'Y', 'b', 'd', 'h', 'k', 'm', 'n', 'r',
-                               's', 'v', 'w', 'y', '-', '?', '$', '.', '*', 'X', 'x'};
-const std::vector<char> RNAset{'A', 'C', 'G', 'U', 'a', 'c', 'g', 'u', 'B', 'D', 'H', 'K', 'M',
-                               'N', 'R', 'S', 'V', 'W', 'Y', 'b', 'd', 'h', 'k', 'm', 'n', 'r',
-                               's', 'v', 'w', 'y', '-', '?', '$', '.', '*', 'X', 'x'};
-
-// amino acids
-
-const int precision = 10000;
-const std::string Alphabet = "Amino_Acids";
-const std::vector<char> AminoAcids{'A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M',
-                                   'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y', '-'};
-const std::vector<char> aminoacids{'a', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'k', 'l', 'm',
-                                   'n', 'p', 'q', 'r', 's', 't', 'v', 'w', 'y', '-'};
-const std::vector<char> RYletters{'R', 'Y'};
-const std::vector<char> DNAletters{'A', 'C', 'G', 'T'};
-const std::vector<char> dnaletters{'a', 'c', 'g', 't'};
-const std::vector<char> RNAletters{'A', 'C', 'G', 'U'};
-const std::vector<char> rnaletters{'a', 'c', 'g', 'u'};
-
-const std::vector<int> Dayhoff6Table{3, 5, 2, 2, 4, 3, 1, 0, 1, 0, 0, 2, 3, 2, 1, 3, 3, 0, 4, 4};
-const std::vector<int> Dayhoff4Table{3, -1, 2, 2, 0, 3, 1, 0, 1, 0, 0, 2, 3, 2, 1, 3, 3, 0, 2, 2};
-
 const int unknown = -1;
-
 const int Naa = 20;
 const int Nnuc = 4;
 const int Ncodon = 64;
-const std::vector<std::string> Codons{
-    "TTT", "TTC", "TTA", "TTG", "TCT", "TCC", "TCA", "TCG", "TAT", "TAC", "TAA", "TAG", "TGT",
-    "TGC", "TGA", "TGG", "CTT", "CTC", "CTA", "CTG", "CCT", "CCC", "CCA", "CCG", "CAT", "CAC",
-    "CAA", "CAG", "CGT", "CGC", "CGA", "CGG", "ATT", "ATC", "ATA", "ATG", "ACT", "ACC", "ACA",
-    "ACG", "AAT", "AAC", "AAA", "AAG", "AGT", "AGC", "AGA", "AGG", "GTT", "GTC", "GTA", "GTG",
-    "GCT", "GCC", "GCA", "GCG", "GAT", "GAC", "GAA", "GAG", "GGT", "GGC", "GGA", "GGG"};
-const int codonpos[][64]{{3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 1, 1, 1, 1, 1, 1,
-                          1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                          0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2},
-                         {3, 3, 3, 3, 1, 1, 1, 1, 0, 0, 0, 0, 2, 2, 2, 2, 3, 3, 3, 3, 1, 1,
-                          1, 1, 0, 0, 0, 0, 2, 2, 2, 2, 3, 3, 3, 3, 1, 1, 1, 1, 0, 0, 0, 0,
-                          2, 2, 2, 2, 3, 3, 3, 3, 1, 1, 1, 1, 0, 0, 0, 0, 2, 2, 2, 2},
-                         {3, 1, 0, 2, 3, 1, 0, 2, 3, 1, 0, 2, 3, 1, 0, 2, 3, 1, 0, 2, 3, 1,
-                          0, 2, 3, 1, 0, 2, 3, 1, 0, 2, 3, 1, 0, 2, 3, 1, 0, 2, 3, 1, 0, 2,
-                          3, 1, 0, 2, 3, 1, 0, 2, 3, 1, 0, 2, 3, 1, 0, 2, 3, 1, 0, 2}};
+const int precision = 10000;
+const int MtMamNStopCodons = 4;
+const int MtInvNStopCodons = 2;
+const int UniNStopCodons = 3;
+
+static const std::string Path = "";
+
+extern const std::vector<char> AAset;
+extern const std::vector<char> DNAset;
+extern const std::vector<char> RNAset;
+
+// amino acids
+extern const std::string Alphabet;
+extern const std::vector<char> AminoAcids;
+extern const std::vector<char> aminoacids;
+extern const std::vector<char> DNAletters;
+extern const std::vector<char> dnaletters;
+extern const std::vector<char> RNAletters;
+extern const std::vector<char> rnaletters;
+
+extern const std::vector<std::string> Codons;
+extern const int codonpos[][64];
 
 enum GeneticCodeType { Universal = 0, MtMam = 1, MtInv = 2, MtProt = 3, MtEch = 4 };
-// universal genetic code
-// const std::string UniStopCodons[]  {"TAA","TAG","TGA"};
-const int UniNStopCodons = 3;
-const std::vector<int> UniStopCodons{10, 11, 14};
-const std::vector<int> UniCodonCode{4,  4,  9,  9,  15, 15, 15, 15, 19, 19, -1, -1, 1,  1,  -1, 18,
-                                    9,  9,  9,  9,  12, 12, 12, 12, 6,  6,  13, 13, 14, 14, 14, 14,
-                                    7,  7,  7,  10, 16, 16, 16, 16, 11, 11, 8,  8,  15, 15, 14, 14,
-                                    17, 17, 17, 17, 0,  0,  0,  0,  2,  2,  3,  3,  5,  5,  5,  5};
-const std::vector<int> UniStopPos1{3, 3, 3};
-const std::vector<int> UniStopPos2{0, 0, 2};
-const std::vector<int> UniStopPos3{0, 2, 0};
 
-const int MtInvNStopCodons = 2;
-const std::vector<int> MtInvStopCodons{10, 11};
-const std::vector<int> MtInvCodonCode{
-    4,  4,  9,  9,  15, 15, 15, 15, 19, 19, -1, -1, 1,  1,  18, 18, 9,  9,  9,  9,  12, 12,
-    12, 12, 6,  6,  13, 13, 14, 14, 14, 14, 7,  7,  10, 10, 16, 16, 16, 16, 11, 11, 8,  8,
-    15, 15, 15, 15, 17, 17, 17, 17, 0,  0,  0,  0,  2,  2,  3,  3,  5,  5,  5,  5};
-const std::vector<int> MtInvStopPos1{3, 3};
-const std::vector<int> MtInvStopPos2{0, 0};
-const std::vector<int> MtInvStopPos3{0, 2};
+extern const std::vector<int> UniStopCodons;
+extern const std::vector<int> UniCodonCode;
+extern const std::vector<int> UniStopPos1;
+extern const std::vector<int> UniStopPos2;
+extern const std::vector<int> UniStopPos3;
+
+extern const std::vector<int> MtInvStopCodons;
+extern const std::vector<int> MtInvCodonCode;
+extern const std::vector<int> MtInvStopPos1;
+extern const std::vector<int> MtInvStopPos2;
+extern const std::vector<int> MtInvStopPos3;
 
 // mammal mitochondrial genetic code
-const int MtMamNStopCodons = 4;
-const std::vector<int> MtMamStopCodons{10, 11, 46, 47};
-const std::vector<int> MtMamCodonCode{
-    4,  4,  9,  9,  15, 15, 15, 15, 19, 19, -1, -1, 1,  1,  18, 18, 9,  9,  9,  9,  12, 12,
-    12, 12, 6,  6,  13, 13, 14, 14, 14, 14, 7,  7,  10, 10, 16, 16, 16, 16, 11, 11, 8,  8,
-    15, 15, -1, -1, 17, 17, 17, 17, 0,  0,  0,  0,  2,  2,  3,  3,  5,  5,  5,  5};
-const std::vector<int> MtMamStopPos1{3, 3, 0, 0};
-const std::vector<int> MtMamStopPos2{0, 0, 2, 2};
-const std::vector<int> MtMamStopPos3{0, 2, 0, 2};
-
-inline std::istream &operator>>(std::istream &is, GeneticCodeType &type) {
-    std::string t;
-    is >> t;
-    if (t == "Universal") {
-        type = Universal;
-    } else if (t == "MtMam") {
-        type = MtMam;
-    } else if (t == "MtInv") {
-        type = MtInv;
-    } else if (t == "MtProt") {
-        type = MtProt;
-    } else if (t == "MtEch") {
-        type = MtEch;
-    } else {
-        std::cerr << "error in std::istream genetic code type\n";
-        std::cerr << type << '\n';
-        exit(1);
-    }
-    return is;
-}
-
-inline std::ostream &operator<<(std::ostream &os, GeneticCodeType type) {
-    if (type == Universal) {
-        os << "Universal\n";
-    } else if (type == MtMam) {
-        os << "MtMam\n";
-    } else if (type == MtInv) {
-        os << "MtInv\n";
-    } else if (type == MtProt) {
-        os << "MtProt\n";
-    } else if (type == MtEch) {
-        os << "MtEch\n";
-    } else {
-        std::cerr << "error in std::ostream genetic code type\n";
-        std::cerr << (int)type << '\n';
-        exit(1);
-    }
-    return os;
-}
+extern const std::vector<int> MtMamStopCodons;
+extern const std::vector<int> MtMamCodonCode;
+extern const std::vector<int> MtMamStopPos1;
+extern const std::vector<int> MtMamStopPos2;
+extern const std::vector<int> MtMamStopPos3;
 
 #endif  // BIOLOGICALSEQUENCES_H

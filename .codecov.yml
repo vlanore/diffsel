@@ -8,5 +8,6 @@ coverage:
     project:
       default:
         threshold: 5
+
 ignore:
-  - "include"
+  - "utils"

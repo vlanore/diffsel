@@ -1,14 +1,35 @@
+/*Copyright or © or Copr. Centre National de la Recherche Scientifique (CNRS) (2017-06-14).
+Contributors:
+* Nicolas LARTILLOT - nicolas.lartillot@univ-lyon1.fr
+* Vincent LANORE - vincent.lanore@univ-lyon1.fr
+
+This software is a computer program whose purpose is to detect convergent evolution using Bayesian
+phylogenetic codon models.
+
+This software is governed by the CeCILL-C license under French law and abiding by the rules of
+distribution of free software. You can use, modify and/ or redistribute the software under the terms
+of the CeCILL-C license as circulated by CEA, CNRS and INRIA at the following URL
+"http://www.cecill.info".
+
+As a counterpart to the access to the source code and rights to copy, modify and redistribute
+granted by the license, users are provided only with a limited warranty and the software's author,
+the holder of the economic rights, and the successive licensors have only limited liability.
+
+In this respect, the user's attention is drawn to the risks associated with loading, using,
+modifying and/or developing or reproducing the software by the user in light of its specific status
+of free software, that may mean that it is complicated to manipulate, and that also therefore means
+that it is reserved for developers and experienced professionals having in-depth computer knowledge.
+Users are therefore encouraged to load and test the software's suitability as regards their
+requirements in conditions enabling the security of their systems and/or data to be ensured and,
+more generally, to use and operate it in the same conditions as regards security.
+
+The fact that you are presently reading this means that you have had knowledge of the CeCILL-C
+license and that you accept its terms.*/
+
 // SubMatrix:
 // this class implements
 // the instant rate matrix of a substitution process
 // but only the mathematical aspects of it
-//
-// RandomSubMatrix:
-// this class derives from SubMatrix and from Dnode
-// therefore, it knows everything about substitution processes (as a SubMatrix)
-// and at the same time, it can be inserted as a deterministic node in a
-// probabilistic model (as a
-// Dnode)
 //
 // If you need to define a new substitution process
 // - derive a new class deriving (directly or indirectly) from SubMatrix
@@ -24,34 +45,36 @@
 // SubMatrix uses in
 // ComputeArray And ComputeStationary,
 // based on the values stored by the parent nodes)
-//
-//
 
 #ifndef SUBMATRIX_H
 #define SUBMATRIX_H
 
+#include <doctest.h>
+#include <Eigen/Dense>
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
+#include <sstream>
 #include "PathSuffStat.hpp"
 #include "Random.hpp"
 
+using Vector = double *;
+using ConstVect = const double *;
+using Matrix = double **;
+using EMatrix = Eigen::MatrixXd;
+using EVector = Eigen::VectorXd;
 
 class SubMatrix {
   protected:
     // these 2 pure virtual functions are the most essential component of the
-    // SubMatrix class
-    // see GTRSubMatrix.cpp and CodonSubMatrix.cpp for examples
+    // SubMatrix class see GTRSubMatrix.cpp and CodonSubMatrix.cpp for examples
 
     // ComputeArray(int state) is in charge of computing the row of the rate
-    // matrix
-    // corresponding to all possible rates of substitution AWAY from state
+    // matrix corresponding to all possible rates of substitution AWAY from state
     virtual void ComputeArray(int state) const = 0;
 
     // ComputeStationary() is in charge of computing the vector of stationary
-    // probabilities
-    // (equilibirum frequencies)
-    // of the substitution process
+    // probabilities (equilibirum frequencies) of the substitution process
     virtual void ComputeStationary() const = 0;
 
     static const int UniSubNmax = 500;
@@ -60,28 +83,71 @@ class SubMatrix {
     static int nunimax;
     static int diagcount;
 
+    static double meanz;
+    static double maxz;
+    static double nz;
+
+    mutable bool powflag;
+    mutable bool diagflag;
+    mutable bool statflag;
+    mutable bool *flagarray;
+
+    int Nstate;
+    mutable int npow;
+    mutable double UniMu;
+    bool normalise;
+
+    Matrix *mPow;
+    mutable EMatrix Q;            // Q : the infinitesimal generator matrix
+    mutable EVector mStationary;  // the stationary probabilities of the matrix
+    double *oldStationary;
+    // mutable Matrix aux;          // an auxiliary matrix
+
+    mutable Eigen::EigenSolver<EMatrix> solver;
+
+    mutable EMatrix u;     // u : the matrix of eigen vectors
+    mutable EMatrix invu;  // invu : the inverse of u
+    mutable EVector v;     // v : eigenvalues
+    mutable EVector vi;    // vi : imaginary part
+
+    mutable int ndiagfailed;
+
   public:
-    static int GetDiagCount() { return diagcount; }
-    static void ResetDiagCount() { diagcount = 0; }
+    SubMatrix(int inNstate, bool innormalise = false)
+        : Nstate(inNstate), normalise(innormalise), ndiagfailed(0) {
+        Create();
+    }
 
-    static int GetUniSubCount() { return nunisubcount; }
-
-    static double GetMeanUni() { return ((double)nunimax) / nuni; }
-
-    SubMatrix(int inNstate, bool innormalise = false);
+    SubMatrix(const SubMatrix &) = delete;
     virtual ~SubMatrix();
 
-    void Create();
+    void Create();  // manual allocation of internal resources (requires Nstate and UniSubNmax)
 
-    double operator()(int /*i*/, int /*j*/) const;
-    const double *GetRow(int i) const;
+    // static getters
+    static int GetUniSubCount() { return nunisubcount; }
+    static int GetDiagCount() { return diagcount; }
+    static double GetMeanUni() { return ((double)nunimax) / nuni; }
 
-    const double *GetStationary() const;
-    double Stationary(int i) const;
-
+    // getters
     int GetNstate() const { return Nstate; }
-
+    const EVector &GetStationary() const;
+    double *OldGetStationary() const {
+        if (!statflag) {
+            UpdateStationary();
+        }
+        return oldStationary;
+    }
     double GetRate() const;
+    const EVector &GetEigenVal() const;
+    const EMatrix &GetEigenVect() const;
+    const EMatrix &GetInvEigenVect() const;
+    int GetDiagStat() const { return ndiagfailed; }
+    double GetUniformizationMu() const;
+
+    static void ResetDiagCount() { diagcount = 0; }
+
+    double Stationary(int i) const;
+    double operator()(int /*i*/, int /*j*/) const;
     void ScalarMul(double e);
 
     bool isNormalised() const { return normalise; }
@@ -93,29 +159,11 @@ class SubMatrix {
     void ActivatePowers() const;
     void InactivatePowers() const;
     double Power(int n, int i, int j) const;
-    double GetUniformizationMu() const;
-
-    double *GetEigenVal() const;
-    double **GetEigenVect() const;
-    double **GetInvEigenVect() const;
 
     virtual void ToStream(std::ostream &os) const;
-    void CheckReversibility() const;
-
-    int GetDiagStat() const { return ndiagfailed; }
 
     void BackwardPropagate(const double *up, double *down, double length) const;
     void ForwardPropagate(const double *down, double *up, double length) const;
-    // virtual void     FiniteTime(int i0, double* down, double length);
-
-    double **GetQ() const { return Q; }
-    void ComputeExponential(double range, double **expo) const;
-    void ApproachExponential(double range, double **expo, int prec = 1024) const;
-    void PowerOf2(double **y, int z) const;
-
-    static double meanz;
-    static double maxz;
-    static double nz;
 
     // uniformization resampling methods
     // CPU level 1
@@ -123,7 +171,6 @@ class SubMatrix {
     double GetFiniteTimeTransitionProb(int stateup, int statedown, double efflength) const;
     int DrawUniformizedTransition(int state, int statedown, int n) const;
     int DrawUniformizedSubstitutionNumber(int stateup, int statedown, double efflength) const;
-    //
 
     // used by accept-reject resampling method
     // CPU level 1
@@ -134,6 +181,7 @@ class SubMatrix {
     double SuffStatLogProb(PathSuffStat *suffstat);
 
   protected:
+    EVector GetRow(int i) const;
     void UpdateRow(int state) const;
     void UpdateStationary() const;
 
@@ -143,64 +191,27 @@ class SubMatrix {
     bool ArrayUpdated() const;
 
     int Diagonalise() const;
-
-    // data members
-
-    mutable bool powflag;
-    mutable bool diagflag;
-    mutable bool statflag;
-    mutable bool *flagarray;
-
-    int Nstate;
-    mutable int npow;
-    mutable double UniMu;
-
-    double ***mPow;
-
-    // Q : the infinitesimal generator matrix
-    mutable double **Q;
-
-    // the stationary probabilities of the matrix
-    mutable double *mStationary;
-
-    bool normalise;
-
-    // an auxiliary matrix
-    mutable double **aux;
-
-  protected:
-    // v : eigenvalues
-    // vi : imaginary part
-    // u : the matrix of eigen vectors
-    // invu : the inverse of u
-
-    mutable double **u;
-    mutable double **invu;
-    mutable double *v;
-    mutable double *vi;
-
-    mutable int ndiagfailed;
 };
+
 
 //-------------------------------------------------------------------------
 //	* Inline definitions
 //-------------------------------------------------------------------------
-
 inline double SubMatrix::operator()(int i, int j) const {
     if (!flagarray[i]) {
         UpdateRow(i);
     }
-    return Q[i][j];
+    return Q(i, j);
 }
 
-inline const double *SubMatrix::GetRow(int i) const {
+inline EVector SubMatrix::GetRow(int i) const {
     if (!flagarray[i]) {
         UpdateRow(i);
     }
-    return Q[i];
+    return Q.row(i);
 }
 
-inline const double *SubMatrix::GetStationary() const {
+inline const EVector &SubMatrix::GetStationary() const {
     if (!statflag) {
         UpdateStationary();
     }
@@ -233,6 +244,9 @@ inline bool SubMatrix::ArrayUpdated() const {
 
 inline void SubMatrix::UpdateStationary() const {
     ComputeStationary();
+    for (int i = 0; i < Nstate; i++) {
+        oldStationary[i] = mStationary[i];
+    }
     statflag = true;
 }
 
@@ -249,9 +263,9 @@ inline void SubMatrix::UpdateRow(int state) const {
 }
 
 inline void SubMatrix::BackwardPropagate(const double *up, double *down, double length) const {
-    double **eigenvect = GetEigenVect();
-    double **inveigenvect = GetInvEigenVect();
-    double *eigenval = GetEigenVal();
+    auto &eigenvect = GetEigenVect();
+    auto &inveigenvect = GetInvEigenVect();
+    auto &eigenval = GetEigenVal();
 
     int matSize = GetNstate();
 
@@ -262,7 +276,7 @@ inline void SubMatrix::BackwardPropagate(const double *up, double *down, double 
     }
     for (int i = 0; i < GetNstate(); i++) {
         for (int j = 0; j < GetNstate(); j++) {
-            aux[i] += inveigenvect[i][j] * up[j];
+            aux[i] += inveigenvect(i, j) * up[j];
         }
     }
 
@@ -276,7 +290,7 @@ inline void SubMatrix::BackwardPropagate(const double *up, double *down, double 
 
     for (int i = 0; i < GetNstate(); i++) {
         for (int j = 0; j < GetNstate(); j++) {
-            down[i] += eigenvect[i][j] * aux[j];
+            down[i] += eigenvect(i, j) * aux[j];
         }
     }
 
@@ -326,9 +340,9 @@ inline void SubMatrix::BackwardPropagate(const double *up, double *down, double 
 }
 
 inline void SubMatrix::ForwardPropagate(const double *down, double *up, double length) const {
-    double **eigenvect = GetEigenVect();
-    double **inveigenvect = GetInvEigenVect();
-    double *eigenval = GetEigenVal();
+    auto &eigenvect = GetEigenVect();
+    auto &inveigenvect = GetInvEigenVect();
+    auto &eigenval = GetEigenVal();
 
     auto aux = new double[GetNstate()];
 
@@ -338,7 +352,7 @@ inline void SubMatrix::ForwardPropagate(const double *down, double *up, double l
 
     for (int i = 0; i < GetNstate(); i++) {
         for (int j = 0; j < GetNstate(); j++) {
-            aux[i] += down[j] * eigenvect[j][i];
+            aux[i] += down[j] * eigenvect(j, i);
         }
     }
 
@@ -352,7 +366,7 @@ inline void SubMatrix::ForwardPropagate(const double *down, double *up, double l
 
     for (int i = 0; i < GetNstate(); i++) {
         for (int j = 0; j < GetNstate(); j++) {
-            up[i] += aux[j] * inveigenvect[j][i];
+            up[i] += aux[j] * inveigenvect(j, i);
         }
     }
 
@@ -361,12 +375,12 @@ inline void SubMatrix::ForwardPropagate(const double *down, double *up, double l
 
 inline double SubMatrix::GetFiniteTimeTransitionProb(int stateup, int statedown,
                                                      double efflength) const {
-    double **invp = GetInvEigenVect();
-    double **p = GetEigenVect();
-    double *l = GetEigenVal();
+    auto &invp = GetInvEigenVect();
+    auto &p = GetEigenVect();
+    auto &l = GetEigenVal();
     double tot = 0;
     for (int i = 0; i < GetNstate(); i++) {
-        tot += p[stateup][i] * exp(efflength * l[i]) * invp[i][statedown];
+        tot += p(stateup, i) * exp(efflength * l[i]) * invp(i, statedown);
     }
     return tot;
 }
@@ -435,7 +449,6 @@ inline int SubMatrix::DrawUniformizedSubstitutionNumber(int stateup, int statedo
             std::cerr << stateup << '\t' << statedown << '\n';
 
             ToStream(std::cerr);
-            CheckReversibility();
             throw;
         }
     }
@@ -446,13 +459,13 @@ inline int SubMatrix::DrawUniformizedSubstitutionNumber(int stateup, int statedo
 }
 
 inline double SubMatrix::DrawWaitingTime(int state) const {
-    const double *row = GetRow(state);
+    EVector row = GetRow(state);
     double t = Random::sExpo() / (-row[state]);
     return t;
 }
 
 inline int SubMatrix::DrawOneStep(int state) const {
-    const double *row = GetRow(state);
+    EVector row = GetRow(state);
     double p = -row[state] * Random::Uniform();
     int k = -1;
     double tot = 0;
@@ -471,6 +484,58 @@ inline int SubMatrix::DrawOneStep(int state) const {
         exit(1);
     }
     return k;
+}
+
+/*
+#### TESTS #########################################################################################
+*/
+TEST_CASE("SubMatrix tests") {
+    class MyMatrix : public SubMatrix {
+      protected:
+        void ComputeArray(int) const override {}
+
+        void ComputeStationary() const override {
+            for (int i = 0; i < 4; ++i) {
+                mStationary[i] = 0.25;
+            }
+        }
+
+      public:
+        MyMatrix() : SubMatrix(4) {}
+
+        double &ref(int i, int j) { return Q(i, j); }
+
+        using SubMatrix::Diagonalise;
+    };
+
+    MyMatrix myMatrix{};
+    CHECK(myMatrix.GetNstate() == 4);
+
+    for (int i = 0; i < 4; ++i) {
+        for (int j = 0; j < 4; ++j) {
+            if (i == j) {
+                myMatrix.ref(i, j) = -0.75;
+            } else {
+                myMatrix.ref(i, j) = 0.25;
+            }
+        }
+    }
+
+    myMatrix.Diagonalise();
+
+    std::stringstream ss;
+    myMatrix.ToStream(ss);
+    CHECK(ss.str() ==
+          "4\n\
+stationaries:\n\
+0.25\t0.25\t0.25\t0.25\t\n\
+rate matrix:\n\
+-0.75\t0.25\t0.25\t0.25\t\n\
+0.25\t-0.75\t0.25\t0.25\t\n\
+0.25\t0.25\t-0.75\t0.25\t\n\
+0.25\t0.25\t0.25\t-0.75\t\n\
+\n\
+-1\t0\t-1\t-1\t\n");
 }
 
 #endif  // SUBMATRIX_H
