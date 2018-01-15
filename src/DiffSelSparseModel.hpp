@@ -53,35 +53,12 @@ std::string sf(const std::string& format, Args... args) {
 =====================================================================
 */
 struct AcceptStats {
-    static std::map<std::string, std::vector<double>> d;
-    static void add(std::string k, double v) { d[k].push_back(v); }
+    std::map<std::string, std::vector<double>> d;
+    void add(std::string k, double v) { d[k].push_back(v); }
 };
-std::map<std::string, std::vector<double>> AcceptStats::d;
-
 
 #define CAR(f, ...) call_and_record(#f, this, &DiffSelSparseModel::f, ##__VA_ARGS__)
 
-class DiffSelSparseModel;
-
-std::string args_to_string() { return ""; }
-
-std::string args_to_string(double d) { return sf("%.2f", d); }
-
-template <class Arg>
-std::string args_to_string(Arg arg) {
-    return std::to_string(arg);
-}
-
-template <class Arg, class... Args>
-std::string args_to_string(Arg arg, Args... args) {
-    return args_to_string(arg) + ", " + args_to_string(args...);
-}
-
-template <class... Args>
-void call_and_record(const std::string& s, DiffSelSparseModel* instance,
-                     double (DiffSelSparseModel::*f)(Args...), Args... args) {
-    AcceptStats::add(s + '(' + args_to_string(args...) + ')', (instance->*f)(args...));
-}
 /*
 =====================================================================
 */
@@ -91,16 +68,6 @@ using AAProfile = Eigen::Matrix<double, Eigen::Dynamic, 1>;
 using BMatrix = Eigen::Matrix<bool, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
 using DMatrix = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
 
-void InitUniformDirichlet(Eigen::VectorXd& v) {
-    double tot = 0.;
-    for (int i = 0; i < v.size(); i++) {
-        v[i] = Random::sExpo();
-        tot += v[i];
-    }
-    for (int i = 0; i < v.size(); i++) {
-        v[i] /= tot;
-    }
-}
 
 class DiffSelSparseModel : public ProbModel {
     // -----
@@ -188,10 +155,37 @@ class DiffSelSparseModel : public ProbModel {
 
     PhyloProcess* phyloprocess;
 
+    AcceptStats* stats;  // pointer to move acceptance stats
+
+    // ===================================================================================================
+    //   MOVE ACCEPTANCE THINGS
+    // ===================================================================================================
+    std::string args_to_string() { return ""; }
+
+    std::string args_to_string(double d) { return sf("%.2f", d); }
+
+    template <class Arg>
+    std::string args_to_string(Arg arg) {
+        return std::to_string(arg);
+    }
+
+    template <class Arg, class... Args>
+    std::string args_to_string(Arg arg, Args... args) {
+        return args_to_string(arg) + ", " + args_to_string(args...);
+    }
+
+    template <class... Args>
+    void call_and_record(const std::string& s, DiffSelSparseModel* instance,
+                         double (DiffSelSparseModel::*f)(Args...), Args... args) {
+        instance->stats->add(s + '(' + args_to_string(args...) + ')', (instance->*f)(args...));
+    }
+    // ===================================================================================================
+
   public:
     DiffSelSparseModel(const std::string& datafile, const std::string& treefile, int Ncond,
-                       int inNlevel, int infixglob, int infixvar, int incodonmodel, bool sample)
-        : Ncond(Ncond) {
+                       int inNlevel, int infixglob, int infixvar, int incodonmodel, bool sample,
+                       AcceptStats* stats = nullptr)
+        : Ncond(Ncond), stats(stats) {
         fixglob = infixglob;
         if (!fixglob) {
             std::cerr << "error: free hyperparameters for baseline (global profile) not yet "
@@ -328,6 +322,8 @@ class DiffSelSparseModel : public ProbModel {
 
         fitness_shape = Random::sExpo();
         fitness_inv_rates = AAProfile(Naa);
+
+
         InitUniformDirichlet(fitness_inv_rates);
 
         fitness = std::vector<DMatrix>(Ncond, Eigen::MatrixXd(Nsite, Naa));
@@ -412,6 +408,17 @@ class DiffSelSparseModel : public ProbModel {
         bksitecondsuffstatlogprob = new double*[Ncond];
         for (int k = 0; k < Ncond; k++) {
             bksitecondsuffstatlogprob[k] = new double[Nsite];
+        }
+    }
+
+    void InitUniformDirichlet(Eigen::VectorXd& v) {
+        double tot = 0.;
+        for (int i = 0; i < v.size(); i++) {
+            v[i] = Random::sExpo();
+            tot += v[i];
+        }
+        for (int i = 0; i < v.size(); i++) {
+            v[i] /= tot;
         }
     }
 

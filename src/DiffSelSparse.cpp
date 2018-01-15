@@ -35,20 +35,22 @@ license and that you accept its terms.*/
 using namespace std;
 
 
-class DiffSelChain : public Chain {
+class DiffSelSparseChain : public Chain {
   private:
     // Chain parameters
     string modeltype, datafile, treefile;
     int codonmodel, category, level, fixglob, fixvar;
 
   public:
+    AcceptStats stats;
+
     DiffSelSparseModel* GetModel() { return static_cast<DiffSelSparseModel*>(model.get()); }
 
     string GetModelType() override { return modeltype; }
 
-    DiffSelChain(const string& indata, const string& intree, int incategory, int inlevel,
-                 int inevery, int inuntil, int infixglob, int infixvar, int incodonmodel,
-                 string inname, int force)
+    DiffSelSparseChain(const string& indata, const string& intree, int incategory, int inlevel,
+                       int inevery, int inuntil, int infixglob, int infixvar, int incodonmodel,
+                       string inname, int force)
         : modeltype("DIFFSEL"),
           datafile(indata),
           treefile(intree),
@@ -63,7 +65,7 @@ class DiffSelChain : public Chain {
         New(force);
     }
 
-    explicit DiffSelChain(string filename) {
+    explicit DiffSelSparseChain(string filename) {
         name = filename;
         Open();
         Save();
@@ -71,7 +73,7 @@ class DiffSelChain : public Chain {
 
     void New(int force) override {
         model = std::unique_ptr<DiffSelSparseModel>(new DiffSelSparseModel(
-            datafile, treefile, category, level, fixglob, fixvar, codonmodel, true));
+            datafile, treefile, category, level, fixglob, fixvar, codonmodel, true, &stats));
         cerr << "-- Reset" << endl;
         Reset(force);
         cerr << "-- New ok\n";
@@ -141,7 +143,7 @@ int main(int argc, char* argv[]) {
     if (argc == 2 && argv[1][0] != '-') {
         string name = argv[1];
         cerr << "-- Trying to reopen existing chain named " << name << " on disk\n";
-        DiffSelChain* chain = new DiffSelChain(name);
+        DiffSelSparseChain* chain = new DiffSelSparseChain(name);
         cerr << "start\n";
         chain->Start();
         cerr << "chain stopped\n";
@@ -216,16 +218,18 @@ int main(int argc, char* argv[]) {
                     "[-fixvar|-freevar] [-ms|-sr] [-x every until] name\n";
             exit(1);
         }
-        DiffSelChain* chain = new DiffSelChain(datafile, treefile, ncond, nlevel, every, until,
-                                               fixglob, fixvar, codonmodel, name, true);
+        DiffSelSparseChain* chain =
+            new DiffSelSparseChain(datafile, treefile, ncond, nlevel, every, until, fixglob, fixvar,
+                                   codonmodel, name, true);
         cerr << "start\n";
         chain->Start();
         cerr << "chain stopped\n";
 
+        for (auto p : chain->stats.d) {
+            cout << setw(35) << p.first << " -> "
+                 << 100. * accumulate(p.second.begin(), p.second.end(), 0.) / p.second.size()
+                 << "%\n";
+        }
         delete chain;
-    }
-    for (auto p : AcceptStats::d) {
-        cout << setw(35) << p.first << " -> "
-             << 100. * accumulate(p.second.begin(), p.second.end(), 0.) / p.second.size() << "%\n";
     }
 }
