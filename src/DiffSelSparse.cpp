@@ -42,7 +42,7 @@ class DiffSelSparseChain : public Chain {
     int codonmodel, category, level, fixglob, fixvar;
 
   public:
-    AcceptStats stats;
+    DiffSelSparseModel::AcceptStats stats;
 
     DiffSelSparseModel* GetModel() { return static_cast<DiffSelSparseModel*>(model.get()); }
 

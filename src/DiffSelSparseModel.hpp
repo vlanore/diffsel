@@ -38,31 +38,9 @@ license and that you accept its terms.*/
 
 const int Nrr = Nnuc * (Nnuc - 1) / 2;
 const int Nstate = 61;
-
-template <typename... Args>
-std::string sf(const std::string& format, Args... args) {
-    size_t size = snprintf(nullptr, 0, format.c_str(), args...) + 1;
-    std::unique_ptr<char[]> buf(new char[size]);
-    snprintf(buf.get(), size, format.c_str(), args...);
-    return std::string(buf.get(), buf.get() + size - 1);
-}
-
-/*
-=====================================================================
-  Things required to record move success rates
-=====================================================================
-*/
-struct AcceptStats {
-    std::map<std::string, std::vector<double>> d;
-    void add(std::string k, double v) { d[k].push_back(v); }
-};
+class DiffSelSparseChain;
 
 #define CAR(f, ...) call_and_record(#f, this, &DiffSelSparseModel::f, ##__VA_ARGS__)
-
-/*
-=====================================================================
-*/
-
 
 using AAProfile = Eigen::Matrix<double, Eigen::Dynamic, 1>;
 using BMatrix = Eigen::Matrix<bool, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
@@ -73,7 +51,6 @@ class DiffSelSparseModel : public ProbModel {
     // -----
     // model selectors
     // -----
-
     int fixglob;
     int fixvar;
     int codonmodel;
@@ -81,7 +58,6 @@ class DiffSelSparseModel : public ProbModel {
     // -----
     // external parameters
     // -----
-
     Tree* tree;
     FileSequenceAlignment* data;
     const TaxonSet* taxonset;
@@ -101,7 +77,6 @@ class DiffSelSparseModel : public ProbModel {
     // -----
     //  model structure
     // -----
-
     // iid exponential branch lengths of rate lambda
     double lambda;
     double* branchlength;
@@ -155,11 +130,25 @@ class DiffSelSparseModel : public ProbModel {
 
     PhyloProcess* phyloprocess;
 
-    AcceptStats* stats;  // pointer to move acceptance stats
-
     // ===================================================================================================
     //   MOVE ACCEPTANCE THINGS
     // ===================================================================================================
+    struct AcceptStats {
+        std::map<std::string, std::vector<double>> d;
+        void add(std::string k, double v) { d[k].push_back(v); }
+    };
+
+    friend DiffSelSparseChain;
+    AcceptStats* stats;  // pointer to move acceptance stats
+
+    template <typename... Args>
+    std::string sf(const std::string& format, Args... args) {
+        size_t size = snprintf(nullptr, 0, format.c_str(), args...) + 1;
+        std::unique_ptr<char[]> buf(new char[size]);
+        snprintf(buf.get(), size, format.c_str(), args...);
+        return std::string(buf.get(), buf.get() + size - 1);
+    }
+
     std::string args_to_string() { return ""; }
 
     std::string args_to_string(double d) { return sf("%.2f", d); }
