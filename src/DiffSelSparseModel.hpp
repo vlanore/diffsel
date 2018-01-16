@@ -326,7 +326,13 @@ class DiffSelSparseModel : public ProbModel {
 
         prob_conv = Eigen::VectorXd(Ncond);
         for (int k = 0; k < Ncond; k++) {
-            prob_conv[k] = Random::BetaMV(prob_conv_m, prob_conv_v);
+            if (!k) {
+                prob_conv[k] = 1.0;
+            }
+            else    {
+                prob_conv[k] = 0.1;
+            }
+            // prob_conv[k] = Random::BetaMV(prob_conv_m, prob_conv_v);
         }
 
         ind_conv = std::vector<BMatrix>(Ncond, BMatrix(Nsite, Naa));
@@ -1057,20 +1063,59 @@ class DiffSelSparseModel : public ProbModel {
 
 
     void TraceHeader(std::ostream& os) override {
+        os << "loglik\t";
         os << "length\t";
+        for (int k = 1; k < Ncond; k++) {
+            os << "pconv" << k << '\t';
+            os << "fconv" << k << '\t';
+        }
+        os << "shape\t";
+        os << "invrate\t";
         os << "statent\t";
-        os << "rrent\t";
-        os << "diag\n";
+        os << "rrent\n";
+    }
+
+    double GetFitnessInvRatesEntropy()  {
+        double tot = 0;
+        for (int a=0; a<Naa; a++)   {
+            tot += (fitness_inv_rates[a] < 1e-6) ? 0 : - fitness_inv_rates[a] * log(fitness_inv_rates[a]);
+        }
+        return tot;
+    }
+
+    double GetFracShifts(int k)   {
+        double tot = 0;
+        for (int i=0; i<Nsite; i++) {
+            for (int aa=0; aa<Naa; aa++)    {
+                if (ind_conv[k](i,aa))  {
+                    tot++;
+                }
+            }
+        }
+        return tot / Nsite / Naa;
     }
 
     void Trace(std::ostream& os) override {
+        os << phyloprocess->GetLogProb() << '\t';
         os << GetTotalLength() << '\t';
+        for (int k = 1; k < Ncond; k++) {
+            os << prob_conv[k] << '\t';
+            os << GetFracShifts(k) << '\t';
+        }
+        os << fitness_shape << '\t';
+        os << GetFitnessInvRatesEntropy() << '\t';
         os << GetEntropy(nucstat, Nnuc) << '\t';
-        os << GetEntropy(nucrelrate, Nrr) << '\t';
-        os << SubMatrix::GetDiagCount() << '\n';
+        os << GetEntropy(nucrelrate, Nrr) << '\n';
     }
 
-    void Monitor(std::ostream&) override {}
+    void Monitor(std::ostream& os) override {
+        for (auto p : stats->d) {
+            // os << p.first << " -> "
+            os << std::setw(35) << p.first << " -> "
+                 << 100. * accumulate(p.second.begin(), p.second.end(), 0.) / p.second.size()
+                 << "%\n";
+        }
+    }
 
     void FromStream(std::istream& is) override {
         is >> lambda;
