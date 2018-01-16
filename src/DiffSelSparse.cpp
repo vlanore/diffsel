@@ -27,11 +27,11 @@ license and that you accept its terms.*/
 
 #define DOCTEST_CONFIG_IMPLEMENT
 
+#include <fstream>
 #include "Chain.hpp"
 #include "DiffSelSparseModel.hpp"
 
 using namespace std;
-
 
 class DiffSelSparseChain : public Chain {
   private:
