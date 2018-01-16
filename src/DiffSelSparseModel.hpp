@@ -27,8 +27,9 @@ more generally, to use and operate it in the same conditions as regards security
 The fact that you are presently reading this means that you have had knowledge of the CeCILL-C
 license and that you accept its terms.*/
 
-
+#include <iomanip>
 #include <memory>
+#include <numeric>
 #include "CodonSequenceAlignment.hpp"
 #include "GTRSubMatrix.hpp"
 #include "MSCodonSubMatrix.hpp"
@@ -328,8 +329,7 @@ class DiffSelSparseModel : public ProbModel {
         for (int k = 0; k < Ncond; k++) {
             if (!k) {
                 prob_conv[k] = 1.0;
-            }
-            else    {
+            } else {
                 prob_conv[k] = 0.1;
             }
             // prob_conv[k] = Random::BetaMV(prob_conv_m, prob_conv_v);
@@ -770,7 +770,7 @@ class DiffSelSparseModel : public ProbModel {
     double MoveFitnessShape(double tuning) {
         auto partial_gamma_log_density = [](double alpha, double m, double x) {
             double beta = alpha / m;
-            return alpha * log(beta) - log(tgamma(alpha)) + (alpha - 1) * log(x) -beta*x;
+            return alpha * log(beta) - log(tgamma(alpha)) + (alpha - 1) * log(x) - beta * x;
         };
 
         auto fitness_log_density = [&]() {
@@ -877,21 +877,20 @@ class DiffSelSparseModel : public ProbModel {
         return nacc / ntot;
     }
 
-    double GibbsResampleProbConv()  {
-
+    double GibbsResampleProbConv() {
         double alpha = prob_conv_m / prob_conv_v;
-        double beta = (1-prob_conv_m) / prob_conv_v;
+        double beta = (1 - prob_conv_m) / prob_conv_v;
 
         for (int k = 1; k < Ncond; k++) {
             int nshift = 0;
-            for (int i=0; i<Nsite; i++) {
-                for (int a=0; a<Naa; a++)   {
-                    nshift += ind_conv[k](i,a);
+            for (int i = 0; i < Nsite; i++) {
+                for (int a = 0; a < Naa; a++) {
+                    nshift += ind_conv[k](i, a);
                 }
             }
-            int nn = Nsite*Naa;
+            int nn = Nsite * Naa;
 
-            prob_conv[k] = Random::Beta(alpha+nshift,beta+nn-nshift);
+            prob_conv[k] = Random::Beta(alpha + nshift, beta + nn - nshift);
         }
         return 1.0;
     }
@@ -901,15 +900,15 @@ class DiffSelSparseModel : public ProbModel {
         double ntot = 0, nacc = 0;
 
         int nshift = 0;
-        for (int i=0; i<Nsite; i++) {
-            for (int a=0; a<Naa; a++)   {
-                nshift += ind_conv[cond](i,a);
+        for (int i = 0; i < Nsite; i++) {
+            for (int a = 0; a < Naa; a++) {
+                nshift += ind_conv[cond](i, a);
             }
         }
-        int nn = Nsite*Naa;
+        int nn = Nsite * Naa;
 
         double alpha = prob_conv_m / prob_conv_v;
-        double beta = (1-prob_conv_m) / prob_conv_v;
+        double beta = (1 - prob_conv_m) / prob_conv_v;
 
         for (int rep = 0; rep < nrep; rep++) {
             for (int i = 0; i < Nsite; i++) {
@@ -918,7 +917,6 @@ class DiffSelSparseModel : public ProbModel {
                 BackupSite(i);
 
                 if (!bk) {
-
                     double deltalogprob = -GetSiteSuffStatLogProb(i);
                     double loghastings = 0.;
                     ind_conv[cond](i, aa) = true;
@@ -927,7 +925,8 @@ class DiffSelSparseModel : public ProbModel {
                     UpdateSite(i);
                     deltalogprob += GetSiteSuffStatLogProb(i);
 
-                    // adding marginal probability of going from nshift to nshift+1 (integrated over prob_conv)
+                    // adding marginal probability of going from nshift to nshift+1 (integrated over
+                    // prob_conv)
                     deltalogprob += log(alpha + nshift) - log(beta + nn - nshift - 1);
 
                     deltalogprob += loghastings;
@@ -942,13 +941,14 @@ class DiffSelSparseModel : public ProbModel {
                     }
                     ntot++;
                 } else {
-                    double deltalogprob = - GetSiteSuffStatLogProb(i);
+                    double deltalogprob = -GetSiteSuffStatLogProb(i);
                     double loghastings = 0.;
                     ind_conv[cond](i, aa) = false;
                     UpdateSite(i);
                     deltalogprob += GetSiteSuffStatLogProb(i);
 
-                    // adding marginal probability of going from nshift to nshift-1 (integrated over prob_conv)
+                    // adding marginal probability of going from nshift to nshift-1 (integrated over
+                    // prob_conv)
                     deltalogprob += log(beta + nn - nshift) + log(alpha + nshift - 1);
 
                     deltalogprob += loghastings;
@@ -1169,19 +1169,21 @@ class DiffSelSparseModel : public ProbModel {
         os << "rrent\n";
     }
 
-    double GetFitnessInvRatesEntropy()  {
+    double GetFitnessInvRatesEntropy() {
         double tot = 0;
-        for (int a=0; a<Naa; a++)   {
-            tot += (fitness_inv_rates[a] < 1e-6) ? 0 : - fitness_inv_rates[a] * log(fitness_inv_rates[a]);
+        for (int a = 0; a < Naa; a++) {
+            tot += (fitness_inv_rates[a] < 1e-6)
+                       ? 0
+                       : -fitness_inv_rates[a] * log(fitness_inv_rates[a]);
         }
         return tot;
     }
 
-    double GetFracShifts(int k)   {
+    double GetFracShifts(int k) {
         double tot = 0;
-        for (int i=0; i<Nsite; i++) {
-            for (int aa=0; aa<Naa; aa++)    {
-                if (ind_conv[k](i,aa))  {
+        for (int i = 0; i < Nsite; i++) {
+            for (int aa = 0; aa < Naa; aa++) {
+                if (ind_conv[k](i, aa)) {
                     tot++;
                 }
             }
@@ -1206,8 +1208,8 @@ class DiffSelSparseModel : public ProbModel {
         for (auto p : stats->d) {
             // os << p.first << " -> "
             os << std::setw(35) << p.first << " -> "
-                 << 100. * accumulate(p.second.begin(), p.second.end(), 0.) / p.second.size()
-                 << "%\n";
+               << 100. * accumulate(p.second.begin(), p.second.end(), 0.) / p.second.size()
+               << "%\n";
         }
     }
 
