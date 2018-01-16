@@ -766,7 +766,7 @@ class DiffSelSparseModel : public ProbModel {
     double MoveFitnessShape(double tuning) {
         auto partial_gamma_log_density = [](double alpha, double m, double x) {
             double beta = alpha / m;
-            return alpha * log(beta) - log(tgamma(alpha)) + (alpha - 1) * log(x);
+            return alpha * log(beta) - log(tgamma(alpha)) + (alpha - 1) * log(x) -beta*x;
         };
 
         auto fitness_log_density = [&]() {
