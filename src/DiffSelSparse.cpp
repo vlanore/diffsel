@@ -124,6 +124,18 @@ class DiffSelSparseChain : public Chain {
     }
 
 
+    void MakeFiles(int force = 0) override   {
+        Chain::MakeFiles(force);
+        std::ofstream os((name + ".fitness").c_str());
+    }
+
+    void SavePoint() override   {
+
+        Chain::SavePoint();
+        std::ofstream os((name + ".fitness").c_str(),ios_base::app);
+        GetModel()->PrintFitnessVector(os);
+    }
+
     void Move() override {
         for (int i = 0; i < every; i++) {
             model->Move();
