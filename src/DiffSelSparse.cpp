@@ -26,9 +26,7 @@ The fact that you are presently reading this means that you have had knowledge o
 license and that you accept its terms.*/
 
 #define DOCTEST_CONFIG_IMPLEMENT
-#include <cmath>
-#include <fstream>
-#include <numeric>
+
 #include "Chain.hpp"
 #include "DiffSelSparseModel.hpp"
 
