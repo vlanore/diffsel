@@ -694,12 +694,16 @@ class DiffSelSparseModel : public ProbModel {
             CAR(MoveFitnessInvRates, 0.15, 5);
             CAR(MoveFitnessInvRates, 0.15, 10);
 
+            /*
             CAR(MoveProbConv, 1.);
             CAR(MoveProbConv, 0.3);
+            */
 
             for (int k = 1; k < Ncond; k++) {
-                CAR(MoveIndConv, k, 10);
+                CAR(MoveIndConv2, k, 10);
+                // CAR(MoveIndConv, k, 10);
             }
+            CAR(GibbsResampleProbConv);
 
             CAR(MoveRR, 0.1, 1, 10);
             CAR(MoveRR, 0.03, 3, 10);
@@ -873,6 +877,96 @@ class DiffSelSparseModel : public ProbModel {
         return nacc / ntot;
     }
 
+    double GibbsResampleProbConv()  {
+
+        double alpha = prob_conv_m / prob_conv_v;
+        double beta = (1-prob_conv_m) / prob_conv_v;
+
+        for (int k = 1; k < Ncond; k++) {
+            int nshift = 0;
+            for (int i=0; i<Nsite; i++) {
+                for (int a=0; a<Naa; a++)   {
+                    nshift += ind_conv[k](i,a);
+                }
+            }
+            int nn = Nsite*Naa;
+
+            prob_conv[k] = Random::Beta(alpha+nshift,beta+nn-nshift);
+        }
+        return 1.0;
+    }
+
+
+    double MoveIndConv2(int cond, int nrep) {
+        double ntot = 0, nacc = 0;
+
+        int nshift = 0;
+        for (int i=0; i<Nsite; i++) {
+            for (int a=0; a<Naa; a++)   {
+                nshift += ind_conv[cond](i,a);
+            }
+        }
+        int nn = Nsite*Naa;
+
+        double alpha = prob_conv_m / prob_conv_v;
+        double beta = (1-prob_conv_m) / prob_conv_v;
+
+        for (int rep = 0; rep < nrep; rep++) {
+            for (int i = 0; i < Nsite; i++) {
+                int aa = Random::Choose(Naa);
+                bool bk = ind_conv[cond](i, aa);
+                BackupSite(i);
+
+                if (!bk) {
+
+                    double deltalogprob = -GetSiteSuffStatLogProb(i);
+                    double loghastings = 0.;
+                    ind_conv[cond](i, aa) = true;
+                    fitness[cond](i, aa) =
+                        Random::Gamma(fitness_shape, fitness_shape / fitness_inv_rates[aa]);
+                    UpdateSite(i);
+                    deltalogprob += GetSiteSuffStatLogProb(i);
+
+                    // adding marginal probability of going from nshift to nshift+1 (integrated over prob_conv)
+                    deltalogprob += log(alpha + nshift) - log(beta + nn - nshift - 1);
+
+                    deltalogprob += loghastings;
+
+                    int accepted = (log(Random::Uniform()) < deltalogprob);
+                    if (accepted) {
+                        nacc++;
+                        nshift++;
+                    } else {
+                        ind_conv[cond](i, aa) = false;
+                        RestoreSite(i);
+                    }
+                    ntot++;
+                } else {
+                    double deltalogprob = - GetSiteSuffStatLogProb(i);
+                    double loghastings = 0.;
+                    ind_conv[cond](i, aa) = false;
+                    UpdateSite(i);
+                    deltalogprob += GetSiteSuffStatLogProb(i);
+
+                    // adding marginal probability of going from nshift to nshift-1 (integrated over prob_conv)
+                    deltalogprob += log(beta + nn - nshift) + log(alpha + nshift - 1);
+
+                    deltalogprob += loghastings;
+
+                    int accepted = (log(Random::Uniform()) < deltalogprob);
+                    if (accepted) {
+                        nacc++;
+                        nshift--;
+                    } else {
+                        ind_conv[cond](i, aa) = true;
+                        RestoreSite(i);
+                    }
+                    ntot++;
+                }
+            }
+        }
+        return nacc / ntot;
+    }
 
     double MoveIndConv(int cond, int nrep) {
         double ntot = 0, nacc = 0;
