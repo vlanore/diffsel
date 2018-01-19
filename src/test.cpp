@@ -29,3 +29,4 @@ license and that you accept its terms.*/
 #include "StateSpace.hpp"
 #include "SubMatrix.hpp"
 #include "Tree.hpp"
+#include "GammaSuffStats.hpp"

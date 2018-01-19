@@ -32,6 +32,7 @@ license and that you accept its terms.*/
 #include <numeric>
 #include "CodonSequenceAlignment.hpp"
 #include "GTRSubMatrix.hpp"
+#include "GammaSuffStats.hpp"
 #include "MSCodonSubMatrix.hpp"
 #include "PhyloProcess.hpp"
 #include "ProbModel.hpp"
@@ -124,6 +125,8 @@ class DiffSelSparseModel : public ProbModel {
     // suff stats, for each site and under each condition
     // Ncond * Nsite
     PathSuffStat** suffstatarray;
+
+    GammaSuffStats gamma_suff_stats;
 
     // storing cond/site suff stat log probs
     double** sitecondsuffstatlogprob;
@@ -313,7 +316,6 @@ class DiffSelSparseModel : public ProbModel {
         fitness_shape = Random::sExpo();
         fitness_inv_rates = AAProfile(Naa);
 
-
         InitUniformDirichlet(fitness_inv_rates);
 
         fitness = std::vector<DMatrix>(Ncond, Eigen::MatrixXd(Nsite, Naa));
@@ -324,6 +326,8 @@ class DiffSelSparseModel : public ProbModel {
                         Random::Gamma(fitness_shape, fitness_shape / fitness_inv_rates[aa]);
                 }
         }
+
+        gamma_suff_stats = GammaSuffStats(Ncond, Nsite, &fitness);
 
         prob_conv = Eigen::VectorXd(Ncond);
         for (int k = 0; k < Ncond; k++) {
@@ -687,13 +691,16 @@ class DiffSelSparseModel : public ProbModel {
                 }
             }
 
-            CAR(MoveFitnessShape, 1.);
-            CAR(MoveFitnessShape, 0.3);
+            gamma_suff_stats.gather();
 
-            CAR(MoveFitnessInvRates, 0.15, 1);
-            CAR(MoveFitnessInvRates, 0.15, 5);
-            CAR(MoveFitnessInvRates, 0.15, 10);
+            for (int rep = 0; rep < 100; rep++) {
+                CAR(MoveFitnessShape, 1.);
+                CAR(MoveFitnessShape, 0.3);
 
+                CAR(MoveFitnessInvRates, 0.15, 1);
+                CAR(MoveFitnessInvRates, 0.15, 5);
+                CAR(MoveFitnessInvRates, 0.15, 10);
+            }
             /*
             CAR(MoveProbConv, 1.);
             CAR(MoveProbConv, 0.3);
@@ -768,19 +775,20 @@ class DiffSelSparseModel : public ProbModel {
     }
 
     double MoveFitnessShape(double tuning) {
-        auto partial_gamma_log_density = [](double alpha, double m, double x) {
-            double beta = alpha / m;
-            return alpha * log(beta) - log(tgamma(alpha)) + (alpha - 1) * log(x) - beta * x;
-        };
+        // auto partial_gamma_log_density = [](double alpha, double m, double x) {
+        //     double beta = alpha / m;
+        //     return alpha * log(beta) - log(tgamma(alpha)) + (alpha - 1) * log(x) -
+        //            beta * x;
+        // };
 
         auto fitness_log_density = [&]() {
-            double logprob = -fitness_shape;
-            for (int k = 0; k < Ncond; k++)
-                for (int i = 0; i < Nsite; i++)
-                    for (int aa = 0; aa < Naa; aa++)
-                        logprob += ind_conv[k](i, aa) *
-                                   partial_gamma_log_density(fitness_shape, fitness_inv_rates[aa],
-                                                             fitness[k](i, aa));
+            double logprob = -fitness_shape + gamma_suff_stats.partial_density_shape(fitness_shape, fitness_inv_rates);
+            // for (int k = 0; k < Ncond; k++)
+            //     for (int i = 0; i < Nsite; i++)
+            //         for (int aa = 0; aa < Naa; aa++)
+            //             logprob += ind_conv[k](i, aa) *
+            //                        partial_gamma_log_density(fitness_shape, fitness_inv_rates[aa],
+            //                                                  fitness[k](i, aa));
             return logprob;
         };
 
@@ -802,19 +810,19 @@ class DiffSelSparseModel : public ProbModel {
     }
 
     double MoveFitnessInvRates(double tuning, int n) {
-        auto partial_gamma_log_density = [](double alpha, double m, double x) {
-            double beta = alpha / m;
-            return alpha * log(beta) - beta * x;
-        };
+        // auto partial_gamma_log_density = [](double alpha, double m, double x) {
+        //     double beta = alpha / m;
+        //     return alpha * log(beta) - beta * x;
+        // };
 
         auto fitness_log_density = [&]() {
-            double logprob = 0;
-            for (int k = 0; k < Ncond; k++)
-                for (int i = 0; i < Nsite; i++)
-                    for (int aa = 0; aa < Naa; aa++)
-                        logprob += ind_conv[k](i, aa) *
-                                   partial_gamma_log_density(fitness_shape, fitness_inv_rates[aa],
-                                                             fitness[k](i, aa));
+            double logprob = gamma_suff_stats.partial_density_invshape(fitness_shape, fitness_inv_rates);
+            // for (int k = 0; k < Ncond; k++)
+            //     for (int i = 0; i < Nsite; i++)
+            //         for (int aa = 0; aa < Naa; aa++)
+            //             logprob += ind_conv[k](i, aa) *
+            //                        partial_gamma_log_density(fitness_shape, fitness_inv_rates[aa],
+            //                                                  fitness[k](i, aa));
             return logprob;
         };
 
