@@ -1312,4 +1312,15 @@ class DiffSelSparseModel : public ProbModel {
         // sitecondsuffstatlogprob
         os << '\n';
     }
+
+    void PrintFitnessVector(std::ostream& os)  {
+        for (int k=0; k<Ncond; k++) {
+            for (int i=0; i<Nsite; i++) {
+                for (int a=0; a<Naa; a++)   {
+                    os << ind_conv[k](i,a) << '\t' << fitness[k](i,a) << '\t';
+                }
+            }
+        }
+        os << '\n';
+    }
 };
