@@ -782,12 +782,14 @@ class DiffSelSparseModel : public ProbModel {
         // };
 
         auto fitness_log_density = [&]() {
-            double logprob = -fitness_shape + gamma_suff_stats.partial_density(fitness_shape, fitness_inv_rates);
+            double logprob =
+                -fitness_shape + gamma_suff_stats.partial_density(fitness_shape, fitness_inv_rates);
             // for (int k = 0; k < Ncond; k++)
             //     for (int i = 0; i < Nsite; i++)
             //         for (int aa = 0; aa < Naa; aa++)
             //             logprob += ind_conv[k](i, aa) *
-            //                        partial_gamma_log_density(fitness_shape, fitness_inv_rates[aa],
+            //                        partial_gamma_log_density(fitness_shape,
+            //                        fitness_inv_rates[aa],
             //                                                  fitness[k](i, aa));
             return logprob;
         };
@@ -816,12 +818,14 @@ class DiffSelSparseModel : public ProbModel {
         // };
 
         auto fitness_log_density = [&]() {
-            double logprob = gamma_suff_stats.partial_density_invrate(fitness_shape, fitness_inv_rates);
+            double logprob =
+                gamma_suff_stats.partial_density_invrate(fitness_shape, fitness_inv_rates);
             // for (int k = 0; k < Ncond; k++)
             //     for (int i = 0; i < Nsite; i++)
             //         for (int aa = 0; aa < Naa; aa++)
             //             logprob += ind_conv[k](i, aa) *
-            //                        partial_gamma_log_density(fitness_shape, fitness_inv_rates[aa],
+            //                        partial_gamma_log_density(fitness_shape,
+            //                        fitness_inv_rates[aa],
             //                                                  fitness[k](i, aa));
             return logprob;
         };
@@ -1313,11 +1317,11 @@ class DiffSelSparseModel : public ProbModel {
         os << '\n';
     }
 
-    void PrintFitnessVector(std::ostream& os)  {
-        for (int k=0; k<Ncond; k++) {
-            for (int i=0; i<Nsite; i++) {
-                for (int a=0; a<Naa; a++)   {
-                    os << ind_conv[k](i,a) << '\t' << fitness[k](i,a) << '\t';
+    void PrintFitnessVector(std::ostream& os) {
+        for (int k = 0; k < Ncond; k++) {
+            for (int i = 0; i < Nsite; i++) {
+                for (int a = 0; a < Naa; a++) {
+                    os << ind_conv[k](i, a) << '\t' << fitness[k](i, a) << '\t';
                 }
             }
         }

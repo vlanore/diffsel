@@ -107,8 +107,7 @@ TEST_CASE("Comparing gamma suff stat to logprob computed normally.") {
     GammaSuffStats gamma_suff_stats(Ncond, Nsite, &fitness, &ind_conv);
 
     auto partial_gamma_log_density = [](double alpha, double m, double x) {
-        double beta = alpha / m;
-        return alpha * log(beta) - beta * x;
+        return -alpha * log(m) - alpha * x / m;
     };
 
     auto fitness_log_density = [&]() {
@@ -121,7 +120,6 @@ TEST_CASE("Comparing gamma suff stat to logprob computed normally.") {
                                                                               fitness[k](i, aa));
         return logprob;
     };
-
 
     auto partial_gamma_log_density2 = [](double alpha, double m, double x) {
         double beta = alpha / m;
@@ -140,8 +138,10 @@ TEST_CASE("Comparing gamma suff stat to logprob computed normally.") {
     };
 
     gamma_suff_stats.collect();
-    CHECK(gamma_suff_stats.partial_density(fitness_shape, fitness_inv_rates) ==
-          fitness_log_density2());
-    CHECK(gamma_suff_stats.partial_density_invrate(fitness_shape, fitness_inv_rates) ==
-          fitness_log_density());
+    CHECK(gamma_suff_stats.partial_density(fitness_shape, fitness_inv_rates) -
+              fitness_log_density2() <
+          10e-10);
+    CHECK(gamma_suff_stats.partial_density_invrate(fitness_shape, fitness_inv_rates) -
+              fitness_log_density() <
+          10e-10);
 }

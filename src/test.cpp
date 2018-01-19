@@ -26,7 +26,7 @@ The fact that you are presently reading this means that you have had knowledge o
 license and that you accept its terms.*/
 
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include "GammaSuffStats.hpp"
 #include "StateSpace.hpp"
 #include "SubMatrix.hpp"
 #include "Tree.hpp"
-#include "GammaSuffStats.hpp"
