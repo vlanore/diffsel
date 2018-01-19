@@ -327,8 +327,6 @@ class DiffSelSparseModel : public ProbModel {
                 }
         }
 
-        gamma_suff_stats = GammaSuffStats(Ncond, Nsite, &fitness);
-
         prob_conv = Eigen::VectorXd(Ncond);
         for (int k = 0; k < Ncond; k++) {
             if (!k) {
@@ -345,6 +343,8 @@ class DiffSelSparseModel : public ProbModel {
                 for (int aa = 0; aa < Naa; aa++) {
                     ind_conv[k](i, aa) = (Random::Uniform() < prob_conv[k]);
                 }
+
+        gamma_suff_stats = GammaSuffStats(Ncond, Nsite, &fitness, &ind_conv);
 
         // codon matrices
         // per condition and per site
@@ -691,7 +691,7 @@ class DiffSelSparseModel : public ProbModel {
                 }
             }
 
-            gamma_suff_stats.gather();
+            gamma_suff_stats.collect();
 
             for (int rep = 0; rep < 100; rep++) {
                 CAR(MoveFitnessShape, 1.);
@@ -782,7 +782,7 @@ class DiffSelSparseModel : public ProbModel {
         // };
 
         auto fitness_log_density = [&]() {
-            double logprob = -fitness_shape + gamma_suff_stats.partial_density_shape(fitness_shape, fitness_inv_rates);
+            double logprob = -fitness_shape + gamma_suff_stats.partial_density(fitness_shape, fitness_inv_rates);
             // for (int k = 0; k < Ncond; k++)
             //     for (int i = 0; i < Nsite; i++)
             //         for (int aa = 0; aa < Naa; aa++)
@@ -816,7 +816,7 @@ class DiffSelSparseModel : public ProbModel {
         // };
 
         auto fitness_log_density = [&]() {
-            double logprob = gamma_suff_stats.partial_density_invshape(fitness_shape, fitness_inv_rates);
+            double logprob = gamma_suff_stats.partial_density_invrate(fitness_shape, fitness_inv_rates);
             // for (int k = 0; k < Ncond; k++)
             //     for (int i = 0; i < Nsite; i++)
             //         for (int aa = 0; aa < Naa; aa++)

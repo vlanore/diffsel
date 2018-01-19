@@ -7,51 +7,65 @@ using AAProfile = Eigen::Matrix<double, Eigen::Dynamic, 1>;
 using BMatrix = Eigen::Matrix<bool, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
 
 class GammaSuffStats {
-    double sum_x{0}, sum_logx{0};
+    double sum_logx{0};
+    std::vector<double> sum_x;
+    int sum_ind_total{0};
+    std::vector<int> sum_ind;
+
     int Ncond{0}, Nsite{0}, Naa{20};
     std::vector<DMatrix>* fitness{nullptr};
+    std::vector<BMatrix>* ind_conv{nullptr};
 
   public:
     GammaSuffStats() = default;
 
-    GammaSuffStats(int Ncond, int Nsite, std::vector<DMatrix>* fitness)
-        : Ncond(Ncond), Nsite(Nsite), fitness(fitness) {}
+    GammaSuffStats(int Ncond, int Nsite, std::vector<DMatrix>* fitness,
+                   std::vector<BMatrix>* ind_conv)
+        : Ncond(Ncond), Nsite(Nsite), fitness(fitness), ind_conv(ind_conv) {}
 
-    void gather() {
+    void collect() {
         sum_logx = 0;
-        sum_x = 0;
+        sum_ind_total = 0;
+        sum_x.clear();
+        sum_ind.clear();
         auto& x = *fitness;
-        for (int k = 0; k < Ncond; k++) {
-            for (int i = 0; i < Nsite; i++) {
-                for (int aa = 0; aa < Naa; aa++) {
-                    sum_logx += log(x[k](i, aa));
-                    sum_x += x[k](i, aa);
+        auto& ind = *ind_conv;
+        for (int aa = 0; aa < Naa; aa++) {
+            sum_x.push_back(0);
+            sum_ind.push_back(0);
+            for (int k = 0; k < Ncond; k++) {
+                for (int i = 0; i < Nsite; i++) {
+                    if (ind[k](i, aa)) {
+                        sum_ind_total += 1;
+                        sum_ind[aa] += 1;
+                        sum_logx += log(x[k](i, aa));
+                        sum_x[aa] += x[k](i, aa);
+                    }
                 }
             }
         }
     }
 
-    double partial_density_shape(double shape, AAProfile invshape) {
-        double result = Naa * Nsite * Ncond * (shape * log(shape) - log(tgamma(shape))) +
-                        (shape - 1) * sum_logx;
+    double partial_density(double shape, AAProfile invrate) {
+        double result =
+            sum_ind_total * (shape * log(shape) - log(tgamma(shape))) + (shape - 1) * sum_logx;
         for (int aa = 0; aa < Naa; aa++) {
-            result += -Ncond * Nsite * shape * (log(invshape[aa]) + sum_x / invshape[aa]);
+            result += -shape * (log(invrate[aa]) * sum_ind[aa] + sum_x[aa] / invrate[aa]);
         }
         return result;
     }
 
-    double partial_density_invshape(double shape, AAProfile invshape) {
-        double result = 0;  // this term was not dependent on invshape
+    double partial_density_invrate(double shape, AAProfile invrate) {
+        double result = 0;
         for (int aa = 0; aa < Naa; aa++) {
-            result += -Ncond * Nsite * shape * (log(invshape[aa]) + sum_x / invshape[aa]);
+            result += -shape * (log(invrate[aa]) * sum_ind[aa] + sum_x[aa] / invrate[aa]);
         }
         return result;
     }
 };
 
 /*
-  #### TESTS
-  #########################################################################################
+#### TESTS #########################################################################################
 */
 TEST_CASE("Comparing gamma suff stat to logprob computed normally.") {
     auto InitUniformDirichlet = [](Eigen::VectorXd& v) {
@@ -90,7 +104,7 @@ TEST_CASE("Comparing gamma suff stat to logprob computed normally.") {
                 ind_conv[k](i, aa) = (Random::Uniform() < 0.5);
             }
 
-    GammaSuffStats gamma_suff_stats(Ncond, Nsite, &fitness);
+    GammaSuffStats gamma_suff_stats(Ncond, Nsite, &fitness, &ind_conv);
 
     auto partial_gamma_log_density = [](double alpha, double m, double x) {
         double beta = alpha / m;
@@ -98,8 +112,7 @@ TEST_CASE("Comparing gamma suff stat to logprob computed normally.") {
     };
 
     auto fitness_log_density = [&]() {
-        double logprob =
-            gamma_suff_stats.partial_density_invshape(fitness_shape, fitness_inv_rates);
+        double logprob = 0;
         for (int k = 0; k < Ncond; k++)
             for (int i = 0; i < Nsite; i++)
                 for (int aa = 0; aa < Naa; aa++)
@@ -116,19 +129,19 @@ TEST_CASE("Comparing gamma suff stat to logprob computed normally.") {
     };
 
     auto fitness_log_density2 = [&]() {
-        double logprob = -fitness_shape;
+        double logprob = 0;
         for (int k = 0; k < Ncond; k++)
             for (int i = 0; i < Nsite; i++)
                 for (int aa = 0; aa < Naa; aa++)
-                    logprob += ind_conv[k](i, aa) * partial_gamma_log_density2(fitness_shape,
-                                                                              fitness_inv_rates[aa],
-                                                                              fitness[k](i, aa));
+                    logprob += ind_conv[k](i, aa) *
+                               partial_gamma_log_density2(fitness_shape, fitness_inv_rates[aa],
+                                                          fitness[k](i, aa));
         return logprob;
     };
 
-    gamma_suff_stats.gather();
-    CHECK(gamma_suff_stats.partial_density_shape(fitness_shape, fitness_inv_rates) ==
+    gamma_suff_stats.collect();
+    CHECK(gamma_suff_stats.partial_density(fitness_shape, fitness_inv_rates) ==
           fitness_log_density2());
-    CHECK(gamma_suff_stats.partial_density_invshape(fitness_shape, fitness_inv_rates) ==
+    CHECK(gamma_suff_stats.partial_density_invrate(fitness_shape, fitness_inv_rates) ==
           fitness_log_density());
 }
