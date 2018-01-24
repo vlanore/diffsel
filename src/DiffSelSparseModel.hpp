@@ -1261,7 +1261,7 @@ class DiffSelSparseModel : public ProbModel {
         for (int i = 1; i < prob_conv.size(); i++) {
             os << '\t' << "prob_conv_" << i;
         }
-        for (unsigned int k = 0; k < ind_conv.size(); k++) {
+        for (unsigned int k = 1; k < ind_conv.size(); k++) {
             for (int i = 0; i < Nsite; i++) {
                 for (int aa = 0; aa < Naa; aa++) {
                     os << '\t' << "ind_conv_" << k << '_' << i << "_" << aa;
@@ -1302,10 +1302,10 @@ class DiffSelSparseModel : public ProbModel {
         for (int i = 1; i < prob_conv.size(); i++) {
             os << '\t' << prob_conv[i];
         }
-        for (auto& m : ind_conv) {
+        for (unsigned int k = 1; k < ind_conv.size(); k++) {
             for (int i = 0; i < Nsite; i++) {
                 for (int aa = 0; aa < Naa; aa++) {
-                    os << '\t' << m(i, aa);
+                    os << '\t' << ind_conv[k](i, aa);
                 }
             }
         }
