@@ -170,6 +170,7 @@ class DiffSelSparseModel : public ProbModel {
     template <class... Args>
     void call_and_record(const std::string& s, DiffSelSparseModel* instance,
                          double (DiffSelSparseModel::*f)(Args...), Args... args) {
+        // (instance->*f)(args...);
         instance->stats->add(s + '(' + args_to_string(args...) + ')', (instance->*f)(args...));
     }
     // ===================================================================================================
@@ -313,7 +314,8 @@ class DiffSelSparseModel : public ProbModel {
         // normalized (true) GTR nucleotide substitution matrix
         nucmatrix = new GTRSubMatrix(Nnuc, nucrelrate, nucstat, true);
 
-        fitness_shape = Random::sExpo();
+        // fitness_shape = Random::sExpo();
+        fitness_shape = 0.05;  // init above was waaay to high
         fitness_inv_rates = AAProfile(Naa);
 
         InitUniformDirichlet(fitness_inv_rates);
@@ -693,10 +695,11 @@ class DiffSelSparseModel : public ProbModel {
 
             gamma_suff_stats.collect();
 
-            for (int rep = 0; rep < 100; rep++) {
+            for (int rep = 0; rep < 1000; rep++) {
                 CAR(MoveFitnessShape, 1.);
                 CAR(MoveFitnessShape, 0.3);
-
+            }
+            for (int rep = 0; rep < 100; rep++) {
                 CAR(MoveFitnessInvRates, 0.15, 1);
                 CAR(MoveFitnessInvRates, 0.15, 5);
                 CAR(MoveFitnessInvRates, 0.15, 10);
