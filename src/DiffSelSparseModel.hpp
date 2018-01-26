@@ -696,8 +696,8 @@ class DiffSelSparseModel : public ProbModel {
             gamma_suff_stats.collect();
 
 
-            for (int rep = 0; rep < 100; rep++) {
-                for (int rep = 0; rep < 10; rep++) {
+            for (int rep_ss = 0; rep_ss < 100; rep_ss++) {
+                for (int rep_fs = 0; rep_fs < 10; rep_fs++) {
                     CAR(MoveFitnessShape, 1.);
                     CAR(MoveFitnessShape, 0.3);
                 }
