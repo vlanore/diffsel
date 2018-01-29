@@ -1264,8 +1264,10 @@ class DiffSelSparseModel : public ProbModel {
             os << "pconv" << k << '\t';
             os << "fconv" << k << '\t';
         }
+#if (!FIXED_GAMMA_PARAMS)
         os << "shape\t";
         os << "invrate\t";
+#endif
         os << "statent\t";
         os << "rrent\n";
     }
