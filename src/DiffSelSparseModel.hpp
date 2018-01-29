@@ -238,6 +238,41 @@ class DiffSelSparseModel : public ProbModel {
         delete phyloprocess;
     }
 
+    std::vector<double> ComputeAAFrequencies() {
+        std::cout << "-- Analyzing codon sequence to extract aa frequencies...\n";
+        // std::cout << "   * Codon alignment contains " << codondata->GetNsite() << " sites and "
+        //           << codondata->GetNtaxa() << " taxa\n";
+        // std::cout << "   * First 15 codons of first taxon are: ";
+        // for (int i = 0; i < 15; i++) {
+        //     std::cout << codondata->GetState(0, i) << " ";
+        // }
+        // std::cout << "\n";
+        // std::cout << "   * AA translation is : ";
+        // for (int i = 0; i < 15; i++) {
+        //     std::cout << codondata->GetCodonStateSpace()->Translation(codondata->GetState(0, i))
+        //               << " ";
+        // }
+        // std::cout << "\n   * Computing aa frequencies...\n";
+        std::vector<double> aa_count(20, 0);
+        int total = 0;
+        for (int taxon = 0; taxon < codondata->GetNtaxa(); taxon++) {
+            for (int site = 0; site < codondata->GetNsite(); site++) {
+                int codon = codondata->GetState(taxon, site);
+                if (codon != -1) {
+                    int aa = codondata->GetCodonStateSpace()->Translation(codon);
+                    aa_count.at(aa)++;
+                    total++;
+                }
+            }
+        }
+        // std::cout << "   * Frequencies are:\n";
+        for (int aa = 0; aa < Naa; aa++) {
+            aa_count.at(aa) /= total;
+            // std::cout << "      " << aa_count.at(aa) << "\n";
+        }
+        return aa_count;
+    }
+
     void ReadFiles(std::string datafile, std::string treefile) {
         // nucleotide sequence alignment
         data = new FileSequenceAlignment(datafile);
@@ -320,10 +355,11 @@ class DiffSelSparseModel : public ProbModel {
             fitness_shape = Random::sExpo();
             fitness_inv_rates = AAProfile(Naa);
         } else {
+            auto frequencies = ComputeAAFrequencies();
             fitness_shape = 0.05;
             fitness_inv_rates = AAProfile(20);
             for (int aa = 0; aa < Naa; aa++) {
-                fitness_inv_rates[aa] = 0.05;
+                fitness_inv_rates[aa] = frequencies.at(aa);
             }
         }
 
@@ -694,7 +730,6 @@ class DiffSelSparseModel : public ProbModel {
             UpdateAll();
 
             for (int rep = 0; rep < nrep; rep++) {
-                /* ci gisaient movebaseline, movedelta et move varsel*/
                 for (int k = 0; k < Ncond; k++) {
                     CAR(MoveFitness, k, 1.0, 10);
                     CAR(MoveFitness, k, 3.0, 10);
