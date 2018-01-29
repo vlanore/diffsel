@@ -38,6 +38,8 @@ license and that you accept its terms.*/
 #include "ProbModel.hpp"
 #include "Tree.hpp"
 
+#define FIXED_GAMMA_PARAMS true
+
 const int Nrr = Nnuc * (Nnuc - 1) / 2;
 const int Nstate = 61;
 class DiffSelSparseChain;
@@ -314,9 +316,16 @@ class DiffSelSparseModel : public ProbModel {
         // normalized (true) GTR nucleotide substitution matrix
         nucmatrix = new GTRSubMatrix(Nnuc, nucrelrate, nucstat, true);
 
-        fitness_shape = Random::sExpo();
-        // fitness_shape = 0.05;  // init above was waaay to high
-        fitness_inv_rates = AAProfile(Naa);
+        if (!FIXED_GAMMA_PARAMS) {
+            fitness_shape = Random::sExpo();
+            fitness_inv_rates = AAProfile(Naa);
+        } else {
+            fitness_shape = 0.05;
+            fitness_inv_rates = AAProfile(20);
+            for (int aa = 0; aa < Naa; aa++) {
+                fitness_inv_rates[aa] = 0.05;
+            }
+        }
 
         InitUniformDirichlet(fitness_inv_rates);
 
@@ -693,17 +702,17 @@ class DiffSelSparseModel : public ProbModel {
                 }
             }
 
-            gamma_suff_stats.collect();
-
-
-            for (int rep_ss = 0; rep_ss < 100; rep_ss++) {
-                for (int rep_fs = 0; rep_fs < 10; rep_fs++) {
-                    CAR(MoveFitnessShape, 1.);
-                    CAR(MoveFitnessShape, 0.3);
+            if (!FIXED_GAMMA_PARAMS) {
+                gamma_suff_stats.collect();
+                for (int rep_ss = 0; rep_ss < 100; rep_ss++) {
+                    for (int rep_fs = 0; rep_fs < 10; rep_fs++) {
+                        CAR(MoveFitnessShape, 1.);
+                        CAR(MoveFitnessShape, 0.3);
+                    }
+                    CAR(MoveFitnessInvRates, 0.15, 1);
+                    CAR(MoveFitnessInvRates, 0.15, 5);
+                    CAR(MoveFitnessInvRates, 0.15, 10);
                 }
-                CAR(MoveFitnessInvRates, 0.15, 1);
-                CAR(MoveFitnessInvRates, 0.15, 5);
-                CAR(MoveFitnessInvRates, 0.15, 10);
             }
             /*
             CAR(MoveProbConv, 1.);
@@ -1254,9 +1263,11 @@ class DiffSelSparseModel : public ProbModel {
             os << '\t' << "nucstat_" << i;
         }
         // nucmatrix
-        os << '\t' << "fitness_shape";
-        for (int i = 0; i < fitness_inv_rates.size(); i++) {
-            os << '\t' << "fitness_inv_rates_" << i;
+        if (!FIXED_GAMMA_PARAMS) {
+            os << '\t' << "fitness_shape";
+            for (int i = 0; i < fitness_inv_rates.size(); i++) {
+                os << '\t' << "fitness_inv_rates_" << i;
+            }
         }
         for (unsigned int k = 0; k < fitness.size(); k++)
             for (int i = 0; i < Nsite; i++)
@@ -1292,9 +1303,11 @@ class DiffSelSparseModel : public ProbModel {
             os << '\t' << nucstat[i];
         }
         // nucmatrix
-        os << '\t' << fitness_shape;
-        for (int i = 0; i < fitness_inv_rates.size(); i++) {
-            os << '\t' << fitness_inv_rates[i];
+        if (!FIXED_GAMMA_PARAMS) {
+            os << '\t' << fitness_shape;
+            for (int i = 0; i < fitness_inv_rates.size(); i++) {
+                os << '\t' << fitness_inv_rates[i];
+            }
         }
         for (auto& m : fitness) {
             for (int i = 0; i < Nsite; i++) {
