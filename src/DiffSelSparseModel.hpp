@@ -98,8 +98,13 @@ class DiffSelSparseModel : public ProbModel {
     GTRSubMatrix* nucmatrix;
 
 
+#if (!FIXED_GAMMA_PARAMS)
     double fitness_shape;
     AAProfile fitness_inv_rates;
+#else
+    double fitness_concentration;
+    AAProfile fitness_centers;
+#endif
     // differential selection factors across conditions k=1..Ncond and across sites
     // Ncond * Nsite * Naa
     std::vector<DMatrix> fitness;
@@ -351,26 +356,28 @@ class DiffSelSparseModel : public ProbModel {
         // normalized (true) GTR nucleotide substitution matrix
         nucmatrix = new GTRSubMatrix(Nnuc, nucrelrate, nucstat, true);
 
-        if (!FIXED_GAMMA_PARAMS) {
-            fitness_shape = Random::sExpo();
-            fitness_inv_rates = AAProfile(Naa);
-        } else {
-            auto frequencies = ComputeAAFrequencies();
-            fitness_shape = 0.05;
-            fitness_inv_rates = AAProfile(20);
-            for (int aa = 0; aa < Naa; aa++) {
-                fitness_inv_rates[aa] = frequencies.at(aa);
-            }
-        }
-
+#if (!FIXED_GAMMA_PARAMS)
+        fitness_shape = Random::sExpo();
+        fitness_inv_rates = AAProfile(Naa);
         InitUniformDirichlet(fitness_inv_rates);
+#else
+        auto frequencies = ComputeAAFrequencies();
+        fitness_centers = AAProfile(20);
+        for (int aa = 0; aa < Naa; aa++) {
+            fitness_centers[aa] = frequencies.at(aa);
+        }
+#endif
 
         fitness = std::vector<DMatrix>(Ncond, Eigen::MatrixXd(Nsite, Naa));
         for (auto& G_k : fitness) {
             for (int i = 0; i < Nsite; i++)
                 for (int aa = 0; aa < Naa; aa++) {
+#if (!FIXED_GAMMA_PARAMS)
                     G_k(i, aa) =
                         Random::Gamma(fitness_shape, fitness_shape / fitness_inv_rates[aa]);
+#else
+                    G_k(i, aa) = Random::Gamma(fitness_concentration * fitness_centers(aa), 1);
+#endif
                 }
         }
 
@@ -737,18 +744,18 @@ class DiffSelSparseModel : public ProbModel {
                 }
             }
 
-            if (!FIXED_GAMMA_PARAMS) {
-                gamma_suff_stats.collect();
-                for (int rep_ss = 0; rep_ss < 100; rep_ss++) {
-                    for (int rep_fs = 0; rep_fs < 10; rep_fs++) {
-                        CAR(MoveFitnessShape, 1.);
-                        CAR(MoveFitnessShape, 0.3);
-                    }
-                    CAR(MoveFitnessInvRates, 0.15, 1);
-                    CAR(MoveFitnessInvRates, 0.15, 5);
-                    CAR(MoveFitnessInvRates, 0.15, 10);
+#if (!FIXED_GAMMA_PARAMS)
+            gamma_suff_stats.collect();
+            for (int rep_ss = 0; rep_ss < 100; rep_ss++) {
+                for (int rep_fs = 0; rep_fs < 10; rep_fs++) {
+                    CAR(MoveFitnessShape, 1.);
+                    CAR(MoveFitnessShape, 0.3);
                 }
+                CAR(MoveFitnessInvRates, 0.15, 1);
+                CAR(MoveFitnessInvRates, 0.15, 5);
+                CAR(MoveFitnessInvRates, 0.15, 10);
             }
+#endif
             /*
             CAR(MoveProbConv, 1.);
             CAR(MoveProbConv, 0.3);
@@ -781,7 +788,11 @@ class DiffSelSparseModel : public ProbModel {
     double MoveFitness(int cond, double tuning, int nrep) {
         double ntot = 0, nacc = 0;
         auto partial_gamma_log_density = [](double alpha, double m, double x) {
+#if (FIXED_GAMMA_PARAMS)
+            return (alpha - 1.) * log(x) - x;
+#else
             return (alpha - 1.) * log(x) - alpha / m * x;
+#endif
         };
 
         for (int rep = 0; rep < nrep; rep++) {
@@ -791,18 +802,33 @@ class DiffSelSparseModel : public ProbModel {
                     double bk = fitness[cond](i, aa);
                     BackupSite(i);
 
+#if (!FIXED_GAMMA_PARAMS)
                     double logprob_before =
                         partial_gamma_log_density(fitness_shape, fitness_inv_rates[aa], bk) +
                         GetSiteSuffStatLogProb(i);
+#else
+                    double logprob_before =
+                        partial_gamma_log_density(fitness_concentration * fitness_centers(aa), 1,
+                                                  bk) +
+                        GetSiteSuffStatLogProb(i);
+#endif
 
                     double m = tuning * (Random::Uniform() - 0.5);
 
                     fitness[cond](i, aa) *= exp(m);
                     UpdateSite(i);
+
+#if (!FIXED_GAMMA_PARAMS)
                     double logprob_after =
                         partial_gamma_log_density(fitness_shape, fitness_inv_rates[aa],
                                                   fitness[cond](i, aa)) +
                         GetSiteSuffStatLogProb(i);
+#else
+                    double logprob_after =
+                        partial_gamma_log_density(fitness_concentration * fitness_centers(aa), 1,
+                                                  fitness[cond](i, aa)) +
+                        GetSiteSuffStatLogProb(i);
+#endif
 
                     double loghastings = m;
 
@@ -822,6 +848,7 @@ class DiffSelSparseModel : public ProbModel {
         return (ntot == 0) ? 0 : (double(nacc) / double(ntot));
     }
 
+#if (!FIXED_GAMMA_PARAMS)
     double MoveFitnessShape(double tuning) {
         // auto partial_gamma_log_density = [](double alpha, double m, double x) {
         //     double beta = alpha / m;
@@ -858,7 +885,9 @@ class DiffSelSparseModel : public ProbModel {
         }
         return static_cast<double>(accepted);
     }
+#endif
 
+#if (!FIXED_GAMMA_PARAMS)
     double MoveFitnessInvRates(double tuning, int n) {
         // auto partial_gamma_log_density = [](double alpha, double m, double x) {
         //     double beta = alpha / m;
@@ -892,6 +921,7 @@ class DiffSelSparseModel : public ProbModel {
         }
         return static_cast<double>(accepted);
     }
+#endif
 
     double MoveProbConv(double tuning) {
         auto partial_beta_log_density = [](double m, double v, double x) {
@@ -980,8 +1010,13 @@ class DiffSelSparseModel : public ProbModel {
                     double deltalogprob = -GetSiteSuffStatLogProb(i);
                     double loghastings = 0.;
                     ind_conv[cond](i, aa) = true;
+#if (FIXED_GAMMA_PARAMS)
+                    fitness[cond](i, aa) =
+                        Random::Gamma(fitness_concentration * fitness_centers(aa), 1);
+#else
                     fitness[cond](i, aa) =
                         Random::Gamma(fitness_shape, fitness_shape / fitness_inv_rates[aa]);
+#endif
                     UpdateSite(i);
                     deltalogprob += GetSiteSuffStatLogProb(i);
 
@@ -1051,8 +1086,13 @@ class DiffSelSparseModel : public ProbModel {
                     //                             fitness_inv_rates[aa],
                     //                             fitness[k](i,aa))
                     ind_conv[cond](i, aa) = true;
+#if (FIXED_GAMMA_PARAMS)
+                    fitness[cond](i, aa) =
+                        Random::Gamma(fitness_concentration * fitness_centers(aa), 1);
+#else
                     fitness[cond](i, aa) =
                         Random::Gamma(fitness_shape, fitness_shape / fitness_inv_rates[aa]);
+#endif
                     UpdateSite(i);
                     double logprob_after = log(prob_conv[cond]) + GetSiteSuffStatLogProb(i);
                     double deltalogprob = logprob_after - logprob_before + loghastings;
@@ -1229,6 +1269,7 @@ class DiffSelSparseModel : public ProbModel {
         os << "rrent\n";
     }
 
+#if (!FIXED_GAMMA_PARAMS)
     double GetFitnessInvRatesEntropy() {
         double tot = 0;
         for (int a = 0; a < Naa; a++) {
@@ -1238,6 +1279,7 @@ class DiffSelSparseModel : public ProbModel {
         }
         return tot;
     }
+#endif
 
     double GetFracShifts(int k) {
         double tot = 0;
@@ -1258,8 +1300,10 @@ class DiffSelSparseModel : public ProbModel {
             os << prob_conv[k] << '\t';
             os << GetFracShifts(k) << '\t';
         }
+#if (!FIXED_GAMMA_PARAMS)
         os << fitness_shape << '\t';
         os << GetFitnessInvRatesEntropy() << '\t';
+#endif
         os << GetEntropy(nucstat, Nnuc) << '\t';
         os << GetEntropy(nucrelrate, Nrr) << '\n';
     }
@@ -1297,13 +1341,13 @@ class DiffSelSparseModel : public ProbModel {
         for (int i = 0; i < Nnuc; i++) {
             os << '\t' << "nucstat_" << i;
         }
-        // nucmatrix
-        if (!FIXED_GAMMA_PARAMS) {
-            os << '\t' << "fitness_shape";
-            for (int i = 0; i < fitness_inv_rates.size(); i++) {
-                os << '\t' << "fitness_inv_rates_" << i;
-            }
+// nucmatrix
+#if (!FIXED_GAMMA_PARAMS)
+        os << '\t' << "fitness_shape";
+        for (int i = 0; i < fitness_inv_rates.size(); i++) {
+            os << '\t' << "fitness_inv_rates_" << i;
         }
+#endif
         for (unsigned int k = 0; k < fitness.size(); k++)
             for (int i = 0; i < Nsite; i++)
                 for (int aa = 0; aa < Naa; aa++)
@@ -1337,13 +1381,13 @@ class DiffSelSparseModel : public ProbModel {
         for (int i = 0; i < Nnuc; i++) {
             os << '\t' << nucstat[i];
         }
-        // nucmatrix
-        if (!FIXED_GAMMA_PARAMS) {
-            os << '\t' << fitness_shape;
-            for (int i = 0; i < fitness_inv_rates.size(); i++) {
-                os << '\t' << fitness_inv_rates[i];
-            }
+// nucmatrix
+#if (!FIXED_GAMMA_PARAMS)
+        os << '\t' << fitness_shape;
+        for (int i = 0; i < fitness_inv_rates.size(); i++) {
+            os << '\t' << fitness_inv_rates[i];
         }
+#endif
         for (auto& m : fitness) {
             for (int i = 0; i < Nsite; i++) {
                 for (int aa = 0; aa < Naa; aa++) {
