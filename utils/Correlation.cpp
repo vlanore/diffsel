@@ -438,7 +438,7 @@ void compareChainsConvergence(string outname, Correlation** corr, int nchain, do
     double* se = new double[nchain];
 
     ofstream os_conv((outname + ".contdiff").c_str());
-    os_conv << "name                effsize\trel_diff\n";
+    os_conv << "name\teffsize\trel_diff\n";
     os_conv << '\n';
 
     disc = 0;
@@ -538,8 +538,9 @@ void compareChainsConvergence(string outname, Correlation** corr, int nchain, do
             }
         }
         os_conv << corr[0]->getParameterName(i);
-        for (unsigned int k = corr[0]->getParameterName(i).length(); k < 20; k++) os_conv << ' ';
-        os_conv << (int)meaneffsize[i] << '\t' << '\t' << discrepancy[i] << "\n";
+        os_conv << '\t';
+        // for (unsigned int k = corr[0]->getParameterName(i).length(); k < 20; k++) os_conv << ' ';
+        os_conv << (int)meaneffsize[i] << '\t' << discrepancy[i] << "\n";
 
         if (disc < discrepancy[i]) {
             disc = discrepancy[i];
