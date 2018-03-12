@@ -362,10 +362,11 @@ class DiffSelSparseModel : public ProbModel {
         InitUniformDirichlet(fitness_inv_rates);
 #else
         fitness_concentration = 4;
-        auto frequencies = ComputeAAFrequencies();
+        // auto frequencies = ComputeAAFrequencies();
         fitness_centers = AAProfile(20);
         for (int aa = 0; aa < Naa; aa++) {
-            fitness_centers[aa] = frequencies.at(aa);
+            fitness_centers[aa] = 1.0 / Naa;
+            // fitness_centers[aa] = frequencies.at(aa);
         }
 #endif
 
