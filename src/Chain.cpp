@@ -100,7 +100,7 @@ int Chain::GetRunningStatus() {
 }
 
 void Chain::Run() {
-#define DEBUG 2
+#define DEBUG 0
 #if DEBUG > 0
     int i = 0;
     MeasureTime timer;
