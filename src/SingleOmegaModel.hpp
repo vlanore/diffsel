@@ -182,7 +182,7 @@ class SingleOmegaModel : public ProbModel {
             }
         } else {
             for (int i = 0; i < Nsite; i++) {
-                phyloprocess->AddSuffStat(i, from->Out(), suffstat);
+                phyloprocess->AddSuffStat(i, from, suffstat);
             }
         }
         for (const Link* link = from->Next(); link != from; link = link->Next()) {
@@ -205,7 +205,7 @@ class SingleOmegaModel : public ProbModel {
     void RecursiveCollectLengthSuffStat(const Link* from) {
         if (!from->isRoot()) {
             for (int i = 0; i < Nsite; i++) {
-                phyloprocess->AddLengthSuffStat(i, from->Out(),
+                phyloprocess->AddLengthSuffStat(i, from,
                                                 branchlengthcount[from->GetBranch()->GetIndex()],
                                                 branchlengthbeta[from->GetBranch()->GetIndex()]);
             }
@@ -251,12 +251,16 @@ class SingleOmegaModel : public ProbModel {
             MoveOmega(0.1, 3);
             MoveOmega(0.03, 3);
 
+            UpdateSuffStatLogProb();
+
             MoveRR(0.1, 1, 3);
             MoveRR(0.03, 3, 3);
             MoveRR(0.01, 3, 3);
 
             MoveNucStat(0.1, 1, 3);
             MoveNucStat(0.01, 1, 3);
+
+            UpdateSuffStatLogProb();
         }
         return 1.0;
     }
