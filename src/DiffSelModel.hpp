@@ -766,7 +766,6 @@ class DiffSelModel : public ProbModel {
     // move cycle schedule
     // does not yet implement any monitoring (success rates, time spent, etc)
     double Move() override {
-        SubMatrix::ResetDiagCount();
 
         int nrep0 = 3;
         int nrep = 20;
@@ -1097,8 +1096,7 @@ class DiffSelModel : public ProbModel {
             os << "selvar" << k << '\t';
         }
         os << "statent\t";
-        os << "rrent\t";
-        os << "diag\n";
+        os << "rrent\n";
     }
 
     void Trace(std::ostream& os) override {
@@ -1110,8 +1108,7 @@ class DiffSelModel : public ProbModel {
             os << GetMeanVar(k) << '\t';
         }
         os << GetEntropy(nucstat, Nnuc) << '\t';
-        os << GetEntropy(nucrelrate, Nrr) << '\t';
-        os << SubMatrix::GetDiagCount() << '\n';
+        os << GetEntropy(nucrelrate, Nrr) << '\n';
     }
 
     void Monitor(std::ostream&) override {}
