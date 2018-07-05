@@ -135,6 +135,10 @@ class DiffSelChain : public Chain {
 
 int main(int argc, char* argv[]) {
     cerr << "-- Parsing command line arguments\n";
+    cerr << "-- Command line arguments are:\n";
+    for (int i=0; i<argc; i++) {
+        cerr << argv[i] << "\n";
+    }
 
     // this is an already existing chain on the disk; reopen and restart
     if (argc == 2 && argv[1][0] != '-') {
