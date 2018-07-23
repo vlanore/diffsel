@@ -62,9 +62,20 @@ class DiffSelChain : public Chain {
         New(force);
     }
 
-    explicit DiffSelChain(string filename) {
+    explicit DiffSelChain(string filename, int new_until = -1) {
         name = filename;
         Open();
+
+        if (new_until != -1) {
+            cerr << "-- Setting new max iteration to " << new_until << "\n";
+            if (new_until < size) {
+                cerr << "-- ERROR: new max iteration (" << new_until << ") is lower that number of points already computed (" << size << ").\n";
+                cerr << "-- Shutting down.\n";
+                exit(1);
+            }
+            until = new_until;
+        }
+
         Save();
     }
 
@@ -86,6 +97,7 @@ class DiffSelChain : public Chain {
         is >> modeltype;
         is >> datafile >> treefile >> category >> level;
         is >> fixglob >> fixvar >> codonmodel;
+
         int tmp;
         is >> tmp;
         if (tmp) {
@@ -93,6 +105,12 @@ class DiffSelChain : public Chain {
             exit(1);
         }
         is >> every >> until >> size;
+
+        cerr << "-- Model type is " << modeltype << "\n";
+        cerr << "-- Data file is " << datafile << "\n";
+        cerr << "-- Tree file is " << treefile << "\n";
+        cerr << "-- Restarting from point " << size << "\n";
+        cerr << "-- Run was up to point " << until + 1 << "\n";
 
         if (modeltype == "DIFFSEL") {
             model = std::unique_ptr<DiffSelModel>(new DiffSelModel(
@@ -105,7 +123,7 @@ class DiffSelChain : public Chain {
         model->FromStream(is);
 
         model->Update();
-        cerr << size << "-- Points saved\n";
+
         model->Trace(cerr);
     }
 
@@ -141,10 +159,14 @@ int main(int argc, char* argv[]) {
     }
 
     // this is an already existing chain on the disk; reopen and restart
-    if (argc == 2 && argv[1][0] != '-') {
+    if ((argc == 2 or argc == 3) and argv[1][0] != '-') {
+        int new_until = -1;
         string name = argv[1];
+        if (argc == 3) {
+            new_until = stoi(argv[2]);
+        }
         cerr << "-- Trying to reopen existing chain named " << name << " on disk\n";
-        DiffSelChain* chain = new DiffSelChain(name);
+        DiffSelChain* chain = new DiffSelChain(name, new_until);
         cerr << "start\n";
         chain->Start();
         cerr << "chain stopped\n";
