@@ -33,6 +33,7 @@ license and that you accept its terms.*/
 #include "CodonSubMatrix.hpp"
 
 struct FitnessProxy {
+    virtual ~FitnessProxy() = default;
     virtual double GetFitness(int) const = 0;
 };
 

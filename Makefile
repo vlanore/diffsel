@@ -4,7 +4,7 @@ PYTHON = python3
 
 # COMPILATION
 # Requires: cmake 3.1.0 or better
-all: cmake utils/Eigen
+all: cmake utils/Eigen utils/nhx-parser.hpp
 	@cd _build ; make --no-print-directory -j8
 
 cmake: _build/Makefile
@@ -19,6 +19,9 @@ utils/Eigen:
 	@tar -xf eigen.tar.gz
 	@cp -r eigen-eigen-67e894c6cd8f/Eigen utils
 	@rm -rf eigen.tar.gz eigen-eigen-67e894c6cd8f
+
+utils/nhx-parser.hpp:
+	curl https://raw.githubusercontent.com/vlanore/nhx-parser/master/src/nhx-parser.hpp > $@
 
 clean:
 	@rm -rf _build doc/html src/*gcno src/*.gcda
