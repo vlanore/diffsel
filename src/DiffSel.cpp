@@ -37,8 +37,9 @@ using namespace std;
 class DiffSelChain : public Chain {
   private:
     // Chain parameters
-    string modeltype, datafile, treefile;
+    string modeltype, datafile, treefile, bl_filename{""};
     int codonmodel, category, level, fixglob, fixvar;
+    bool use_nobl{false};
 
   public:
     DiffSelModel* GetModel() { return static_cast<DiffSelModel*>(model.get()); }
@@ -47,15 +48,17 @@ class DiffSelChain : public Chain {
 
     DiffSelChain(const string& indata, const string& intree, int incategory, int inlevel,
                  int inevery, int inuntil, int infixglob, int infixvar, int incodonmodel,
-                 string inname, int force)
+                 string inname, int force, bool use_nobl, const string& bl_filename)
         : modeltype("DIFFSEL"),
           datafile(indata),
           treefile(intree),
+          bl_filename(bl_filename),
           codonmodel(incodonmodel),
           category(incategory),
           level(inlevel),
           fixglob(infixglob),
-          fixvar(infixvar) {
+          fixvar(infixvar),
+          use_nobl(use_nobl) {
         SetEvery(inevery);
         SetUntil(inuntil);
         SetName(inname);
@@ -69,7 +72,8 @@ class DiffSelChain : public Chain {
         if (new_until != -1) {
             cerr << "-- Setting new max iteration to " << new_until << "\n";
             if (new_until < size) {
-                cerr << "-- ERROR: new max iteration (" << new_until << ") is lower that number of points already computed (" << size << ").\n";
+                cerr << "-- ERROR: new max iteration (" << new_until
+                     << ") is lower that number of points already computed (" << size << ").\n";
                 cerr << "-- Shutting down.\n";
                 exit(1);
             }
@@ -154,7 +158,7 @@ class DiffSelChain : public Chain {
 int main(int argc, char* argv[]) {
     cerr << "-- Parsing command line arguments\n";
     cerr << "-- Command line arguments are:\n";
-    for (int i=0; i<argc; i++) {
+    for (int i = 0; i < argc; i++) {
         cerr << argv[i] << "\n";
     }
 
@@ -186,6 +190,10 @@ int main(int argc, char* argv[]) {
         int every = 1;
         int until = -1;
 
+        // nobl-specific
+        bool use_nobl = false;
+        string bl_filename{""};
+
         try {
             if (argc == 1) {
                 throw(0);
@@ -201,6 +209,10 @@ int main(int argc, char* argv[]) {
                 } else if ((s == "-t") || (s == "-T")) {
                     i++;
                     treefile = argv[i];
+                } else if (s == "-bltree") {
+                    use_nobl = true;
+                    i++;
+                    bl_filename = argv[i];
                 } else if (s == "-ncond") {
                     i++;
                     ncond = atoi(argv[i]);
@@ -241,8 +253,9 @@ int main(int argc, char* argv[]) {
                     "[-fixvar|-freevar] [-ms|-sr] [-x every until] name\n";
             exit(1);
         }
-        DiffSelChain* chain = new DiffSelChain(datafile, treefile, ncond, nlevel, every, until,
-                                               fixglob, fixvar, codonmodel, name, true);
+        DiffSelChain* chain =
+            new DiffSelChain(datafile, treefile, ncond, nlevel, every, until, fixglob, fixvar,
+                             codonmodel, name, true, use_nobl, bl_filename);
         cerr << "start new chain\n";
         chain->Start();
         cerr << "chain stopped\n";

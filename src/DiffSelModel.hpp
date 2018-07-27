@@ -139,7 +139,8 @@ class DiffSelModel : public ProbModel {
 
   public:
     DiffSelModel(const std::string& datafile, const std::string& treefile, int inNcond,
-                 int inNlevel, int infixglob, int infixvar, int incodonmodel, bool sample) {
+                 int inNlevel, int infixglob, int infixvar, int incodonmodel, bool sample,
+                 bool use_nobl =false,  const std::string& bl_filename = "") {
         fixglob = infixglob;
         if (!fixglob) {
             std::cerr << "error: free hyperparameters for baseline (global profile) not yet "
@@ -163,7 +164,7 @@ class DiffSelModel : public ProbModel {
         std::cerr << "-- conditions over branches ok\n";
 
         // model allocation
-        Allocate();
+        Allocate(use_nobl, bl_filename);
         std::cerr << "-- model allocation ok\n";
 
         // unfold phyloprocess (allocate conditional likelihood vectors, etc)
@@ -235,7 +236,7 @@ class DiffSelModel : public ProbModel {
         std::cerr << "-- Tree and data fit together\n";
     }
 
-    void Allocate() {
+    void Allocate(bool use_nobl, const std::string& bl_filename) {
         // ----------
         // construction of the model
         // ----------
@@ -246,8 +247,12 @@ class DiffSelModel : public ProbModel {
 
         lambda = 10;
         branchlength = new double[Nbranch];
-        for (int j = 0; j < Nbranch; j++) {
-            branchlength[j] = Random::sExpo() / lambda;
+        if (!use_nobl) {
+            for (int j = 0; j < Nbranch; j++) {
+                branchlength[j] = Random::sExpo() / lambda;
+            }
+        } else {
+            
         }
 
         branchlengthcount = new int[Nbranch];
