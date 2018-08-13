@@ -69,7 +69,8 @@ class DiffSelChain : public Chain {
         if (new_until != -1) {
             cerr << "-- Setting new max iteration to " << new_until << "\n";
             if (new_until < size) {
-                cerr << "-- ERROR: new max iteration (" << new_until << ") is lower that number of points already computed (" << size << ").\n";
+                cerr << "-- ERROR: new max iteration (" << new_until
+                     << ") is lower that number of points already computed (" << size << ").\n";
                 cerr << "-- Shutting down.\n";
                 exit(1);
             }
@@ -154,7 +155,7 @@ class DiffSelChain : public Chain {
 int main(int argc, char* argv[]) {
     cerr << "-- Parsing command line arguments\n";
     cerr << "-- Command line arguments are:\n";
-    for (int i=0; i<argc; i++) {
+    for (int i = 0; i < argc; i++) {
         cerr << argv[i] << "\n";
     }
 
@@ -246,15 +247,29 @@ int main(int argc, char* argv[]) {
             exit(1);
         }
         if (seed == -1) {
-            cerr << "-- No seed was specified. Using seed generated at startup instead (which is " << Random::GetSeed() << ").\n" ;
+            cerr << "-- No seed was specified. Using seed generated at startup instead (which is "
+                 << Random::GetSeed() << ").\n";
         } else {
             cerr << "-- Setting seed to " << seed << "\n";
             Random::InitRandom(seed);
         }
-        DiffSelChain chain(datafile, treefile, ncond, nlevel, every, until,
-                                               fixglob, fixvar, codonmodel, name, true);
-        cerr << "start new chain\n";
-        chain.Start();
-        cerr << "chain stopped\n";
+        try {
+            cerr << "-- Creating chain object\n";
+            DiffSelChain chain(datafile, treefile, ncond, nlevel, every, until, fixglob, fixvar,
+                               codonmodel, name, true);
+            cerr << "-- Starting new chain\n";
+            chain.Start();
+            cerr << "-- Chain stopped\n";
+        } catch (NormalizingConstantExceptionAtStartup&) {
+            cerr << "-- [diffsel main] Caught NormalizingConstantExceptionAtStartup!\n";
+            cerr << "-- [dirty fix] Creating a new chain object with a new random seed!\n";
+            Random::InitRandom(-1);
+            cerr << "-- [dirty fix] New seed is " << Random::GetSeed() << "\n";
+            DiffSelChain chain(datafile, treefile, ncond, nlevel, every, until, fixglob, fixvar,
+                               codonmodel, name, true);
+            cerr << "-- Starting new chain\n";
+            chain.Start();
+            cerr << "-- Chain stopped\n";
+        }
     }
 }

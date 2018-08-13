@@ -427,6 +427,9 @@ inline int SubMatrix::DrawUniformizedTransition(int state, int statedown, int n)
     return k;
 }
 
+struct NormalizingConstantException : public std::exception {
+    const char *what() const throw() { return "Normalizing constant exception"; }
+};
 
 inline int SubMatrix::DrawUniformizedSubstitutionNumber(int stateup, int statedown,
                                                         double efflength) const {
@@ -449,7 +452,7 @@ inline int SubMatrix::DrawUniformizedSubstitutionNumber(int stateup, int statedo
             std::cerr << stateup << '\t' << statedown << '\n';
 
             ToStream(std::cerr);
-            throw;
+            throw NormalizingConstantException();
         }
     }
     if (m == UniSubNmax) {

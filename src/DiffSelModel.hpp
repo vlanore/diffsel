@@ -36,6 +36,10 @@ license and that you accept its terms.*/
 
 const int Nrr = Nnuc * (Nnuc - 1) / 2;
 
+struct NormalizingConstantExceptionAtStartup : public std::exception {
+    const char* what() const throw() { return "Normalizing constant exception at startup"; }
+};
+
 class DiffSelModel : public ProbModel {
     // -----
     // model selectors
@@ -173,7 +177,12 @@ class DiffSelModel : public ProbModel {
         if (sample) {
             // stochastic mapping of substitution histories
             std::cerr << "-- mapping substitutions\n";
-            phyloprocess->ResampleSub();
+            try {
+                phyloprocess->ResampleSub();
+            } catch (NormalizingConstantException&) {
+                std::cerr << "-- [DiffSelModel] Caught a NormalizingConstantException!\n";
+                throw NormalizingConstantExceptionAtStartup();
+            }
         }
     }
 
