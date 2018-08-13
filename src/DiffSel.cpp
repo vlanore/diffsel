@@ -181,6 +181,7 @@ int main(int argc, char* argv[]) {
         int fixglob = 1;
         int fixvar = 1;
         int codonmodel = 1;
+        int seed = -1;
 
         string name = "";
         int every = 1;
@@ -204,6 +205,9 @@ int main(int argc, char* argv[]) {
                 } else if (s == "-ncond") {
                     i++;
                     ncond = atoi(argv[i]);
+                } else if (s == "-seed") {
+                    i++;
+                    seed = atoi(argv[i]);
                 } else if (s == "-nlevel") {
                     i++;
                     nlevel = atoi(argv[2]);
@@ -240,6 +244,12 @@ int main(int argc, char* argv[]) {
                  << "\tflatdiffsel_bin -d datafile -t treefile [-ncond i] [-nlevel 1|2] "
                     "[-fixvar|-freevar] [-ms|-sr] [-x every until] name\n";
             exit(1);
+        }
+        if (seed == -1) {
+            cerr << "-- No seed was specified. Using seed generated at startup instead (which is " << Random::GetSeed() << ").\n" ;
+        } else {
+            cerr << "-- Setting seed to " << seed << "\n";
+            Random::InitRandom(seed);
         }
         DiffSelChain* chain = new DiffSelChain(datafile, treefile, ncond, nlevel, every, until,
                                                fixglob, fixvar, codonmodel, name, true);
