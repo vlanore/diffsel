@@ -263,7 +263,7 @@ int main(int argc, char* argv[]) {
         } catch (NormalizingConstantExceptionAtStartup&) {
             cerr << "-- [diffsel main] Caught NormalizingConstantExceptionAtStartup!\n";
             cerr << "-- [dirty fix] Creating a new chain object with a new random seed!\n";
-            Random::InitRandom(-1);
+            Random::InitRandom(rand());
             cerr << "-- [dirty fix] New seed is " << Random::GetSeed() << "\n";
             DiffSelChain chain(datafile, treefile, ncond, nlevel, every, until, fixglob, fixvar,
                                codonmodel, name, true);
