@@ -251,12 +251,10 @@ int main(int argc, char* argv[]) {
             cerr << "-- Setting seed to " << seed << "\n";
             Random::InitRandom(seed);
         }
-        DiffSelChain* chain = new DiffSelChain(datafile, treefile, ncond, nlevel, every, until,
+        DiffSelChain chain(datafile, treefile, ncond, nlevel, every, until,
                                                fixglob, fixvar, codonmodel, name, true);
         cerr << "start new chain\n";
-        chain->Start();
+        chain.Start();
         cerr << "chain stopped\n";
-
-        delete chain;
     }
 }
