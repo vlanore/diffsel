@@ -149,7 +149,7 @@ Effects are already filtered to keep only those with probability above 0.9 or be
 "Convergence probability" measures how consistently the corresponding aminoacid has a fitness that is better than the other aminoacids at the same position. See the original diffsel paper for more details.
 
 If the `*.signdiffsel` file is empty, it means that no effects were detected.
-You can lower the detection threshold in the `src/ReadDiffsel.cpp` file. Just change the lign that says `double cutoff = 0.9;` to another value, recompile and rerun `readdiffsel`.
+You can lower the detection threshold in the `src/ReadDiffsel.cpp` file. Just change the line that says `double cutoff = 0.9;` to another value, recompile and rerun `readdiffsel`.
 
 ## Another way to use diffsel: convergence pipeline
 
