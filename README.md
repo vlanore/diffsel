@@ -80,3 +80,13 @@ For example, to run a diffsel chain called "myrun" on example data (from the `da
 ```bash
 _build/diffsel -t data/samhd1.tree -d data/samhd1.ali -ncond 3 -x 1 10000 myrun
 ```
+
+## How to run post-analysis after a diffsel run
+
+When it runs, diffsel produces a series of files with raw data about the run. These files are named `<name of run>.<something>`, for example `myrun.run`, `myrun.param`, `myrun.chain`, etc...
+
+The diffsel repository contains an executable, called `readdiffsel`, which can analyze these raw files to see if convergent sites were detected. To run this exectuable, run the command `_build/readdiffsel <name of run>` from the diffsel root folder (assuming you ran your analysis from the diffsel root folder). For example, if your analysis was run using the example command above, the command for post-analysis is:
+
+```bash
+_build/readdiffsel myrun
+```
