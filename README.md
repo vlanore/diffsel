@@ -87,7 +87,7 @@ To ensure that analysis results are correct, one should check that the MCMC chai
 You can do that either by using your MCMC convergence tool of choice using the `<name of run>.trace` files,
 or by using the provided `tracecomp` program.
 
-Tracecomp requires that two runs with identical parameters.
+Tracecomp requires two runs with identical parameters.
 You can invoke it by typing `_build/tracecomp -x <burn-in> <name of run 1> <name of run2>` from the diffsel root folder (assuming you ran your analysis from the diffsel root folder). If you don't know what burn-in to specify, 20% of the total number of iterations should be a decent default value.
 
 For example, with the example analysis command above, assuming a second identical run named `myrun2` was done, the command could be (with a burn-in at 20% of 10000 iterations):
