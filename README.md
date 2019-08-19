@@ -96,7 +96,7 @@ For example, with the example analysis command above, assuming a second identica
 _build/tracecomp -x 2000 myrun1 myrun2
 ```
 
-and it would output something like this (example output from a smaller run):
+and it would output something like this (example output from a very small run):
 
 ```
 setting upper limit to : 11
@@ -112,8 +112,11 @@ selvar1             6		1.11341
 statent             5		1.03834
 rrent               5		0.550811
 diag                6		0
-
 ```
+
+If all lines have a large effsize (>300) and a small rel_diff (<0.1) then your chain has converged well.
+In the above example, the chain *has not* converged (but it only had 11 iterations).
+For test runs, these conditions can be slightly relaxed while still giving decently reliable results (e.g., effsize>100 and rel_diff<0.15).
 
 ## How to run post-analysis after a diffsel run
 
