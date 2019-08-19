@@ -81,6 +81,40 @@ For example, to run a diffsel chain called "myrun" on example data (from the `da
 _build/diffsel -t data/samhd1.tree -d data/samhd1.ali -ncond 3 -x 1 10000 myrun
 ```
 
+## Check MCMC convergence
+
+To ensure that analysis results are correct, one should check that the MCMC chain has converged.
+You can do that either by using your MCMC convergence tool of choice using the `<name of run>.trace` files,
+or by using the provided `tracecomp` program.
+
+Tracecomp requires that two runs with identical parameters.
+You can invoke it by typing `_build/tracecomp -x <burn-in> <name of run 1> <name of run2>` from the diffsel root folder (assuming you ran your analysis from the diffsel root folder). If you don't know what burn-in to specify, 20% of the total number of iterations should be a decent default value.
+
+For example, with the example analysis command above, assuming a second identical run named `myrun2` was done, the command could be (with a burn-in at 20% of 10000 iterations):
+
+```bash
+_build/tracecomp -x 2000 myrun1 myrun2
+```
+
+and it would output something like this (example output from a smaller run):
+
+```
+setting upper limit to : 11
+tmp.trace	 burnin : 5	sample size : 6
+tmp2.trace	 burnin : 5	sample size : 6
+name                effsize	rel_diff
+
+#logprior           6		1.83775
+lnL                 4		1.03644
+length              5		1.25434
+globent             5		0.632021
+selvar1             6		1.11341
+statent             5		1.03834
+rrent               5		0.550811
+diag                6		0
+
+```
+
 ## How to run post-analysis after a diffsel run
 
 When it runs, diffsel produces a series of files with raw data about the run. These files are named `<name of run>.<something>`, for example `myrun.run`, `myrun.param`, `myrun.chain`, etc...
