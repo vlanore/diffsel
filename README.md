@@ -111,5 +111,13 @@ Effects are already filtered to keep only those with probability above 0.9 or be
 
 "Convergence probability" measures how consistently the corresponding aminoacid has a fitness that is better than the other aminoacids at the same position. See the original diffsel paper for more details.
 
-If the `*.signdiffsel` file is empty, it means that no effects was detected.
+If the `*.signdiffsel` file is empty, it means that no effects were detected.
 You can lower the detection threshold in the `src/ReadDiffsel.cpp` file. Just change the lign that says `double cutoff = 0.9;` to another value, recompile and rerun `readdiffsel`.
+
+## Another way to use diffsel: convergence pipeline
+
+If you want to use diffsel but don't need to see the low-level MCMC-related files, you might prefer using our convergence detection pipeline.
+This pipeline is capable of running diffsel, along with other convergence detection methods, and produces a standardized output for all methods (a score between 0 and 1 for each method and for each site).
+This output might be simpler to understand and use than the post-analysis described above.
+
+The pipeline and instructions are located at: https://gitlab.in2p3.fr/pveber/reviewphiltrans
