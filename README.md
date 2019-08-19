@@ -90,3 +90,26 @@ The diffsel repository contains an executable, called `readdiffsel`, which can a
 ```bash
 _build/readdiffsel myrun
 ```
+
+This command produces two files per condition after the first. For example, in the `myrun` example with 3 conditions, it should have produced the files `myrun_1.meandiffsel`, `myrun_1.signdiffsel`, `myrun_2.meandiffsel` and `myrun_2.signdiffsel`.
+
+Among the produced files, the interesting one is the `*.signdiffsel` file for the convergent condition.
+It contains the list of detected convergent effects.
+It looks like this:
+
+```tsv
+0       17      0.909091        1.19692
+1       3       0.0909091       -0.549043
+1       10      0       -0.992412
+1       12      0.909091        0.493234
+1       17      1       1.29196
+2       10      0.909091        1.19423
+```
+
+The columns are: site number, aminoacid number, "convergence probability", and effect strength.
+Effects are already filtered to keep only those with probability above 0.9 or below 0.1, i.e., significant effects.
+
+"Convergence probability" measures how consistently the corresponding aminoacid has a fitness that is better than the other aminoacids at the same position. See the original diffsel paper for more details.
+
+If the `*.signdiffsel` file is empty, it means that no effects was detected.
+You can lower the detection threshold in the `src/ReadDiffsel.cpp` file. Just change the lign that says `double cutoff = 0.9;` to another value, recompile and rerun `readdiffsel`.
