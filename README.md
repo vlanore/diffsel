@@ -118,6 +118,8 @@ If all lines have a large effsize (>300) and a small rel_diff (<0.1) then your c
 In the above example, the chain *has not* converged (but it only had 11 iterations).
 For test runs, these conditions can be slightly relaxed while still giving decently reliable results (e.g., effsize>100 and rel_diff<0.15).
 
+**Important note:** there is a known bug in `tracecomp` where it outputs wrong results when no burn-in is specified via command line. For now, please always use the `-x <burn-in>` option to manually specify a burn-in.
+
 ## How to run post-analysis after a diffsel run
 
 When it runs, diffsel produces a series of files with raw data about the run. These files are named `<name of run>.<something>`, for example `myrun.run`, `myrun.param`, `myrun.chain`, etc...
