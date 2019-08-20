@@ -62,6 +62,23 @@ Your tree file must follow the newick format. In addition, nodes should be label
 
 The `datà` folder in the diffsel root folder contains examples of data files usable with diffsel.
 
+## Remarks about conditions
+
+Conditions correspond to known phenotypes in the input data.
+What diffsel does is look for differential fitness effects associated with these conditions.
+
+For example, the cyperaceae dataset from Besnard et al. 2009 (available here: https://gitlab.in2p3.fr/pveber/reviewphiltrans/tree/master/example/real_data/besnard2009) has two conditions:
+* condition 0, the "ancestral condition", which corresponds to C3 photosynthesis;
+* condition 1, the "convergent condition", which corresponds to the independently-acquired C4 photosynthesis.
+
+In most cases, you should follow this two-condition approach if you want to use diffsel with your own data.
+In the original diffsel paper (Parto et al. 2018) three conditions were used:
+* the ancestral condition;
+* the convergent condition;
+* sister clades to convergent clades.
+
+It seems that in some cases this three-condition approach can give better results but our testing indicates that this slighlty more complex approach is not necessary in most cases.
+
 ## How to run diffsel
 
 Basic usage for diffsel is (from the diffsel root folder):
